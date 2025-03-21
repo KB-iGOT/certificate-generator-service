@@ -6,6 +6,8 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sunbird.BaseException;
 import org.sunbird.JsonKeys;
 import org.sunbird.PropertiesCache;
@@ -18,12 +20,10 @@ import org.sunbird.response.Response;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class IssueCertificateEventHelper {
-    private static final Logger logger = Logger.getLogger(IssueCertificateEventHelper.class.getName());
-
+    private static final Logger logger = LoggerFactory.getLogger(IssueCertificateEventHelper.class);
     private static final CassandraOperation cassandraOperation = ServiceFactory.getInstance();
     private static final RedisCacheUtil contentCache = new RedisCacheUtil();
     private static ObjectMapper mapper = new ObjectMapper();
@@ -65,14 +65,14 @@ public class IssueCertificateEventHelper {
                     certName,
                     additionalProps
             );
-            logger.info("enrolledUser: " + enrolledUser);
+            logger.debug("enrolledUser: " + enrolledUser);
 
             Map<String, Object> userDetails = validateUser(
                     userId,
                     (Map<String, Object>) criteria.getOrDefault(JsonKeys.USERS, new HashMap<>()),
                     additionalProps
             );
-            logger.info("userDetails: " + userDetails);
+            logger.debug("userDetails: " + userDetails);
 
             if (!userDetails.isEmpty()) {
                 return generateCertificateEvent(

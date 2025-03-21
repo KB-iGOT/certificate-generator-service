@@ -7,6 +7,8 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sunbird.BaseException;
 import org.sunbird.HttpUtil;
 import org.sunbird.JsonKeys;
@@ -20,11 +22,10 @@ import org.sunbird.response.Response;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class IssueCertificateContentHelper {
-    private static final Logger logger = Logger.getLogger(IssueCertificateContentHelper.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(IssueCertificateContentHelper.class);
 
     private static final CassandraOperation cassandraOperation = ServiceFactory.getInstance();
     private static final RedisCacheUtil contentCache = new RedisCacheUtil();
@@ -62,13 +63,13 @@ public class IssueCertificateContentHelper {
             Map<String, List<String>> additionalProps = mapper.readValue((String) template.getOrDefault(JsonKeys.ADDITIONAL_PROPS, "{}"), Map.class);
 
             Map<String, Object> enrolledUser = validateEnrolmentCriteria(requestMap, (Map<String, Object>) criteria.getOrDefault(JsonKeys.ENROLLMENT, new HashMap<>()), certName, additionalProps);
-            logger.info("enrolledUser: " + enrolledUser);
+            logger.debug("enrolledUser: " + enrolledUser);
 
             Map<String, Object> assessedUser = validateAssessmentCriteria(requestMap, (Map<String, Object>) criteria.getOrDefault(JsonKeys.ASSESSMENT, new HashMap<>()), userId, additionalProps);
-            logger.info("assessedUser: " + assessedUser);
+            logger.debug("assessedUser: " + assessedUser);
 
             Map<String, Object> userDetails = validateUser(userId, (Map<String, Object>) criteria.getOrDefault(JsonKeys.USERS, new HashMap<>()), additionalProps);
-            logger.info("userDetails: " + userDetails);
+            logger.debug("userDetails: " + userDetails);
 
             if (!userDetails.isEmpty()) {
                 return generateCertificateEvent(requestMap, template, userDetails, certName, enrolledUser);
