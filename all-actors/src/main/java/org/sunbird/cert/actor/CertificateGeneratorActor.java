@@ -150,7 +150,7 @@ public class CertificateGeneratorActor extends BaseActor {
             }
 
         } catch (Exception ex) {
-            logger.error("generateCertificateV2:Exception Occurred while generating certificate. : {}", ex.getMessage());
+            logger.error("generateCertificateV2:Exception Occurred while generating certificate. : {}", ex);
             throw new BaseException(IResponseMessage.INTERNAL_ERROR, ex.getMessage(), ResponseCode.SERVER_ERROR.getCode());
         }
         logger.info("onReceive method call End");
