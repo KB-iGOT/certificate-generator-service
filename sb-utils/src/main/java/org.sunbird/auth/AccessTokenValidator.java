@@ -92,6 +92,7 @@ public class AccessTokenValidator {
     }
 
     public static String verifyUserToken(String token, boolean checkActive) {
+        logger.info("Inside the verifyToken Method");
         String userId = JsonKeys.UNAUTHORIZED;
         try {
             Map<String, Object> payload = validateToken(token, checkActive);
