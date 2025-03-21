@@ -8,6 +8,7 @@ import org.keycloak.common.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sunbird.JsonKeys;
+import org.sunbird.PropertiesCache;
 
 import java.util.Collections;
 import java.util.Map;
@@ -16,6 +17,7 @@ public class AccessTokenValidator {
 
     private static ObjectMapper mapper = new ObjectMapper();
     private static final Logger logger = LoggerFactory.getLogger(AccessTokenValidator.class.getName());
+    private static PropertiesCache propertiesCache = PropertiesCache.getInstance();
 
     private static Map<String, Object> validateToken(String token, boolean checkActive) throws JsonProcessingException {
         try {
@@ -112,8 +114,8 @@ public class AccessTokenValidator {
 
     private static boolean checkIss(String iss) {
         String realmUrl =
-                KeyCloakConnectionProvider.SSO_URL + "realms/" + KeyCloakConnectionProvider.SSO_REALM;
-        logger.info("the ra=walm url is" + realmUrl);
+                propertiesCache.getProperty(JsonKeys.SUNBIRD_SSO_URL) + "realms/" + propertiesCache.getProperty(JsonKeys.SUNBIRD_SSO_RELAM);
+        logger.info("the realm url is" + realmUrl);
         return (realmUrl.equalsIgnoreCase(iss));
     }
 

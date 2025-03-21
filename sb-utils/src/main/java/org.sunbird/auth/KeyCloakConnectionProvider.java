@@ -1,4 +1,5 @@
-/** */
+/** *//*
+
 package org.sunbird.auth;
 
 import org.apache.commons.lang3.StringUtils;
@@ -10,10 +11,12 @@ import org.slf4j.LoggerFactory;
 import org.sunbird.JsonKeys;
 import org.sunbird.PropertiesCache;
 
+*/
 /**
  * @author Manzarul This class will connect to key cloak server and provide the connection to do
  *     other operations.
- */
+ *//*
+
 public class KeyCloakConnectionProvider {
 
   private static Keycloak keycloak;
@@ -33,11 +36,13 @@ public class KeyCloakConnectionProvider {
     registerShutDownHook();
   }
 
-  /**
+  */
+/**
    * Method to initializate the Keycloak connection
    *
    * @return Keycloak connection
-   */
+   *//*
+
   public static Keycloak initialiseConnection() throws Exception {
    logger.info("key cloak instance is creation started.");
     keycloak = initialiseEnvConnection();
@@ -68,12 +73,14 @@ public class KeyCloakConnectionProvider {
     return keycloak;
   }
 
-  /**
+  */
+/**
    * This method will provide the keycloak connection from environment variable. if environment
    * variable is not set then it will return null.
    *
    * @return Keycloak
-   */
+   *//*
+
   private static Keycloak initialiseEnvConnection() throws Exception {
     String url = System.getenv(JsonKeys.SUNBIRD_SSO_URL);
     String username = System.getenv(JsonKeys.SUNBIRD_SSO_USERNAME);
@@ -118,11 +125,13 @@ public class KeyCloakConnectionProvider {
     return keycloak;
   }
 
-  /**
+  */
+/**
    * This method will provide key cloak connection instance.
    *
    * @return Keycloak
-   */
+   *//*
+
   public static Keycloak getConnection() {
     if (keycloak != null) {
       return keycloak;
@@ -136,12 +145,14 @@ public class KeyCloakConnectionProvider {
     return null;
   }
 
-  /**
+  */
+/**
    * This class will be called by registerShutDownHook to register the call inside jvm , when jvm
    * terminate it will call the run method to clean up the resource.
    *
    * @author Manzarul
-   */
+   *//*
+
   static class ResourceCleanUp extends Thread {
     public void run() {
      logger.info("started resource cleanup.");
@@ -150,10 +161,13 @@ public class KeyCloakConnectionProvider {
     }
   }
 
-  /** Register the hook for resource clean up. this will be called when jvm shut down. */
+  */
+/** Register the hook for resource clean up. this will be called when jvm shut down. *//*
+
   public static void registerShutDownHook() {
     Runtime runtime = Runtime.getRuntime();
     runtime.addShutdownHook(new ResourceCleanUp());
    logger.info("ShutDownHook registered.");
   }
 }
+*/
