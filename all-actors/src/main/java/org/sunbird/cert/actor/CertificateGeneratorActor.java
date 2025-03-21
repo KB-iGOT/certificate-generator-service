@@ -100,7 +100,11 @@ public class CertificateGeneratorActor extends BaseActor {
             logger.info("X_AUTHENTICATED_USER_TOKEN from token:" + userToken);
             String userIdFromToken = AccessTokenValidator.verifyUserToken(userToken.get(0), true);
             logger.info("UserId from token:" + userIdFromToken);
-            if (StringUtils.isEmpty(userIdFromToken) && !userId.equalsIgnoreCase(userIdFromToken)) {
+            if (StringUtils.isEmpty(userIdFromToken)) {
+                logger.error("generateCertificateV2:Exception Occurred while generating certificate. User token is not valid" + userId);
+                throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "You are not authorized to get the certificate", ResponseCode.BAD_REQUEST.getCode());
+            }
+            if (StringUtils.isNotEmpty(userIdFromToken) && !userId.equalsIgnoreCase(userIdFromToken)) {
                 logger.error("generateCertificateV2:Exception Occurred while generating certificate. User token is different from the request UserId" + userId);
                 throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "You are not authorized to get the certificate for other user", ResponseCode.BAD_REQUEST.getCode());
             }
