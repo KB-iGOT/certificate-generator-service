@@ -345,25 +345,28 @@ public class IssueCertificateContentHelper {
 
             Map<String, Object> responseObject = getAPICall(url);
             Map<String, Object> resultObject = (Map<String, Object>) responseObject.get(JsonKeys.RESULT);
-            Map<String, Object> response = (Map<String, Object>) resultObject.get(JsonKeys.RESPONSE);
-            String courseName = sanitizeString((String) response.getOrDefault("name", ""));
-            String primaryCategory = sanitizeString((String) response.getOrDefault("primaryCategory", ""));
-            String posterImage = sanitizeString((String) response.getOrDefault("posterImage", ""));
+            if (MapUtils.isNotEmpty(resultObject)) {
+                Map<String, Object> response = (Map<String, Object>) resultObject.get(JsonKeys.CONTENT);
+                String courseName = sanitizeString((String) response.getOrDefault("name", ""));
+                String primaryCategory = sanitizeString((String) response.getOrDefault("primaryCategory", ""));
+                String posterImage = sanitizeString((String) response.getOrDefault("posterImage", ""));
 
-            List<String> parentCollections = (List<String>) response.getOrDefault("parentCollections", new ArrayList<>());
+                List<String> parentCollections = (List<String>) response.getOrDefault("parentCollections", new ArrayList<>());
 
-            List<Object> orgData = (List<Object>) response.getOrDefault("organisation", Collections.emptyList());
-            String providerName = extractProviderName(orgData);
+                List<Object> orgData = (List<Object>) response.getOrDefault("organisation", Collections.emptyList());
+                String providerName = extractProviderName(orgData);
 
-            Map<String, Object> courseInfoMap = new HashMap<>();
-            courseInfoMap.put("courseId", courseId);
-            courseInfoMap.put("courseName", courseName);
-            courseInfoMap.put("parentCollections", parentCollections);
-            courseInfoMap.put("primaryCategory", primaryCategory);
-            courseInfoMap.put("coursePosterImage", posterImage);
-            courseInfoMap.put("providerName", providerName);
-
-            return courseInfoMap;
+                Map<String, Object> courseInfoMap = new HashMap<>();
+                courseInfoMap.put("courseId", courseId);
+                courseInfoMap.put("courseName", courseName);
+                courseInfoMap.put("parentCollections", parentCollections);
+                courseInfoMap.put("primaryCategory", primaryCategory);
+                courseInfoMap.put("coursePosterImage", posterImage);
+                courseInfoMap.put("providerName", providerName);
+                return courseInfoMap;
+            } else {
+                return new HashMap<>();
+            }
 
         } else {
             Map<String, Object> courseMetadata = mapper.readValue(courseMetadataString, Map.class);

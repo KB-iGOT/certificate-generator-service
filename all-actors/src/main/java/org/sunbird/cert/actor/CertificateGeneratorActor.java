@@ -98,6 +98,7 @@ public class CertificateGeneratorActor extends BaseActor {
             String userId = (String) request.getRequest().get(JsonKeys.USER_ID);
             String userToken = (String) request.getHeaders().get(JsonKeys.X_AUTHENTICATED_USER_TOKEN);
             String userIdFromToken = AccessTokenValidator.verifyUserToken(userToken, true);
+            logger.info("UserId from token:" + userIdFromToken);
             if (StringUtils.isEmpty(userIdFromToken) && !userId.equalsIgnoreCase(userIdFromToken)) {
                 logger.error("generateCertificateV2:Exception Occurred while generating certificate. User token is different from the request UserId" + userId);
                 throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "You are not authorized to get the certificate for other user", ResponseCode.BAD_REQUEST.getCode());
@@ -150,7 +151,7 @@ public class CertificateGeneratorActor extends BaseActor {
             }
 
         } catch (Exception ex) {
-            logger.error("generateCertificateV2:Exception Occurred while generating certificate. : {}", ex);
+            logger.error("generateCertificateV2:Exception Occurred while generating certificate. : {}", ex.getStackTrace());
             throw new BaseException(IResponseMessage.INTERNAL_ERROR, ex.getMessage(), ResponseCode.SERVER_ERROR.getCode());
         }
         logger.info("onReceive method call End");
@@ -211,7 +212,7 @@ public class CertificateGeneratorActor extends BaseActor {
                         }
                         return encodedSvg;
                     } catch (Exception ex) {
-                        logger.error("generateCertificateV2:Exception Occurred while generating certificate. : {}", ex.getMessage());
+                        logger.error("generateCertificateV2:Exception Occurred while generating certificate. : {}", ex.getStackTrace());
                         throw new BaseException(IResponseMessage.INTERNAL_ERROR, ex.getMessage(), ResponseCode.SERVER_ERROR.getCode());
                     } finally {
                         certStore.close();
@@ -224,7 +225,7 @@ public class CertificateGeneratorActor extends BaseActor {
                 }
             }
         } catch (Exception ex) {
-            logger.error("generateCertificateV2:Exception Occurred while generating certificate. : {}", ex.getMessage());
+            logger.error("generateCertificateV2:Exception Occurred while generating certificate. : {}", ex.getStackTrace());
             throw new BaseException(IResponseMessage.INTERNAL_ERROR, ex.getMessage(), ResponseCode.SERVER_ERROR.getCode());
         }
         return null;

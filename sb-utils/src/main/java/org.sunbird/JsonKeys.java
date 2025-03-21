@@ -152,5 +152,6 @@ public class JsonKeys {
     public static final String UNAUTHORIZED = "Unauthorized";
     public static final String PARENT_ID = "parentId";
     public static final String ACCESS_TOKEN_PUBLICKEY_BASEPATH = "accesstoken.publickey.basepath";
+    public static final String CONTENT = "content";
 
 }
