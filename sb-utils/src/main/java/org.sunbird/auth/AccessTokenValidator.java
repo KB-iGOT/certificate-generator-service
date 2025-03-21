@@ -96,6 +96,7 @@ public class AccessTokenValidator {
         String userId = JsonKeys.UNAUTHORIZED;
         try {
             Map<String, Object> payload = validateToken(token, checkActive);
+            logger.info("The token body is" + mapper.writeValueAsString(payload));
             if (MapUtils.isNotEmpty(payload) && checkIss((String) payload.get("iss"))) {
                 userId = (String) payload.get(JsonKeys.SUB);
                 if (StringUtils.isNotBlank(userId)) {
@@ -112,6 +113,7 @@ public class AccessTokenValidator {
     private static boolean checkIss(String iss) {
         String realmUrl =
                 KeyCloakConnectionProvider.SSO_URL + "realms/" + KeyCloakConnectionProvider.SSO_REALM;
+        logger.info("the ra=walm url is" + realmUrl);
         return (realmUrl.equalsIgnoreCase(iss));
     }
 
