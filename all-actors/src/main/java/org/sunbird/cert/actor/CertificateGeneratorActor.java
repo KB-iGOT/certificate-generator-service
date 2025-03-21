@@ -96,6 +96,7 @@ public class CertificateGeneratorActor extends BaseActor {
             String courseId = (String) request.getRequest().get(JsonKeys.COURSE_ID);
             String batchId = (String) request.getRequest().get(JsonKeys.BATCH_ID);
             String userId = (String) request.getRequest().get(JsonKeys.USER_ID);
+            logger.info("The headers = {}", request.getHeaders());
             String userToken = (String) request.getHeaders().get(JsonKeys.X_AUTHENTICATED_USER_TOKEN);
             logger.info("X_AUTHENTICATED_USER_TOKEN from token:" + userToken);
             String userIdFromToken = AccessTokenValidator.verifyUserToken(userToken, true);
