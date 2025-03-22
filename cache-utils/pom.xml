@@ -40,6 +40,12 @@
             <groupId>org.sunbird</groupId>
             <artifactId>common-util</artifactId>
             <version>0.0.1-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.sunbird</groupId>
+                    <artifactId>cloud-store-sdk</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
