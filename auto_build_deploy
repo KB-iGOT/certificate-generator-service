@@ -41,7 +41,7 @@ node('build-slave') {
 		        // Create a deployment package
                 dir('service') {
                     sh 'mvn play2:dist'
-		            sh 'cp target/cert-service-1.2.0-dist.zip ../'
+		            sh 'cp target/certificate-service-1.2.0-dist.zip ../'
                 }
                 sh('chmod 777 ./build.sh')
                 sh("./build.sh ${build_tag} ${env.NODE_NAME} ${hub_org}")
