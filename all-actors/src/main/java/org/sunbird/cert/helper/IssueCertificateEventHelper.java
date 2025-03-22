@@ -13,7 +13,7 @@ import org.sunbird.JsonKeys;
 import org.sunbird.PropertiesCache;
 import org.sunbird.cache.util.RedisCacheUtil;
 import org.sunbird.cassandra.CassandraOperation;
-import org.sunbird.common.models.util.HttpUtil;
+import org.sunbird.HttpUtil;
 import org.sunbird.helper.ServiceFactory;
 import org.sunbird.response.Response;
 
