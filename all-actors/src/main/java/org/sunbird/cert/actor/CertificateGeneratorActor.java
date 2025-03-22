@@ -61,7 +61,6 @@ public class CertificateGeneratorActor extends BaseActor {
         String operation = request.getOperation();
         logger.info("onReceive method call start for operation {}", operation);
         if (CertActorOperation.GENERATE_CERTIFICATE.getOperation().equalsIgnoreCase(operation)) {
-            getStorageService();
             generateCertificate(request);
         }
         logger.info("onReceive method call End");
@@ -70,10 +69,6 @@ public class CertificateGeneratorActor extends BaseActor {
     private BaseStorageService getStorageService() {
         if(storageService == null) {
             StorageConfig storageConfig = null;
-            logger.info("StorageConfig class loaded from: {}",
-                    StorageConfig.class.getProtectionDomain().getCodeSource().getLocation());
-            logger.info("StorageFactory class loaded from: {}",
-                    StorageServiceFactory.class.getProtectionDomain().getCodeSource().getLocation());
             if (certVar.getCloudStorageType().equalsIgnoreCase(certVar.getAzureStorage())) {
                 storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getAzureStorageKey(), certVar.getAzureStorageSecret(), Option.apply(null), Option.empty());
             } else if (certVar.getCloudStorageType().equalsIgnoreCase(certVar.getAwsStorage())) {
@@ -101,12 +96,11 @@ public class CertificateGeneratorActor extends BaseActor {
             String batchId = (String) request.getRequest().get(JsonKeys.BATCH_ID);
             String userId = (String) request.getRequest().get(JsonKeys.USER_ID);
             List<String> userToken = (List<String>) request.getHeaders().get(JsonKeys.X_AUTHENTICATED_USER_TOKEN);
-            logger.debug("X_AUTHENTICATED_USER_TOKEN from token:" + userToken);
             String userIdFromToken = AccessTokenValidator.verifyUserToken(userToken.get(0), true);
             logger.info("UserId from token:" + userIdFromToken);
             if (StringUtils.isEmpty(userIdFromToken)) {
                 logger.error("generateCertificateV2:Exception Occurred while generating certificate. User token is not valid" + userId);
-                throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "You are not authorized to get the certificate", ResponseCode.BAD_REQUEST.getCode());
+                throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "Token is not proper", ResponseCode.BAD_REQUEST.getCode());
             }
             if (StringUtils.isNotEmpty(userIdFromToken) && !userId.equalsIgnoreCase(userIdFromToken)) {
                 logger.error("generateCertificateV2:Exception Occurred while generating certificate. User token is different from the request UserId" + userId);
