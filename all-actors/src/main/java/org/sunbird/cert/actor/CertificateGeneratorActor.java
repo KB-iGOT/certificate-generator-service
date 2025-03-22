@@ -88,7 +88,6 @@ public class CertificateGeneratorActor extends BaseActor {
                 } catch (BaseException e) {
                     logger.error("Error while initialising cloud storage. : {}", e.getMessage());
                 }
-            //StorageConfig storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getAzureStorageKey(), certVar.getAzureStorageSecret());
             logger.info("CertificateGeneratorActor:getStorageService:storage object formed: {}", storageConfig.toString());
             storageService = StorageServiceFactory.getStorageService(storageConfig);
         }
