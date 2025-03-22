@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>cert-generator-service</artifactId>
+        <artifactId>certificate-generator-service</artifactId>
         <groupId>org.sunbird</groupId>
         <version>1.2.0</version>
     </parent>
@@ -19,11 +19,6 @@
         <scoverage.plugin.version>1.4.1</scoverage.plugin.version>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-            <version>${scala.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.major.version}</artifactId>

@@ -4,12 +4,12 @@
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.sunbird</groupId>
-        <artifactId>cert-generator-service</artifactId>
+        <artifactId>certificate-generator-service</artifactId>
         <version>1.2.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>cert-service</artifactId>
-    <name>cert-service</name>
+    <artifactId>certificate-service</artifactId>
+    <name>certificate-service</name>
     <version>1.2.0</version>
     <packaging>play2</packaging>
 
@@ -84,11 +84,6 @@
             <groupId>com.typesafe.play</groupId>
             <artifactId>filters-helpers_${scala.major.version}</artifactId>
             <version>${play2.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.sunbird</groupId>
-            <artifactId>es-utils</artifactId>
-            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>

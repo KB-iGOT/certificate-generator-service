@@ -5,7 +5,7 @@
 	<version>1.0-SNAPSHOT</version>
 	<name>Cassandra Utils</name>
 	<parent>
-		<artifactId>cert-generator-service</artifactId>
+		<artifactId>certificate-generator-service</artifactId>
 		<groupId>org.sunbird</groupId>
 		<version>1.2.0</version>
 	</parent>
