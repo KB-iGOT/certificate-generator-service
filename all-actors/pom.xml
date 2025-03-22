@@ -36,11 +36,6 @@
         </dependency>
         <dependency>
             <groupId>org.sunbird</groupId>
-            <artifactId>es-utils</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.sunbird</groupId>
             <artifactId>cassandra-utils</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
