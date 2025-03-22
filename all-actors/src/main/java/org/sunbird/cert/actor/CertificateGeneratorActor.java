@@ -79,7 +79,7 @@ public class CertificateGeneratorActor extends BaseActor {
                     storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getCephs3StorageKey(), certVar.getCephs3StorageSecret(), Option.apply(certVar.getCephs3StorageEndPoint()), Option.empty());
                 } else if (certVar.getCloudStorageType().equalsIgnoreCase(certVar.getGCPStorage())) {
                     logger.info(certVar.getCloudStorageType() + " " + certVar.getGCPStorageKey() + " " + certVar.getGCPStorageSecret() + " " +certVar.getGCPStorageEndPoint());
-                    storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getGCPStorageKey(), certVar.getGCPStorageSecret(), Option.apply(certVar.getGCPStorageEndPoint()), Option.empty());
+                    storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getGCPStorageKey(), certVar.getGCPStorageSecret(), Option.apply(certVar.getGCPStorageEndPoint()));
                 } else
                     try {
                         throw new BaseException(IResponseMessage.INTERNAL_ERROR, "Error while initialising cloud storage", ResponseCode.SERVER_ERROR.getCode());

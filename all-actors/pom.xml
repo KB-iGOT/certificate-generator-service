@@ -20,7 +20,7 @@
         </dependency>
         <dependency>
             <groupId>org.sunbird.incredible</groupId>
-            <artifactId>cert-processor</artifactId>
+            <artifactId>certificate-processor</artifactId>
             <version>0.1</version>
         </dependency>
         <dependency>

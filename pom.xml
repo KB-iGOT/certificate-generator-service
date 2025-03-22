@@ -35,7 +35,7 @@
     <modules>
         <module>sb-utils</module>
         <module>cassandra-utils</module>
-        <module>cert-processor</module>
+        <module>certificate-processor</module>
         <module>all-actors</module>
         <module>cache-utils</module>
         <module>service</module>
