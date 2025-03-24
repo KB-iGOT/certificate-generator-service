@@ -135,6 +135,7 @@ public class CertificateGeneratorActor extends BaseActor {
                     if (issueCertificateContentHelper.isUserEligibleForContentCertificate(userEnrolmentRecord)) {
                         List<Map<String, Object>> userCertificatesList = issueCertificateEventHelper.getUserCertificates(userEnrolmentRecord);
                         if (CollectionUtils.isNotEmpty(userCertificatesList)) {
+                            logger.info("The userCertificationList is: " + mapper.writeValueAsString(userCertificatesList));
                             certificateRegistryMap = getCertificateRegistryMap(userCertificatesList, certificateList);
                             logger.info("The certificationList is: " + mapper.writeValueAsString(certificateList));
                         }
