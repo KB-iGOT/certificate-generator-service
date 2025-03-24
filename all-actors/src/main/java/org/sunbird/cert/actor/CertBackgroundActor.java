@@ -41,7 +41,7 @@ public class CertBackgroundActor extends BaseActor {
     }
 
     private void addToRegistryAndUpdateCassandraRecord(Request request) throws BaseException {
-        logger.info("The request is for backgroundActor : " + request.getRequest());
+        logger.debug("The request is for backgroundActor : " + request.getRequest());
         String courseId = (String) request.getRequest().get(JsonKeys.COURSE_ID);
         String batchId = (String) request.getRequest().get(JsonKeys.BATCH_ID);
         String userId = (String) request.getRequest().get(JsonKeys.USER_ID);
@@ -110,7 +110,7 @@ public class CertBackgroundActor extends BaseActor {
 
             Map<String, Object> addReq = new HashMap<>();
             addReq.put(JsonKeys.REQUEST, requestMap);
-
+            logger.info("The request is " + addReq);
             return certRegistryHelper.addCertToRegistry(addReq);
         } catch (Exception e) {
             logger.error("Issue while updating the registry");
