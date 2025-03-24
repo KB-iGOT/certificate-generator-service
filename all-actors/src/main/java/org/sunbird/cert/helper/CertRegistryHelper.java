@@ -48,9 +48,8 @@ public class CertRegistryHelper {
         logger.info("Response Object is" + responseObject);
         if (JsonKeys.OK.equalsIgnoreCase((String) responseObject.get(JsonKeys.RESPONSE_CODE))) {
             Map<String, Object> resultObject = (Map<String, Object>) responseObject.get(JsonKeys.RESULT);
-            Map<String, Object> response = (Map<String, Object>) resultObject.get(JsonKeys.RESPONSE);
-            if (MapUtils.isNotEmpty(response)) {
-                return response;
+            if (MapUtils.isNotEmpty(resultObject)) {
+                return resultObject;
             }
         }
         return null;
