@@ -136,13 +136,14 @@ public class CertificateGeneratorActor extends BaseActor {
                         List<Map<String, Object>> userCertificatesList = issueCertificateEventHelper.getUserCertificates(userEnrolmentRecord);
                         if (CollectionUtils.isNotEmpty(userCertificatesList)) {
                             certificateRegistryMap = getCertificateRegistryMap(userCertificatesList, certificateList);
+                            logger.info("The certificationList is: " + mapper.writeValueAsString(certificateList));
                         }
                     } else {
                         isUserEligibleForCertificate = false;
                     }
                 }
                 if (isUserEligibleForCertificate) {
-                    String encodedSvg = generatePrintURIAndUpdateRecord(courseId, batchId, userId, request, isEvent, certificateRegistryMap, certificateList);
+                    String encodedSvg = generatePrintURIAndUpdateRecord(courseId, batchId, request, isEvent, certificateRegistryMap, certificateList);
                     if (StringUtils.isNotBlank(encodedSvg)) {
                         Response response = new Response();
                         response.getResult().put(JsonKeys.PRINT_URI, encodedSvg);
@@ -167,7 +168,7 @@ public class CertificateGeneratorActor extends BaseActor {
         logger.info("onReceive method call End");
     }
 
-    private String generatePrintURIAndUpdateRecord(String courseId, String batchId, String userId, Request request, boolean isEvent, Map<String, Object> v2CertificateRegistryMap, List<Map<String, Object>> issuedCertificateList) throws BaseException {
+    private String generatePrintURIAndUpdateRecord(String courseId, String batchId, Request request, boolean isEvent, Map<String, Object> v2CertificateRegistryMap, List<Map<String, Object>> issuedCertificateList) throws BaseException {
         try {
             Response templateResponse = null;
             if (isEvent) {

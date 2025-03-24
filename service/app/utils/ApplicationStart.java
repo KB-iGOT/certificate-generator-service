@@ -39,6 +39,7 @@ public class ApplicationStart {
 	  @Inject
 	  public ApplicationStart(ApplicationLifecycle lifecycle, Environment environment) throws BaseException {
 		  createCassandraConnection(JsonKeys.SUNBIRD);
+		  createCassandraConnection(JsonKeys.COURSE_KEY_SPACE_NAME);
 		  System.out.println("keymanger.init():starts");
 		  KeyManager.init();
 		  // Shut-down hook
