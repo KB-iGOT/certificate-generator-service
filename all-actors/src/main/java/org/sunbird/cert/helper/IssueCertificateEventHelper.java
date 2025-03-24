@@ -210,7 +210,7 @@ public class IssueCertificateEventHelper {
         eData.put("issuer", mapper.readValue((String)template.getOrDefault(JsonKeys.ISSUER, "{}"), Map.class));
         eData.put("signatoryList", mapper.readValue((String)template.getOrDefault(template.get(JsonKeys.SIGNATORY_LIST), "[]"), List.class));
         eData.put("courseName", courseName);
-        eData.put("basePath", PropertiesCache.getInstance().getProperty("cert_domain_url") + "/certs/v2");
+        eData.put("basePath", PropertiesCache.getInstance().getProperty("cert_domain_url") + "/certs");
         eData.put("name", certName);
         eData.put("providerName", courseInfo.getOrDefault("providerName", ""));
         eData.put("tag", requestMap.get(JsonKeys.BATCH_ID));
