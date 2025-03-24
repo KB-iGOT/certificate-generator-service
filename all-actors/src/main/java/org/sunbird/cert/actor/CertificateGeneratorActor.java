@@ -123,9 +123,9 @@ public class CertificateGeneratorActor extends BaseActor {
                     isEvent = true;
                     Response userEventEnrolmentRecord = userEnrolmentHelper.getUserEventEnrollmentRecord(courseId, batchId, userId);
                     if (issueCertificateEventHelper.isUserEligibleForEventCertificate(userEventEnrolmentRecord)) {
-                        List<Map<String, Object>> userCertificatesList = issueCertificateEventHelper.getUserCertificates(userEventEnrolmentRecord);
-                        if (CollectionUtils.isNotEmpty(userCertificatesList)) {
-                            certificateRegistryMap = getCertificateRegistryMap(userCertificatesList, certificateList);
+                        certificateList = issueCertificateEventHelper.getUserCertificates(userEventEnrolmentRecord);
+                        if (CollectionUtils.isNotEmpty(certificateList)) {
+                            certificateRegistryMap = getCertificateRegistryMap(certificateList);
                         }
                     } else {
                         isUserEligibleForCertificate = false;
@@ -133,11 +133,10 @@ public class CertificateGeneratorActor extends BaseActor {
                 } else {
                     Response userEnrolmentRecord = userEnrolmentHelper.getUserEnrollmentRecord(courseId, batchId, userId);
                     if (issueCertificateContentHelper.isUserEligibleForContentCertificate(userEnrolmentRecord)) {
-                        List<Map<String, Object>> userCertificatesList = issueCertificateEventHelper.getUserCertificates(userEnrolmentRecord);
-                        if (CollectionUtils.isNotEmpty(userCertificatesList)) {
-                            logger.info("The userCertificationList is: " + mapper.writeValueAsString(userCertificatesList));
-                            certificateRegistryMap = getCertificateRegistryMap(userCertificatesList, certificateList);
-                            logger.info("The certificationList is: " + mapper.writeValueAsString(certificateList));
+                        certificateList = issueCertificateEventHelper.getUserCertificates(userEnrolmentRecord);
+                        if (CollectionUtils.isNotEmpty(certificateList)) {
+                            certificateRegistryMap = getCertificateRegistryMap(certificateList);
+                            logger.debug("The certificationList is: " + mapper.writeValueAsString(certificateList));
                         }
                     } else {
                         isUserEligibleForCertificate = false;
@@ -318,13 +317,9 @@ public class CertificateGeneratorActor extends BaseActor {
         return issueCertificateContentHelper.generateCertificateMap(request.getRequest(), value);
     }
 
-    public Map<String, Object> getCertificateRegistryMap(List<Map<String, Object>> userCertificatesList, List<Map<String, Object>> certificationList) throws BaseException {
-        Map<String, Object> userActiveEnrolment = userCertificatesList.stream().filter(m -> Boolean.TRUE.equals(m.get(JsonKeys.ACTIVE))).findFirst().orElse(null);
-        if (MapUtils.isNotEmpty(userActiveEnrolment)) {
-            List<Map<String, Object>> userCertificates = (List<Map<String, Object>>) userActiveEnrolment.get(JsonKeys.ISSUED_CERTIFICATES);
-            if (CollectionUtils.isNotEmpty(userCertificates)) {
-                certificationList.addAll(userCertificates);
-                Map<String, Object> v2Certificates = userCertificates.stream().filter(m -> m.get(JsonKeys.VERSION) != null && m.get(JsonKeys.VERSION) == JsonKeys.VERSION_2).findFirst().orElse(null);
+    public Map<String, Object> getCertificateRegistryMap(List<Map<String, Object>> userCertificatesList) throws BaseException {
+            if (CollectionUtils.isNotEmpty(userCertificatesList)) {
+                Map<String, Object> v2Certificates = userCertificatesList.stream().filter(m -> m.get(JsonKeys.VERSION) != null && m.get(JsonKeys.VERSION) == JsonKeys.VERSION_2).findFirst().orElse(null);
                 if (MapUtils.isNotEmpty(v2Certificates)) {
                     String identifier = (String) v2Certificates.get(JsonKeys.IDENTIFIER);
                     Map<String, Object> v2CertificateRegistry = certRegistryHelper.getCertificateRegistryUsingIdentifier(identifier);
@@ -332,7 +327,6 @@ public class CertificateGeneratorActor extends BaseActor {
                         return v2CertificateRegistry;
                     }
                 }
-            }
         }
         return null;
     }
