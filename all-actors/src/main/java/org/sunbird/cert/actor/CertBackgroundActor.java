@@ -110,10 +110,9 @@ public class CertBackgroundActor extends BaseActor {
 
             Map<String, Object> addReq = new HashMap<>();
             addReq.put(JsonKeys.REQUEST, requestMap);
-            logger.info("The request is " + addReq);
             return certRegistryHelper.addCertToRegistry(addReq);
         } catch (Exception e) {
-            logger.error("Issue while updating the registry");
+            logger.error("Issue while updating the registry: ", e.getMessage());
         }
         return null;
     }

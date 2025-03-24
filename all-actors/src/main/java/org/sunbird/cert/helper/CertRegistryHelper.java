@@ -45,7 +45,6 @@ public class CertRegistryHelper {
     public Map<String, Object> addCertToRegistry(Map<String, Object> addReq) throws Exception {
         String url = propertiesCache.getProperty(JsonKeys.CERT_REGISTRY_BASE_PATH) + propertiesCache.getProperty(JsonKeys.ADD_CERT_REG_API);
         Map<String, Object> responseObject = postAPICall(url, addReq);
-        logger.info("response object" + responseObject);
         if (JsonKeys.OK.equalsIgnoreCase((String) responseObject.get(JsonKeys.RESPONSE_CODE))) {
             Map<String, Object> resultObject = (Map<String, Object>) responseObject.get(JsonKeys.RESULT);
             Map<String, Object> response = (Map<String, Object>) resultObject.get(JsonKeys.RESPONSE);
