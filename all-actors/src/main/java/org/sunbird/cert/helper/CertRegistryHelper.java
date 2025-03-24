@@ -70,7 +70,7 @@ public class CertRegistryHelper {
 
     public Map<String, Object> getCertificateRegistryUsingIdentifier(String identifier) throws BaseException {
         Map<String, Object> primaryKey = new HashMap<>();
-        primaryKey.put(JsonKeys.IDENTIFIER, identifier);
+        primaryKey.put(JsonKeys.ID, identifier);
         Response row = cassandraOperation.getRecordsByProperties(JsonKeys.SUNBIRD, JsonKeys.CERT_REGISTRY_V2, primaryKey, null);
         if (row != null) {
             List<Map<String, Object>> mapList = (List<Map<String, Object>>) row.get(JsonKeys.RESPONSE);

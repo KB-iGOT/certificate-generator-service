@@ -319,7 +319,7 @@ public class CertificateGeneratorActor extends BaseActor {
 
     public Map<String, Object> getCertificateRegistryMap(List<Map<String, Object>> userCertificatesList) throws BaseException {
             if (CollectionUtils.isNotEmpty(userCertificatesList)) {
-                Map<String, Object> v2Certificates = userCertificatesList.stream().filter(m -> m.get(JsonKeys.VERSION) != null && m.get(JsonKeys.VERSION) == JsonKeys.VERSION_2).findFirst().orElse(null);
+                Map<String, Object> v2Certificates = userCertificatesList.stream().filter(m -> m.get(JsonKeys.VERSION) != null && JsonKeys.VERSION_2.equalsIgnoreCase((String)m.get(JsonKeys.VERSION))).findFirst().orElse(null);
                 if (MapUtils.isNotEmpty(v2Certificates)) {
                     String identifier = (String) v2Certificates.get(JsonKeys.IDENTIFIER);
                     Map<String, Object> v2CertificateRegistry = certRegistryHelper.getCertificateRegistryUsingIdentifier(identifier);
