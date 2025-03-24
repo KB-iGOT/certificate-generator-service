@@ -148,7 +148,7 @@ public class CassandraDACImpl extends CassandraOperationImpl {
     }
     try {
       Response response = new Response();
-      logger.info("Remove Map-Key Query: " + update.toString());
+      logger.debug("Remove Map-Key Query: " + update.toString());
       connectionManager.getSession(keySpace).execute(update);
       response.put(Constants.RESPONSE, Constants.SUCCESS);
       return response;

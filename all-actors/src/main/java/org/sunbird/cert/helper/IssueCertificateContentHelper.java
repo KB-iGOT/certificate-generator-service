@@ -74,11 +74,11 @@ public class IssueCertificateContentHelper {
             if (!userDetails.isEmpty()) {
                 return generateCertificateEvent(requestMap, template, userDetails, certName, enrolledUser);
             } else {
-                logger.info(String.format("User :: %s did not match the criteria for batch :: %s and course :: %s", userId, batchId, courseId));
+                logger.error(String.format("User :: %s did not match the criteria for batch :: %s and course :: %s", userId, batchId, courseId));
                 return null;
             }
         } catch (Exception e) {
-            logger.info("Issue while validating the user Enrollment.");
+            logger.error("Issue while validating the user Enrollment.");
         }
         return null;
     }
@@ -216,7 +216,7 @@ public class IssueCertificateContentHelper {
                             List<String> assessmentContentType = Arrays.asList(JsonKeys.ASSESSMENT_CONTENT_TYPE.split(","));
                             return assessmentContentType.contains(contentType);
                         } else {
-                            logger.info("Suppressed exception: Metadata cache not available for: " + key);
+                            logger.error("Suppressed exception: Metadata cache not available for: " + key);
                             return false;
                         }
                     } catch (Exception e) {
@@ -316,7 +316,7 @@ public class IssueCertificateContentHelper {
         eData.put("issuer", mapper.readValue((String) template.getOrDefault(JsonKeys.ISSUER, "{}"), Map.class));
         eData.put("signatoryList", mapper.readValue((String) template.getOrDefault(template.get(JsonKeys.SIGNATORY_LIST), "[]"), List.class));
         eData.put("courseName", courseName);
-        eData.put("basePath", propertiesCache.getProperty("cert_domain_url") + "/certs");
+        eData.put("basePath", propertiesCache.getProperty("cert_domain_url") + "/certs/v2");
         eData.put("name", certName);
         eData.put("providerName", courseInfo.getOrDefault("providerName", ""));
         eData.put("tag", requestMap.get(JsonKeys.BATCH_ID));

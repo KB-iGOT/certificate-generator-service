@@ -60,7 +60,7 @@ public final class CassandraUtil {
       }
     }
     query.append(commaSepValueBuilder + Constants.CLOSING_BRACE);
-    logger.info(query.toString());
+    logger.debug(query.toString());
     return query.toString();
   }
 
@@ -116,7 +116,7 @@ public final class CassandraUtil {
     query.append(String.join(" = ? ,", key));
     query.append(
         Constants.EQUAL_WITH_QUE_MARK + Constants.WHERE_ID + Constants.EQUAL_WITH_QUE_MARK);
-    logger.info(query.toString());
+    logger.debug(query.toString());
     return query.toString();
   }
 
@@ -141,7 +141,7 @@ public final class CassandraUtil {
             + Constants.IDENTIFIER
             + Constants.EQUAL
             + " ?; ");
-    logger.info(query.toString());
+    logger.debug(query.toString());
     return query.toString();
   }
 

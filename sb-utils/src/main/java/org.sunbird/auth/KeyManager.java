@@ -58,7 +58,7 @@ public class KeyManager {
     }
 
     public static PublicKey loadPublicKey(String key) throws Exception {
-        logger.info("the public key is" + key);
+        logger.debug("the public key is" + key);
         String publicKey = new String(key.getBytes(), StandardCharsets.UTF_8);
         publicKey = publicKey.replaceAll("(-+BEGIN PUBLIC KEY-+)", "");
         publicKey = publicKey.replaceAll("(-+END PUBLIC KEY-+)", "");

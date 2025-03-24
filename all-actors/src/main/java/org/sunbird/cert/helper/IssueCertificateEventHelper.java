@@ -83,12 +83,12 @@ public class IssueCertificateEventHelper {
                         enrolledUser
                 );
             } else {
-                logger.info(String.format("User :: %s did not match the criteria for batch :: %s and course :: %s",
+                logger.error(String.format("User :: %s did not match the criteria for batch :: %s and course :: %s",
                         userId, batchId, courseId));
                 return null;
             }
         } catch (Exception e) {
-            logger.info("Issue while validating the user Enrollment.");
+            logger.error("Issue while validating the user Enrollment.");
         }
         return null;
     }
@@ -210,7 +210,7 @@ public class IssueCertificateEventHelper {
         eData.put("issuer", mapper.readValue((String)template.getOrDefault(JsonKeys.ISSUER, "{}"), Map.class));
         eData.put("signatoryList", mapper.readValue((String)template.getOrDefault(template.get(JsonKeys.SIGNATORY_LIST), "[]"), List.class));
         eData.put("courseName", courseName);
-        eData.put("basePath", PropertiesCache.getInstance().getProperty("cert_domain_url") + "/certs");
+        eData.put("basePath", PropertiesCache.getInstance().getProperty("cert_domain_url") + "/certs/v2");
         eData.put("name", certName);
         eData.put("providerName", courseInfo.getOrDefault("providerName", ""));
         eData.put("tag", requestMap.get(JsonKeys.BATCH_ID));

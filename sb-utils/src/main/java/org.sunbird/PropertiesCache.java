@@ -77,7 +77,7 @@ public class PropertiesCache {
           attributePercentageMap.put(keys[i], new Float(values[i]));
       } else {
         // equally divide all the provided field.
-        logger.info("weighted value is not provided  by user.");
+        logger.debug("weighted value is not provided  by user.");
         float perc = (float) 100.0 / keys.length;
         for (int i = 0; i < keys.length; i++) attributePercentageMap.put(keys[i], perc);
       }

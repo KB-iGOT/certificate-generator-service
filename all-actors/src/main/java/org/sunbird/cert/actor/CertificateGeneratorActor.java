@@ -1,5 +1,6 @@
 package org.sunbird.cert.actor;
 
+import akka.actor.ActorRef;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections.CollectionUtils;
@@ -7,6 +8,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.MDC;
 import org.sunbird.*;
 import org.sunbird.auth.AccessTokenValidator;
 import org.sunbird.cert.actor.operation.CertActorOperation;
@@ -28,12 +30,14 @@ import org.sunbird.incredible.processor.views.SvgGenerator;
 import org.sunbird.message.IResponseMessage;
 import org.sunbird.message.ResponseCode;
 import org.sunbird.request.Request;
+import org.sunbird.request.RequestParams;
 import org.sunbird.response.Response;
 import scala.Option;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -50,7 +54,10 @@ public class CertificateGeneratorActor extends BaseActor {
     private static final IssueCertificateEventHelper issueCertificateEventHelper = IssueCertificateEventHelper.getInstance();
     private static final CertRegistryHelper certRegistryHelper = CertRegistryHelper.getInstance();
     private static final UserEnrolmentHelper userEnrolmentHelper = UserEnrolmentHelper.getInstance();
-    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+
+    @Inject
+    @Named("certificate_background_actor")
+    private ActorRef certBackgroundActorRef;
 
     static {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -199,19 +206,20 @@ public class CertificateGeneratorActor extends BaseActor {
                         encodedSvg = svgGenerator.generate(certificateExtension, encodedQrCode, getStorageService());
                         if (MapUtils.isEmpty(v2CertificateRegistryMap)) {
                             certificateExtension.setPrintUri(encodedSvg);
-                            Map<String, Object> courseRelatedInfo = new HashMap<>();
-                            courseRelatedInfo.put(JsonKeys.COURSE_ID, courseId);
-                            courseRelatedInfo.put(JsonKeys.BATCH_ID, batchId);
-                            courseRelatedInfo.put(JsonKeys.TYPE, certificateTemplate.get(JsonKeys.NAME));
-                            addCertificateToRegistry(uuid, certificateExtension, certModel, courseRelatedInfo, (String) qrMap.get(JsonKeys.ACCESS_CODE));
-                            Map<String, Object> certificateMap = new HashMap<>();
-                            certificateMap.put(JsonKeys.IDENTIFIER, uuid);
-                            certificateMap.put(JsonKeys.LAST_ISSUED_ON, formatter.format(new Date()));
-                            certificateMap.put(JsonKeys.TOKEN, qrMap.get(JsonKeys.ACCESS_CODE));
-                            certificateMap.put(JsonKeys.NAME, certificateTemplate.get(JsonKeys.NAME));
-                            certificateMap.put(JsonKeys.VERSION, JsonKeys.VERSION_2);
-                            issuedCertificateList.add(certificateMap);
-                            updateUserEnrolmentRecord(userId, courseId, batchId, issuedCertificateList, isEvent);
+                            Request req = new Request();
+                            RequestParams params = new RequestParams();
+                            params.setMsgid(MDC.get(JsonKeys.REQUEST_MESSAGE_ID));
+                            req.setParams(params);
+                            request.getRequest().put(JsonKeys.CERTIFICATE_EXTENSION, certificateExtension);
+                            request.getRequest().put(JsonKeys.UUID, uuid);
+                            request.getRequest().put(JsonKeys.ACCESS_CODE, qrMap.get(JsonKeys.ACCESS_CODE));
+                            request.getRequest().put(JsonKeys.CERTIFICATE, certificateTemplate);
+                            request.getRequest().put(JsonKeys.CERT_MODEL, certModel);
+                            request.getRequest().put(JsonKeys.IS_EVENT, isEvent);
+                            request.getRequest().put(JsonKeys.USER_CERTICATE_LIST, issuedCertificateList);
+                            request.getRequest().putAll(req.getRequest());
+                            request.setOperation(JsonKeys.ADD_REGISTRY_REQUEST);
+                            certBackgroundActorRef.tell(request, ActorRef.noSender());
                         }
                         return encodedSvg;
                     } catch (Exception ex) {
@@ -270,7 +278,7 @@ public class CertificateGeneratorActor extends BaseActor {
         properties.put(JsonKey.PREVIEW, certVar.getPreview(preview));
         properties.put(JsonKey.BASE_PATH, certVar.getBasePath());
 
-        logger.info("getProperties:properties got from Constant File ".concat(Collections.singleton(properties.toString()) + ""));
+        logger.debug("getProperties:properties got from Constant File ".concat(Collections.singleton(properties.toString()) + ""));
         return properties;
     }
 
@@ -308,40 +316,6 @@ public class CertificateGeneratorActor extends BaseActor {
         return issueCertificateContentHelper.generateCertificateMap(request.getRequest(), value);
     }
 
-    public Map<String, Object> getCertName(Request request, Map<String, Object> template, boolean isEvent) {
-        List<Map<String, Object>> templateResponse = (List<Map<String, Object>>) template.get(JsonKey.RESPONSE);
-        Map<String, Object> templateResponseKey = (Map<String, Object>) templateResponse.get(0).get(JsonKeys.CERT_TEMPLATES);
-        String onlyKey = templateResponseKey.keySet().iterator().next();
-
-        // Get the value associated with that key
-        Map<String, Object> value = (Map<String, Object>) templateResponseKey.get(onlyKey);
-        if (isEvent) {
-            return issueCertificateEventHelper.generateCertificateMap(request.getRequest(), value);
-        }
-        return issueCertificateContentHelper.generateCertificateMap(request.getRequest(), value);
-    }
-
-    public void addCertificateToRegistry(String uuid, CertificateExtension certificateExtension, CertModel certModel, Map<String, Object> courseRelatedInfo, String accessCode) {
-        try {
-            Map<String, Object> requestMap = new HashMap<>();
-
-            requestMap.put(JsonKeys.ID, uuid);
-            requestMap.put(JsonKeys.JSON_DATA, certificateExtension);
-            requestMap.put(JsonKeys.ACCESS_CODE, accessCode);
-            requestMap.put(JsonKeys.RECIPIENT_NAME, certModel.getRecipientName());
-            requestMap.put(JsonKeys.RECIPIENT_ID, certModel.getIdentifier());
-            requestMap.put(JsonKeys.DYNAMIC_GENERATION, true);
-            requestMap.put(JsonKeys.RELATED, courseRelatedInfo);
-
-            Map<String, Object> addReq = new HashMap<>();
-            addReq.put(JsonKeys.REQUEST, requestMap);
-
-            certRegistryHelper.addCertToRegistry(addReq);
-        } catch (Exception e) {
-            logger.error("Issue while updating the registry");
-        }
-    }
-
     public Map<String, Object> getCertificateRegistryMap(List<Map<String, Object>> userCertificatesList, List<Map<String, Object>> certificationList) throws BaseException {
         Map<String, Object> userActiveEnrolment = userCertificatesList.stream().filter(m -> Boolean.TRUE.equals(m.get(JsonKeys.ACTIVE))).findFirst().orElse(null);
         if (MapUtils.isNotEmpty(userActiveEnrolment)) {
@@ -361,14 +335,4 @@ public class CertificateGeneratorActor extends BaseActor {
         return null;
     }
 
-    public Response updateUserEnrolmentRecord(String userId, String courseId, String batchId, List<Map<String, Object>> issuedCertificates, boolean isEvent) throws BaseException {
-        Map<String, Object> attributeMap = new HashMap<>();
-        attributeMap.put(JsonKeys.ISSUED_CERTIFICATES, issuedCertificates);
-        if (isEvent) {
-            userEnrolmentHelper.updateUserEventEnrollmentRecord(courseId, batchId, userId, attributeMap);
-        } else {
-            userEnrolmentHelper.updateUserEnrollmentRecord(courseId, batchId, userId, attributeMap);
-        }
-        return null;
-    }
 }

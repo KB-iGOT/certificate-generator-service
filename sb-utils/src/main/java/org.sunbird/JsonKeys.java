@@ -2,25 +2,11 @@ package org.sunbird;
 
 public class JsonKeys {
 
-
-    public static final String CERT_ADD = "add";
-    public static final String CERT_ADD_V2 = "addV2";
-    public static final String CERT_VALIDATE = "validate";
-    public static final String CERT_DOWNLOAD = "download";
-    public static final String CERT_DOWNLOAD_V2 = "downloadV2";
-    public static final String PDF_URL = "pdfUrl";
     public static final String JSON_DATA = "jsonData";
     public static final String ACCESS_CODE = "accessCode";
     public static final String ID = "id";
-    public static final String REQUEST = "request";
-    public static final String CREATED_AT = "createdAt";
-    public static final String UPDATED_AT = "updatedAt";
+    public static final String REQUEST = "request";;
     public static final String RESPONSE="response";
-    public static final String JSON_URL="jsonUrl";
-    public static final String CERT_ID="certId";
-    public static final String JSON = "json";
-    public static final String PDF = "pdf";
-    public static final String SIGNED_URL="signedUrl";
     public static final String RESULT="result";
     public static final String CERTIFICATE = "certificate";
     public static final String RECIPIENT_NAME = "recipientName";
@@ -30,12 +16,6 @@ public class JsonKeys {
     public static final String ISSUER = "issuer";
     public static final String URL = "url";
     public static final String SIGNATORY_LIST = "signatoryList";
-    public static final String DESIGNATION = "designation";
-    public static final String SIGNATORY_IMAGE = "image";
-    public static final String DATA="data";
-    public static final String KEYS="keys";
-    public static final String STORE = "store";
-    public static final String containerName = "containerName";
     public static final String TYPE = "type";
     public static final String ACCOUNT = "account";
     public static final String key = "key";
@@ -56,15 +36,6 @@ public class JsonKeys {
     public static final String CERT_REGISTRY = "cert_registry";
     public static final String RECIPIENT="recipient";
     public static final String OLD_ID="oldId";
-    public static final String READ = "read";
-    public static final String SEARCH = "search";
-    public static final String SEARCH_V2 = "searchV2";
-    public static final String HITS ="hits";
-    public static final String CERT_ALIAS ="certs";
-    public static final String READ_CERT_META_DATA = "readCertMetaData";
-    public static final String BADGE = "badge";
-    public static final String DESCRIPTION = "description";
-    public static final String SIGNATORY = "signatory";
     public static final String ISSUED_ON = "issuedOn";
     public static final String QR_CODE_URL = "qrCodeUrl";
     public static final String IDENTITY = "identity";
@@ -75,23 +46,8 @@ public class JsonKeys {
     public static final String PRINT_URI = "printUri";
     public static final String REQ_ID ="reqId";
     public static final String REQUEST_MESSAGE_ID = "msgId";
-    public static final String X_REQUEST_ID = "X-Request-ID";
-    public static final String ACCEPT = "Accept";
-    public static final String CONTENT_TYPE = "Content-Type";
-    public static final String IMAGE_SVG_XML = "image/svg+xml";
-    public static final String TEMPLATE_URL = "templateUrl";
-    public static final String REGISTRY_CREDENTIAL_SERVICE_BASE_URL= "registry_credential_service_base_url";
-    public static final String RC_ENTITY = "rc_entity";
-    public static final String APPLICATION_JSON = "application/json";
-    public static final String QUERY_MUST_PHRASE = "/query/bool/must";
-    public static final String MATCH_PHRASE = "/match_phrase";
-    public static final String FILTERS = "filters";
     public static final String COURSE_ID = "courseId";
-    public static final String CERTIFICATE_LABEL = "certificateLabel";
-    public static final String OSID = "osid";
-    public static final String TRAINING = "training";
     public static final String X_AUTHENTICATED_USER_TOKEN = "x-authenticated-user-token";
-    public static final String X_AUTHENTICATED_FOR = "x-authenticated-for";
     public static final String USER_ENROLMENTS = "user_enrolments";
     public static final String USER_ID = "userId";
     public static final String BATCH_ID = "batchId";
@@ -104,7 +60,6 @@ public class JsonKeys {
     public static final String USER_ACTIVITY_AGG = "user_activity_agg";
     public static final String ASSESSMENT_CONTENT_TYPE = "AssessmentContentTypes";
     public static final String DYNAMIC_GENERATION = "dynamicGeneration";
-    public static final String QR_CODE_DATA = "qrcodedata";
     public static final String RESPONSE_CODE = "responseCode";
     public static final String OK = "ok";
     public static final String USER_ENTITY_ENROLMENTS = "user_entity_enrolments";
@@ -132,14 +87,6 @@ public class JsonKeys {
     public static final String TABLE_SYSTEM_SETTINGS = "system_settings";
     public static final Object CASSANDRA_DB = "cassandraDb";
     public static final Object REDIS_CACHE = "redisDb";
-    public static final String SSO_CLIENT_ID = "sso.client.id";
-    public static final String SSO_CLIENT_SECRET = "sso.client.secret";
-    public static final String SSO_PASSWORD = "sso.password";
-    public static final String SSO_POOL_SIZE = "sso.connection.pool.size";
-    public static final String SSO_PUBLIC_KEY = "sunbird_sso_publickey";
-    public static final String SSO_REALM = "sso.realm";
-    public static final String SSO_URL = "sso.url";
-    public static final String SSO_USERNAME = "sso.username";
     public static final String SUNBIRD_SSO_CLIENT_ID = "sunbird_sso_client_id";
     public static final String SUNBIRD_SSO_CLIENT_SECRET = "sunbird_sso_client_secret";
     public static final String SUNBIRD_SSO_PASSWORD = "sunbird_sso_password";
@@ -153,5 +100,10 @@ public class JsonKeys {
     public static final String PARENT_ID = "parentId";
     public static final String ACCESS_TOKEN_PUBLICKEY_BASEPATH = "accesstoken.publickey.basepath";
     public static final String CONTENT = "content";
-
+    public static final String CERTIFICATE_EXTENSION = "certificateExternsion";
+    public static final String UUID = "uuid";
+    public static final String ADD_REGISTRY_REQUEST = "add_registry_req";
+    public static final String CERT_MODEL = "certModel";
+    public static final String IS_EVENT = "isEvent";
+    public static final String USER_CERTICATE_LIST = "user_certificate_list";
 }

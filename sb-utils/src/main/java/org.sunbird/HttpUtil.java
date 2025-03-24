@@ -62,7 +62,7 @@ public class HttpUtil {
     String str = httpResponse.getBody();
     long stopTime = System.currentTimeMillis();
     long elapsedTime = stopTime - startTime;
-    logger.info(
+    logger.debug(
         "HttpUtil sendPostRequest method end at =="
             + stopTime
             + " for requestURL "
@@ -84,7 +84,7 @@ public class HttpUtil {
   public static String sendPostRequest(
       String requestURL, String params, Map<String, String> headers) throws Exception {
     long startTime = System.currentTimeMillis();
-    logger.info("The request url is :" + requestURL + ": headers : " + headers + " : params : " + params);
+    logger.debug("The request url is :" + requestURL + ": headers : " + headers + " : params : " + params);
     HttpResponse<String> httpResponse = Unirest.post(requestURL).headers(headers).body(params).asString();
     String str = httpResponse.getBody();
     long stopTime = System.currentTimeMillis();
@@ -142,7 +142,7 @@ public class HttpUtil {
   public static String sendPatchRequest(
       String requestURL, String params, Map<String, String> headers) {
     long startTime = System.currentTimeMillis();
-    logger.info(
+    logger.debug(
         "HttpUtil sendPatchRequest method started at =="
             + startTime
             + " for requestURL and params "
@@ -156,7 +156,7 @@ public class HttpUtil {
       if (ResponseCode.OK.getCode() == httpResponse.getStatus()) {
         long stopTime = System.currentTimeMillis();
         long elapsedTime = stopTime - startTime;
-        logger.info(
+        logger.debug(
                 "HttpUtil sendPatchRequest method end at =="
                 + stopTime
                 + " for requestURL "
@@ -167,7 +167,7 @@ public class HttpUtil {
       }
       long stopTime = System.currentTimeMillis();
       long elapsedTime = stopTime - startTime;
-      logger.info(
+      logger.debug(
               "Patch request failure status code =="
               + httpResponse.getStatus()
               + stopTime
@@ -181,7 +181,7 @@ public class HttpUtil {
     }
     long stopTime = System.currentTimeMillis();
     long elapsedTime = stopTime - startTime;
-    logger.info(
+    logger.debug(
         "HttpUtil sendPatchRequest method end at =="
             + stopTime
             + " for requestURL "

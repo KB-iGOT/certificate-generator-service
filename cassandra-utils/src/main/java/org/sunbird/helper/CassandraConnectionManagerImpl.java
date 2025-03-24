@@ -123,7 +123,7 @@ public class CassandraConnectionManagerImpl implements CassandraConnectionManage
         }
         final Metadata metadata = cluster.getMetadata();
         String msg = String.format("Connected to cluster: %s", metadata.getClusterName());
-        logger.info(msg);
+        logger.debug(msg);
 
         for (final Host host : metadata.getAllHosts()) {
           msg =
