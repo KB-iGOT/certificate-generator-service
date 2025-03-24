@@ -50,7 +50,7 @@ public class CertBackgroundActor extends BaseActor {
         boolean isEvent = (boolean) request.getRequest().get(JsonKeys.IS_EVENT);
         CertificateExtension certificateExtension = (CertificateExtension) request.getRequest().get(JsonKeys.CERTIFICATE_EXTENSION);
         CertModel certModel = (CertModel) request.getRequest().get(JsonKeys.CERT_MODEL);
-        String accessCode = (String) request.getRequest().get(JsonKeys.UUID);
+        String accessCode = (String) request.getRequest().get(JsonKeys.ACCESS_CODE);
         List<Map<String, Object>> issuedCertificateList = (List<Map<String, Object>>) request.getRequest().get(JsonKeys.USER_CERTICATE_LIST);
         Map<String, Object> courseRelatedInfo = new HashMap<>();
         courseRelatedInfo.put(JsonKeys.COURSE_ID, courseId);
