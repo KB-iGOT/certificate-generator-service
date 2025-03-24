@@ -24,8 +24,8 @@ public class CertRegistryHelper {
 
     private static final CassandraOperation cassandraOperation = ServiceFactory.getInstance();
     private static final RedisCacheUtil contentCache = new RedisCacheUtil();
-    private static ObjectMapper mapper = new ObjectMapper();
-    private static PropertiesCache propertiesCache = PropertiesCache.getInstance();
+    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final PropertiesCache propertiesCache = PropertiesCache.getInstance();
 
     static {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
