@@ -105,7 +105,7 @@ public class CertBackgroundActor extends BaseActor {
             requestMap.put(JsonKeys.ACCESS_CODE, accessCode);
             requestMap.put(JsonKeys.RECIPIENT_NAME, certModel.getRecipientName());
             requestMap.put(JsonKeys.RECIPIENT_ID, certModel.getIdentifier());
-            requestMap.put(JsonKeys.DYNAMIC_GENERATION, true);
+            requestMap.put(JsonKeys.DYNAMIC_GENERATION, "true");
             requestMap.put(JsonKeys.RELATED, courseRelatedInfo);
 
             Map<String, Object> addReq = new HashMap<>();
