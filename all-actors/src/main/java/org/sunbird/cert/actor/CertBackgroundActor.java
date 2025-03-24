@@ -40,35 +40,40 @@ public class CertBackgroundActor extends BaseActor {
         }
     }
 
-    private void addToRegistryAndUpdateCassandraRecord(Request request) throws BaseException {
-        logger.debug("The request is for backgroundActor : " + request.getRequest());
+    private void addToRegistryAndUpdateCassandraRecord(Request request) {
         String courseId = (String) request.getRequest().get(JsonKeys.COURSE_ID);
         String batchId = (String) request.getRequest().get(JsonKeys.BATCH_ID);
         String userId = (String) request.getRequest().get(JsonKeys.USER_ID);
-        Map<String, Object> certificateTemplate = (Map<String,Object>) request.getRequest().get(JsonKeys.CERTIFICATE);
-        String uuid = (String) request.getRequest().get(JsonKeys.UUID);
-        boolean isEvent = (boolean) request.getRequest().get(JsonKeys.IS_EVENT);
-        CertificateExtension certificateExtension = (CertificateExtension) request.getRequest().get(JsonKeys.CERTIFICATE_EXTENSION);
-        CertModel certModel = (CertModel) request.getRequest().get(JsonKeys.CERT_MODEL);
-        String accessCode = (String) request.getRequest().get(JsonKeys.ACCESS_CODE);
-        List<Map<String, Object>> issuedCertificateList = (List<Map<String, Object>>) request.getRequest().get(JsonKeys.USER_CERTICATE_LIST);
-        Map<String, Object> courseRelatedInfo = new HashMap<>();
-        courseRelatedInfo.put(JsonKeys.COURSE_ID, courseId);
-        courseRelatedInfo.put(JsonKeys.BATCH_ID, batchId);
-        courseRelatedInfo.put(JsonKeys.TYPE, certificateTemplate.get(JsonKeys.NAME));
-        Map<String,Object> certificateRegistryResponse = addCertificateToRegistry(uuid, certificateExtension, certModel, courseRelatedInfo, accessCode);
-        if (MapUtils.isNotEmpty(certificateRegistryResponse)) {
-            Map<String, Object> certificateMap = new HashMap<>();
-            certificateMap.put(JsonKeys.IDENTIFIER, uuid);
-            certificateMap.put(JsonKeys.LAST_ISSUED_ON, formatter.format(new Date()));
-            certificateMap.put(JsonKeys.TOKEN, accessCode);
-            certificateMap.put(JsonKeys.NAME, certificateTemplate.get(JsonKeys.NAME));
-            certificateMap.put(JsonKeys.VERSION, JsonKeys.VERSION_2);
-            issuedCertificateList.add(certificateMap);
-            updateUserEnrolmentRecord(userId, courseId, batchId, issuedCertificateList, isEvent);
-        } else {
-            logger.error("Issue while adding the registry for request: " + request);
+        try {
+            logger.debug("The request is for backgroundActor : " + request.getRequest());
+            Map<String, Object> certificateTemplate = (Map<String,Object>) request.getRequest().get(JsonKeys.CERTIFICATE);
+            String uuid = (String) request.getRequest().get(JsonKeys.UUID);
+            boolean isEvent = (boolean) request.getRequest().get(JsonKeys.IS_EVENT);
+            CertificateExtension certificateExtension = (CertificateExtension) request.getRequest().get(JsonKeys.CERTIFICATE_EXTENSION);
+            CertModel certModel = (CertModel) request.getRequest().get(JsonKeys.CERT_MODEL);
+            String accessCode = (String) request.getRequest().get(JsonKeys.ACCESS_CODE);
+            List<Map<String, Object>> issuedCertificateList = (List<Map<String, Object>>) request.getRequest().get(JsonKeys.USER_CERTICATE_LIST);
+            Map<String, Object> courseRelatedInfo = new HashMap<>();
+            courseRelatedInfo.put(JsonKeys.COURSE_ID, courseId);
+            courseRelatedInfo.put(JsonKeys.BATCH_ID, batchId);
+            courseRelatedInfo.put(JsonKeys.TYPE, certificateTemplate.get(JsonKeys.NAME));
+            Map<String,Object> certificateRegistryResponse = addCertificateToRegistry(uuid, certificateExtension, certModel, courseRelatedInfo, accessCode);
+            if (MapUtils.isNotEmpty(certificateRegistryResponse)) {
+                Map<String, Object> certificateMap = new HashMap<>();
+                certificateMap.put(JsonKeys.IDENTIFIER, uuid);
+                certificateMap.put(JsonKeys.LAST_ISSUED_ON, formatter.format(new Date()));
+                certificateMap.put(JsonKeys.TOKEN, accessCode);
+                certificateMap.put(JsonKeys.NAME, certificateTemplate.get(JsonKeys.NAME));
+                certificateMap.put(JsonKeys.VERSION, JsonKeys.VERSION_2);
+                issuedCertificateList.add(certificateMap);
+                updateUserEnrolmentRecord(userId, courseId, batchId, issuedCertificateList, isEvent);
+            } else {
+                logger.error("Issue while adding the registry for request for userId: " + userId + " courseId: " + courseId + " batchId: " + batchId);
+            }
+        } catch (Exception ex) {
+            logger.error("Issue while adding the registry for request for userId: " + userId + " courseId: " + courseId + " batchId: " + batchId , ex);
         }
+
 
     }
 
