@@ -13,7 +13,6 @@ import org.sunbird.cassandra.CassandraOperation;
 import org.sunbird.helper.ServiceFactory;
 import org.sunbird.response.Response;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
