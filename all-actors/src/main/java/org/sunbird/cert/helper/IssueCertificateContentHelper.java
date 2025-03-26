@@ -289,7 +289,7 @@ public class IssueCertificateContentHelper {
         String firstName = (String) userDetails.getOrDefault("firstName", "");
         String lastName = (String) userDetails.getOrDefault("lastName", "");
 
-        String recipientName = firstName + " " + lastName;
+        String recipientName = StringUtils.isNotBlank(lastName) ? firstName + " " + lastName : firstName;
         recipientName = recipientName.trim();
 
         Map<String, Object> courseInfo = getCourseInfo((String) requestMap.get(JsonKeys.COURSE_ID));
