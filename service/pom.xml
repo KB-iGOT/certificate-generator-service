@@ -91,18 +91,6 @@
             <version>1.2.3</version>
         </dependency>
 
-       <!-- <dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>typography</artifactId>
-            <version>2.0.4</version>
-            <optional>true</optional>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.itextpdf</groupId>
-                    <artifactId>io</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>-->
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-module-junit4</artifactId>
@@ -117,7 +105,7 @@
         </dependency>
         <dependency>
             <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito</artifactId>
+            <artifactId>powermock-api-mockito2</artifactId>
             <version>${powermock.version}</version>
             <scope>test</scope>
         </dependency>
@@ -170,7 +158,6 @@
                 <version>1.0.0-rc5</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <!-- if using controllers without dependency injection; default value is "injected" -->
                     <routesGenerator>static</routesGenerator>
                 </configuration>
             </plugin>
@@ -182,9 +169,15 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.11.0</version>
                 <configuration>
-                    <release>11</release>
+                    <compilerArgs>
+                        <arg>--add-opens</arg>
+                        <arg>java.base/java.lang=ALL-UNNAMED</arg>
+                        <arg>--add-opens</arg>
+                        <arg>java.base/java.net=ALL-UNNAMED</arg>
+                    </compilerArgs>
+                    <release>17</release>
                 </configuration>
             </plugin>
             <plugin>
@@ -247,21 +240,5 @@
             <name>iText Repository - releases</name>
             <url>https://repo.itextsupport.com/releases</url>
         </repository>
-    </repositories>    <!--<repositories>-->
-        <!--<repository>-->
-            <!--<id>scalaz-bintray</id>-->
-            <!--<name>Scalaz Bintray - releases</name>-->
-            <!--<url>https://dl.bintray.com/scalaz/releases/</url>-->
-            <!--<snapshots>-->
-                <!--<enabled>false</enabled>-->
-            <!--</snapshots>-->
-        <!--</repository>-->
-        <!--<repository>-->
-            <!--<id>jitpack.io</id>-->
-            <!--<snapshots>-->
-                <!--<enabled>false</enabled>-->
-            <!--</snapshots>-->
-            <!--<url>https://jitpack.io</url>-->
-        <!--</repository>-->
-    <!--</repositories>-->
+    </repositories>
 </project>

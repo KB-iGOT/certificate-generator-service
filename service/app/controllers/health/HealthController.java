@@ -42,7 +42,13 @@ public class HealthController extends BaseController {
   @Inject
   SignalHandler signalHandler;
 
-  /**
+  private final Http.Request request;
+
+    public HealthController(Http.Request request) {
+        this.request = request;
+    }
+
+    /**
    * This action method is responsible for checking complete service and dependency Health.
    *
    * @return a CompletableFuture of success response
@@ -51,10 +57,10 @@ public class HealthController extends BaseController {
     try {
       handleSigTerm();
       logger.info("complete health method called.");
-      CompletionStage<Result> response = handleRequest(healthActorRef, request(), null, HEALTH_ACTOR_OPERATION_NAME);
+      CompletionStage<Result> response = handleRequest(healthActorRef, request, null, HEALTH_ACTOR_OPERATION_NAME);
       return response;
     }  catch (Exception e) {
-      return CompletableFuture.completedFuture(RequestHandler.handleFailureResponse(e,request()));
+      return CompletableFuture.completedFuture(RequestHandler.handleFailureResponse(e,request));
     }
   }
 
@@ -74,7 +80,7 @@ public class HealthController extends BaseController {
               ? cf.thenApplyAsync(Results::ok)
               : cf.thenApplyAsync(Results::badRequest);
     } catch (Exception e) {
-      return CompletableFuture.completedFuture(RequestHandler.handleFailureResponse(e,request()));
+      return CompletableFuture.completedFuture(RequestHandler.handleFailureResponse(e,request));
     }
   }
 
@@ -102,7 +108,7 @@ public class HealthController extends BaseController {
       cf.complete(Json.toJson(response));
       return  cf.thenApplyAsync(Results::ok);
     }  catch (Exception e) {
-      return CompletableFuture.completedFuture(RequestHandler.handleFailureResponse(e,request()));
+      return CompletableFuture.completedFuture(RequestHandler.handleFailureResponse(e,request));
     }
   }
 }

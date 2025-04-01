@@ -5,14 +5,14 @@
 	<version>1.0-SNAPSHOT</version>
 	<name>Cassandra Utils</name>
 	<parent>
-		<artifactId>certificate-generator-service</artifactId>
 		<groupId>org.sunbird</groupId>
+		<artifactId>certificate-generator-service</artifactId>
 		<version>1.2.0</version>
 	</parent>
 	<properties>
 		<version.compiler.plugin>2.3.1</version.compiler.plugin>
-		<maven.compiler.target>1.8</maven.compiler.target>
-		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+		<maven.compiler.source>17</maven.compiler.source>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<scoverage.plugin.version>1.1.1</scoverage.plugin.version>
@@ -91,7 +91,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.powermock</groupId>
-			<artifactId>powermock-api-mockito</artifactId>
+			<artifactId>powermock-api-mockito2</artifactId>
 			<version>${powermock.version}</version>
 			<scope>test</scope>
 		</dependency>
@@ -111,10 +111,14 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>2.3.2</version>
+					<version>3.10.1</version>
 					<configuration>
-						<source>1.8</source>
-						<target>1.8</target>
+						<source>17</source>
+						<target>17</target>
+						<compilerArgs>
+							<arg>--add-opens</arg>
+							<arg>java.base/java.lang=ALL-UNNAMED</arg>
+						</compilerArgs>
 					</configuration>
 				</plugin>
 				<plugin>

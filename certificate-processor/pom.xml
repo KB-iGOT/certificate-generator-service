@@ -45,7 +45,6 @@
         <url>https://github.com/project-sunbird/cert-service/tree/master</url>
     </scm>
     <properties>
-        <powermock.version>1.7.4</powermock.version>
     </properties>
     <dependencies>
         <dependency>
@@ -61,8 +60,8 @@
         </dependency>
         <dependency>
             <groupId>net.karmayogibharat</groupId>
-            <artifactId>cloud-store-sdk_2.11</artifactId>
-            <version>1.4.6</version>
+            <artifactId>cloud-store-sdk_2.12</artifactId>
+            <version>1.4.8</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -80,7 +79,7 @@
 
         <dependency>
             <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito</artifactId>
+            <artifactId>powermock-api-mockito2</artifactId>
             <version>${powermock.version}</version>
             <!--<scope>test</scope>-->
         </dependency>
@@ -119,9 +118,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.10.1</version>
                 <configuration>
-                    <release>11</release>
+                    <release>17</release>
+                    <compilerArgs>
+                        <arg>--add-opens</arg>
+                        <arg>java.base/java.lang=ALL-UNNAMED</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
 
