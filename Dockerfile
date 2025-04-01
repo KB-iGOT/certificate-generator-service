@@ -1,4 +1,5 @@
-FROM sunbird/openjdk-java11-alpine:latest
+#FROM sunbird/openjdk-java11-alpine:latest
+FROM openjdk:17-slim
 MAINTAINER "S M Y ALTAMASH <smy.altamash@gmail.com>"
 RUN apk update \
     && apk add  unzip \
