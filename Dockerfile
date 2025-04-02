@@ -1,14 +1,14 @@
 #FROM sunbird/openjdk-java11-alpine:latest
 FROM openjdk:17-slim
 MAINTAINER "S M Y ALTAMASH <smy.altamash@gmail.com>"
-RUN apk update \
-    && apk add  unzip \
-    && apk add curl \
-    && adduser -u 1001 -h /home/sunbird/ -D sunbird \
-    && apk --no-cache add chromium \
+RUN apt update \
+    && apt install -y unzip curl chromium-browser \
+    && adduser --uid 1001 --home /home/sunbird/ --disabled-login --gecos "" sunbird \
     && mkdir -p /home/sunbird/
-RUN apk add font-noto-gujarati font-noto-kannada font-noto-avestan font-noto-osage font-noto-kayahli font-noto-oriya font-noto-telugu font-noto-tamil font-noto-bengali font-noto-malayalam font-noto-arabic font-noto-extra \
+RUN apt update \
+    && apt install -y fonts-noto-core fonts-noto-cjk fonts-noto-color-emoji fonts-noto-extra \
     && fc-cache -f
+
 ADD ./certificate-service-1.2.0-dist.zip /home/sunbird/
 RUN unzip /home/sunbird/certificate-service-1.2.0-dist.zip -d /home/sunbird/
 RUN chown -R sunbird:sunbird /home/sunbird
