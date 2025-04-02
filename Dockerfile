@@ -2,7 +2,7 @@
 FROM openjdk:17-slim
 MAINTAINER "S M Y ALTAMASH <smy.altamash@gmail.com>"
 RUN apt update \
-    && apt install -y unzip curl chromium-browser \
+    && apt install -y unzip curl \
     && adduser --uid 1001 --home /home/sunbird/ --disabled-login --gecos "" sunbird \
     && mkdir -p /home/sunbird/
 RUN apt update \
