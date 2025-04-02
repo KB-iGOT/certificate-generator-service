@@ -4,6 +4,7 @@ package org.sunbird.incredible.processor.signature;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.ws.rs.core.MediaType;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -11,15 +12,14 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.sunbird.incredible.processor.JsonKey;
-import org.sunbird.incredible.processor.signature.exceptions.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sunbird.incredible.processor.JsonKey;
+import org.sunbird.incredible.processor.signature.exceptions.SignatureException;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import javax.ws.rs.core.MediaType;
 
 
 public class SignatureHelper {

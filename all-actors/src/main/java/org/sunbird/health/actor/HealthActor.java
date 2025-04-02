@@ -38,31 +38,42 @@ public class HealthActor extends BaseActor{
 		sender().tell(response, getSelf());
 	}
 
-	private void cassandraHealthStatus(Response response) throws Exception {
+	private void cassandraHealthStatus(Response response) {
 		Map<String, Object> result = new HashMap<>();
-		result.put(JsonKeys.NAME, JsonKeys.CASSANDRA_DB);
-		Boolean res = true;
-		Response cassandraQueryResponse = cassandraOperation.getRecordsByProperties(
-				JsonKeys.SUNBIRD, JsonKeys.TABLE_SYSTEM_SETTINGS, null, null);
-		if (cassandraQueryResponse.getResponseCode().getCode() != ResponseCode.OK.getCode()
-				&& MapUtils.isNotEmpty(cassandraQueryResponse.getResult())) {
-			res = false;
-			response.put(JsonKeys.HEALTHY, res);
+		try {
+			result.put(JsonKeys.NAME, JsonKeys.CASSANDRA_DB);
+			Boolean res = true;
+			Response cassandraQueryResponse = cassandraOperation.getRecordsByProperties(
+					JsonKeys.SUNBIRD, JsonKeys.TABLE_SYSTEM_SETTINGS, null, null);
+			if (cassandraQueryResponse.getResponseCode().getCode() != ResponseCode.OK.getCode()
+					&& MapUtils.isNotEmpty(cassandraQueryResponse.getResult())) {
+				res = false;
+				response.put(JsonKeys.HEALTHY, res);
+			}
+			result.put(JsonKeys.HEALTHY, res);
+		} catch (Exception e) {
+			result.put(JsonKeys.HEALTHY, false);
+			response.put(JsonKeys.HEALTHY, false);
 		}
-		result.put(JsonKeys.HEALTHY, res);
+
 		((List<Map<String, Object>>) response.get(JsonKeys.CHECKS)).add(result);
 	}
 
-	private void redisHealthStatus(Response response) throws Exception {
+	private void redisHealthStatus(Response response) {
 		Map<String, Object> result = new HashMap<>();
-		result.put(JsonKeys.NAME, JsonKeys.REDIS_CACHE);
-		Boolean res = true;
-		Set<String> redisResponse = contentCache.getAllKeys();
-		if (redisResponse == null || redisResponse.isEmpty()) {
-			res = false;
-			response.put(JsonKeys.HEALTHY, res);
+		try {
+			result.put(JsonKeys.NAME, JsonKeys.REDIS_CACHE);
+			Boolean res = true;
+			Set<String> redisResponse = contentCache.getAllKeys();
+			if (redisResponse == null || redisResponse.isEmpty()) {
+				res = false;
+				response.put(JsonKeys.HEALTHY, res);
+			}
+			result.put(JsonKeys.HEALTHY, res);
+		} catch (Exception e) {
+			result.put(JsonKeys.HEALTHY, false);
+			response.put(JsonKeys.HEALTHY, false);
 		}
-		result.put(JsonKeys.HEALTHY, res);
 		((List<Map<String, Object>>) response.get(JsonKeys.CHECKS)).add(result);
 	}
 

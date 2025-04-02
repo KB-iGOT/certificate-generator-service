@@ -1,11 +1,11 @@
 package org.sunbird.incredible.processor.store;
 
+import jakarta.ws.rs.HttpMethod;
 import org.apache.commons.io.FileUtils;
 import org.sunbird.incredible.processor.JsonKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.HttpMethod;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
