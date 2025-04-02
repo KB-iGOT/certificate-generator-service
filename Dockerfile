@@ -6,8 +6,7 @@ RUN apt update \
     && adduser --uid 1001 --home /home/sunbird/ --disabled-login --gecos "" sunbird \
     && mkdir -p /home/sunbird/
 RUN apt update \
-    && apt install -y fonts-noto-core fonts-noto-cjk fonts-noto-color-emoji fonts-noto-extra \
-    && fc-cache -f
+    && apt install -y fonts-noto-core fonts-noto-cjk fonts-noto-color-emoji fonts-noto-extra
 
 ADD ./certificate-service-1.2.0-dist.zip /home/sunbird/
 RUN unzip /home/sunbird/certificate-service-1.2.0-dist.zip -d /home/sunbird/
