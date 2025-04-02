@@ -25,6 +25,7 @@ node('build-slave') {
                     env.NODE_ENV = "build"
                     print "Environment will be : ${env.NODE_ENV}"
                     sh 'git log -1'
+                    sh 'export MAVEN_OPTS="--add-opens java.base/java.lang=ALL-UNNAMED"'
                     sh 'mvn clean install -DskipTests=true '
 
                 }
