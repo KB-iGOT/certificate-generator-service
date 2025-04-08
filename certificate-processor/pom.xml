@@ -246,11 +246,19 @@
                             <artifactSet>
                                 <includes>
                                     <include>net.karmayogibharat:cloud-store-sdk_2.12</include>
+                                    <include>com.google.inject:guice</include>
+                                    <include>org.apache.tika:tika-core</include>
                                 </includes>
                             </artifactSet>
                             <filters>
                                 <filter>
                                     <artifact>net.karmayogibharat:cloud-store-sdk_2.12</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.tika:tika-core</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
