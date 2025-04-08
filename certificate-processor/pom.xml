@@ -246,8 +246,18 @@
                             <artifactSet>
                                 <includes>
                                     <include>net.karmayogibharat:cloud-store-sdk_2.12</include>
-                                    <include>com.google.inject:guice</include>
-                                    <include>org.apache.tika:tika-core</include>
+                                    <include>org.apache.tika:*</include>           <!-- Tika -->
+                                    <include>org.apache.jclouds:*</include>        <!-- JClouds -->
+                                    <include>com.google.guava:*</include>          <!-- Guava -->
+                                    <include>com.fasterxml.jackson.core:*</include> <!-- Jackson -->
+                                    <include>javax.activation:*</include>          <!-- Activation -->
+                                    <include>javax.xml.bind:*</include>            <!-- JAXB -->
+                                    <include>jakarta.xml.bind:*</include>          <!-- Jakarta JAXB -->
+                                    <include>com.sun.activation:*</include>        <!-- Sun Activation -->
+                                    <include>org.glassfish.jaxb:*</include>        <!-- Glassfish JAXB -->
+                                    <include>com.sun.istack:*</include>            <!-- iStack -->
+                                    <include>org.jvnet.staxex:*</include>          <!-- StaxEx -->
+                                    <include>com.sun.xml.fastinfoset:*</include>
                                 </includes>
                             </artifactSet>
                             <filters>
@@ -258,7 +268,25 @@
                                     </includes>
                                 </filter>
                                 <filter>
-                                    <artifact>org.apache.tika:tika-core</artifact>
+                                    <artifact>org.apache.tika:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.google.guava:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.fasterxml.jackson.core:*</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
