@@ -245,20 +245,52 @@
                             </relocations>
                             <artifactSet>
                                 <includes>
+                                    <!-- Core SDK and its direct dependencies -->
                                     <include>net.karmayogibharat:cloud-store-sdk_2.12</include>
-                                    <include>org.apache.tika:*</include>           <!-- Tika -->
-                                    <include>org.apache.jclouds:*</include>        <!-- JClouds -->
-                                    <include>com.google.guava:*</include>          <!-- Guava -->
-                                    <include>com.fasterxml.jackson.core:*</include> <!-- Jackson -->
-                                    <include>javax.activation:*</include>          <!-- Activation -->
-                                    <include>javax.xml.bind:*</include>            <!-- JAXB -->
-                                    <include>jakarta.xml.bind:*</include>          <!-- Jakarta JAXB -->
-                                    <include>com.sun.activation:*</include>        <!-- Sun Activation -->
-                                    <include>org.glassfish.jaxb:*</include>        <!-- Glassfish JAXB -->
-                                    <include>com.sun.istack:*</include>            <!-- iStack -->
-                                    <include>org.jvnet.staxex:*</include>          <!-- StaxEx -->
-                                    <include>com.sun.xml.fastinfoset:*</include>
+                                    <include>com.google.inject:guice</include> <!-- Guice 7.0.0 for shading -->
+                                    <include>org.apache.tika:tika-core</include>
+                                    <!-- JClouds core modules needed by GcloudStorageService -->
+                                    <include>org.apache.jclouds:jclouds-core</include>
+                                    <include>org.apache.jclouds:jclouds-blobstore</include>
+                                    <include>org.apache.jclouds:jclouds-allblobstore</include>
+                                    <include>org.apache.jclouds:jclouds-compute</include>
+                                    <include>org.apache.jclouds:jclouds-allcompute</include>
+                                    <include>org.apache.jclouds:jclouds-loadbalancer</include>
+                                    <include>org.apache.jclouds:jclouds-allloadbalancer</include>
+                                    <include>org.apache.jclouds:jclouds-scriptbuilder</include>
+                                    <include>org.apache.jclouds:jclouds-all</include>
+                                    <!-- Jackson dependencies -->
+                                    <include>com.fasterxml.jackson.core:jackson-databind</include>
+                                    <include>com.fasterxml.jackson.core:jackson-annotations</include>
+                                    <include>com.fasterxml.jackson.core:jackson-core</include>
+                                    <!-- Guava dependencies -->
+                                    <include>com.google.guava:guava</include>
+                                    <include>com.google.guava:failureaccess</include>
+                                    <include>com.google.guava:listenablefuture</include>
+                                    <!-- JAXB and Activation dependencies -->
+                                    <include>javax.activation:activation</include>
+                                    <include>javax.xml.bind:jaxb-api</include>
+                                    <include>javax.activation:javax.activation-api</include>
+                                    <include>jakarta.xml.bind:jakarta.xml.bind-api</include>
+                                    <include>com.sun.activation:jakarta.activation</include>
+                                    <include>org.glassfish.jaxb:jaxb-runtime</include>
+                                    <include>org.glassfish.jaxb:txw2</include>
+                                    <include>com.sun.istack:istack-commons-runtime</include>
+                                    <include>org.jvnet.staxex:stax-ex</include>
+                                    <include>com.sun.xml.fastinfoset:FastInfoset</include>
                                 </includes>
+                                <excludes>
+                                    <!-- Exclude app-specific dependencies to avoid conflicts -->
+                                    <exclude>com.typesafe.play:*</exclude>
+                                    <exclude>org.scala-lang:*</exclude>
+                                    <exclude>akka:*</exclude>
+                                    <!-- Exclude unnecessary jclouds providers unless needed -->
+                                    <exclude>org.apache.jclouds.provider:*</exclude>
+                                    <exclude>org.apache.jclouds.api:*</exclude> <!-- Exclude APIs not directly used -->
+                                    <exclude>org.apache.velocity:*</exclude>
+                                    <exclude>commons-*:*</exclude>
+                                    <exclude>org.slf4j:*</exclude>
+                                </excludes>
                             </artifactSet>
                             <filters>
                                 <filter>
@@ -268,13 +300,67 @@
                                     </includes>
                                 </filter>
                                 <filter>
-                                    <artifact>org.apache.tika:*</artifact>
+                                    <artifact>org.apache.tika:tika-core</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
                                 </filter>
                                 <filter>
-                                    <artifact>org.apache.jclouds:*</artifact>
+                                    <artifact>org.apache.jclouds:jclouds-core</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-blobstore</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-allblobstore</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-compute</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-allcompute</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-loadbalancer</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-allloadbalancer</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-scriptbuilder</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-all</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.fasterxml.jackson.core:*</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
@@ -286,14 +372,56 @@
                                     </includes>
                                 </filter>
                                 <filter>
-                                    <artifact>com.fasterxml.jackson.core:*</artifact>
+                                    <artifact>javax.activation:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>javax.xml.bind:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>jakarta.xml.bind:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.sun.activation:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.glassfish.jaxb:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.sun.istack:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.jvnet.staxex:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.sun.xml.fastinfoset:*</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
                                 </filter>
                             </filters>
-                            <!-- optional -->
-                            <minimizeJar>true</minimizeJar>
+                            <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
+                            <minimizeJar>false</minimizeJar>
                         </configuration>
                     </execution>
                 </executions>
