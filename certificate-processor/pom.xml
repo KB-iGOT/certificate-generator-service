@@ -245,87 +245,163 @@
                             </relocations>
                             <artifactSet>
                                 <includes>
-                                    <!-- Core SDK -->
                                     <include>net.karmayogibharat:cloud-store-sdk_2.12</include>
-                                    <!-- Guice for shading -->
-                                    <include>com.google.inject:guice</include>
-                                    <include>com.google.inject.extensions:guice-assistedinject</include>
-                                    <include>aopalliance:aopalliance</include>
-                                    <!-- Tika -->
-                                    <include>org.apache.tika:tika-core</include>
-                                    <!-- JClouds core and commonly used modules -->
-                                    <include>org.apache.jclouds:jclouds-core</include>
-                                    <include>org.apache.jclouds:jclouds-blobstore</include>
-                                    <include>org.apache.jclouds:jclouds-allblobstore</include>
-                                    <include>org.apache.jclouds:jclouds-compute</include>
-                                    <include>org.apache.jclouds:jclouds-allcompute</include>
-                                    <include>org.apache.jclouds:jclouds-loadbalancer</include>
-                                    <include>org.apache.jclouds:jclouds-allloadbalancer</include>
-                                    <include>org.apache.jclouds:jclouds-scriptbuilder</include>
-                                    <include>org.apache.jclouds:jclouds-all</include>
-                                    <!-- JClouds APIs and providers potentially used by GcloudStorageService -->
-                                    <include>org.apache.jclouds.api:googlecloud</include>
-                                    <include>org.apache.jclouds.provider:google-cloud-storage</include>
-                                    <include>org.apache.jclouds.api:s3</include>
-                                    <include>org.apache.jclouds.provider:aws-s3</include>
-                                    <include>org.apache.jclouds.api:openstack-swift</include>
-                                    <!-- Jackson -->
-                                    <include>com.fasterxml.jackson.core:jackson-databind</include>
-                                    <include>com.fasterxml.jackson.core:jackson-annotations</include>
-                                    <include>com.fasterxml.jackson.core:jackson-core</include>
-                                    <include>com.fasterxml.jackson.module:jackson-module-scala_2.12</include>
-                                    <!-- Guava -->
-                                    <include>com.google.guava:guava</include>
-                                    <include>com.google.guava:failureaccess</include>
-                                    <include>com.google.guava:listenablefuture</include>
-                                    <include>com.google.code.findbugs:jsr305</include>
-                                    <include>org.checkerframework:checker-qual</include>
-                                    <include>com.google.errorprone:error_prone_annotations</include>
-                                    <include>com.google.j2objc:j2objc-annotations</include>
-                                    <!-- JAXB and Activation -->
-                                    <include>javax.activation:activation</include>
-                                    <include>javax.xml.bind:jaxb-api</include>
-                                    <include>javax.activation:javax.activation-api</include>
-                                    <include>jakarta.xml.bind:jakarta.xml.bind-api</include>
-                                    <include>com.sun.activation:jakarta.activation</include>
-                                    <include>org.glassfish.jaxb:jaxb-runtime</include>
-                                    <include>org.glassfish.jaxb:txw2</include>
-                                    <include>com.sun.istack:istack-commons-runtime</include>
-                                    <include>org.jvnet.staxex:stax-ex</include>
-                                    <include>com.sun.xml.fastinfoset:FastInfoset</include>
-                                    <include>com.sun.xml.bind:jaxb-impl</include>
-                                    <!-- Other common utilities -->
-                                    <include>com.google.code.gson:gson</include>
-                                    <include>org.apache.commons:commons-lang3</include>
-                                    <include>commons-io:commons-io</include>
-                                    <include>commons-codec:commons-codec</include>
-                                    <include>org.apache.httpcomponents:httpclient</include>
-                                    <include>org.apache.httpcomponents:httpcore</include>
-                                    <include>joda-time:joda-time</include>
+                                    <include>com.google.inject:*</include>
+                                    <include>org.apache.tika:*</include>
+                                    <include>org.apache.jclouds:*</include> <!-- Covers all jclouds modules -->
+                                    <include>org.apache.jclouds.provider:*</include> <!-- All providers -->
+                                    <include>org.apache.jclouds.api:*</include> <!-- All APIs -->
+                                    <include>com.fasterxml.jackson.core:*</include>
+                                    <include>com.google.guava:*</include>
+                                    <include>javax.activation:*</include>
+                                    <include>javax.xml.bind:*</include>
+                                    <include>jakarta.xml.bind:*</include>
+                                    <include>com.sun.activation:*</include>
+                                    <include>org.glassfish.jaxb:*</include>
+                                    <include>com.sun.istack:*</include>
+                                    <include>org.jvnet.staxex:*</include>
+                                    <include>com.sun.xml.fastinfoset:*</include>
+                                    <include>org.apache.velocity:*</include>
+                                    <include>commons-*:*</include>
                                 </includes>
                                 <excludes>
-                                    <!-- Exclude only app-specific conflicting dependencies -->
+                                    <!-- Exclude app-specific dependencies to avoid conflicts -->
                                     <exclude>com.typesafe.play:*</exclude>
                                     <exclude>org.scala-lang:*</exclude>
                                     <exclude>akka:*</exclude>
-                                    <!-- Exclude test and unrelated dependencies -->
-                                    <exclude>junit:*</exclude>
-                                    <exclude>org.powermock:*</exclude>
-                                    <exclude>org.mockito:*</exclude>
-                                    <exclude>org.hamcrest:*</exclude>
-                                    <exclude>org.objenesis:*</exclude>
+                                    <!-- Exclude unnecessary jclouds providers unless needed -->
+                                    <exclude>org.slf4j:*</exclude>
                                 </excludes>
                             </artifactSet>
                             <filters>
                                 <filter>
-                                    <artifact>*:*</artifact>
+                                    <artifact>net.karmayogibharat:cloud-store-sdk_2.12</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.tika:tika-core</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-core</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-blobstore</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-allblobstore</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-compute</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-allcompute</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-loadbalancer</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-allloadbalancer</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-scriptbuilder</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.apache.jclouds:jclouds-all</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.fasterxml.jackson.core:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.google.guava:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>javax.activation:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>javax.xml.bind:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>jakarta.xml.bind:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.sun.activation:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.glassfish.jaxb:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.sun.istack:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.jvnet.staxex:*</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.sun.xml.fastinfoset:*</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
                                 </filter>
                             </filters>
                             <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
-                            <!-- Disable minimization for full inclusion -->
                             <minimizeJar>false</minimizeJar>
                         </configuration>
                     </execution>
