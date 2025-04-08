@@ -242,14 +242,6 @@
                                     <pattern>com.google.inject</pattern>
                                     <shadedPattern>shaded.cloudsdk.inject</shadedPattern>
                                 </relocation>
-                                <relocation>
-                                    <pattern>org.apache.tika</pattern>
-                                    <shadedPattern>shaded.cloudsdk.tika</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>com.google.common</pattern>
-                                    <shadedPattern>shaded.cloudsdk.common</shadedPattern>
-                                </relocation>
                             </relocations>
                             <artifactSet>
                                 <includes>
