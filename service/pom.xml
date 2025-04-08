@@ -144,7 +144,6 @@
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>5.1.0</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
@@ -287,27 +286,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--<plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.4.1</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <relocations>
-                                <relocation>
-                                    <pattern>com.google.inject</pattern>
-                                    <shadedPattern>shaded.com.google.inject</shadedPattern>
-                                </relocation>
-                            </relocations>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>-->
         </plugins>
     </build>
     <repositories>

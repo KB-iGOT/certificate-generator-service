@@ -139,11 +139,11 @@
                 </configuration>
             </plugin>
 
-            <plugin>
+            <!--<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.2.1</version>
-            </plugin>
+            </plugin>-->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -225,6 +225,33 @@
                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                     <!-- <autoReleaseAfterClose>true</autoReleaseAfterClose> -->
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <relocations>
+                                <relocation>
+                                    <pattern>com.google.inject</pattern>
+                                    <shadedPattern>shaded.cloudsdk.inject</shadedPattern>
+                                </relocation>
+                            </relocations>
+                            <artifactSet>
+                                <includes>
+                                    <!-- Only shade cloud-store-sdk and its transitive deps -->
+                                    <include>net.karmayogibharat:cloud-store-sdk_2.12</include>
+                                </includes>
+                            </artifactSet>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
 
