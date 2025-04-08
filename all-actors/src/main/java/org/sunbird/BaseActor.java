@@ -26,8 +26,9 @@ public abstract class BaseActor extends UntypedAbstractActor {
             Request request = (Request) message;
             Map<String, Object> trace = new HashMap<>();
             if (request.getHeaders().containsKey(JsonKey.REQUEST_MESSAGE_ID)) {
-                ArrayList<String> requestIds =
-                        (ArrayList<String>) request.getHeaders().get(JsonKey.REQUEST_MESSAGE_ID);
+                List<String> requestIds = scala.collection.JavaConverters.seqAsJavaList(
+                        (scala.collection.Seq<String>) request.getHeaders().get(JsonKey.REQUEST_MESSAGE_ID)
+                );
                 trace.put(JsonKey.REQUEST_MESSAGE_ID, requestIds.get(0));
                 logger.setMDC(trace);
                 // set mdc for non actors
