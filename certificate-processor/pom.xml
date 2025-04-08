@@ -253,10 +253,19 @@
                             </relocations>
                             <artifactSet>
                                 <includes>
-                                    <!-- Only shade cloud-store-sdk and its transitive deps -->
                                     <include>net.karmayogibharat:cloud-store-sdk_2.12</include>
                                 </includes>
                             </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>net.karmayogibharat:cloud-store-sdk_2.12</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
+                            </filters>
+                            <!-- optional -->
+                            <minimizeJar>true</minimizeJar>
                         </configuration>
                     </execution>
                 </executions>
