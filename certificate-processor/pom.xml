@@ -263,6 +263,8 @@
                                     <include>com.sun.xml.fastinfoset:*</include>
                                     <include>org.apache.velocity:*</include>
                                     <include>commons-*:*</include>
+                                    <include>org.apache.jclouds.common:*</include>
+                                    <include>org.apache.jclouds.driver:*</include>
                                 </includes>
                                 <excludes>
                                     <!-- Exclude app-specific dependencies to avoid conflicts -->
