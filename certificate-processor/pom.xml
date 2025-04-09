@@ -261,6 +261,9 @@
                                     <include>jakarta.inject:*</include>
                                     <include>jakarta.ws.rs:*</include>
                                     <include>jakarta.annotation:*</include>
+                                    <include>com.google.*:*</include>
+                                    <include>com.google.code.gson:*</include>
+                                    <include>com.google.errorprone:*</include>
                                     <include>com.sun.istack:*</include>
                                     <include>org.jvnet.staxex:*</include>
                                     <include>com.sun.xml.fastinfoset:*</include>
