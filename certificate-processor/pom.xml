@@ -258,6 +258,9 @@
                                     <include>jakarta.xml.bind:*</include>
                                     <include>com.sun.activation:*</include>
                                     <include>org.glassfish.jaxb:*</include>
+                                    <include>jakarta.inject:*</include>
+                                    <include>jakarta.ws.rs:*</include>
+                                    <include>jakarta.annotation:*</include>
                                     <include>com.sun.istack:*</include>
                                     <include>org.jvnet.staxex:*</include>
                                     <include>com.sun.xml.fastinfoset:*</include>
