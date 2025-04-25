@@ -221,7 +221,7 @@ public class QRCodeImageGenerator {
             logger.info("input stream value is not null for fontfile " + fontFile + " " + inputStream);
             basicFont = Font.createFont(Font.TRUETYPE_FONT, inputStream);
         } catch (Exception e) {
-            logger.debug("Exception occurred during font creation " + e);
+            logger.error("Exception occurred during font creation " + e);
         }
         Map<TextAttribute, Object> attributes = new HashMap<TextAttribute, Object>();
         attributes.put(TextAttribute.TRACKING, tracking);
