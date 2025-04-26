@@ -2,7 +2,8 @@
 FROM openjdk:17-slim
 MAINTAINER "S M Y ALTAMASH <smy.altamash@gmail.com>"
 RUN apt update \
-    && apt install -y unzip curl fontconfig ttf-mscorefonts-installer \
+    && apt install -y unzip curl fontconfig \
+    && apt install -y --no-install-recommends fonts-dejavu fonts-liberation \
     && adduser --uid 1001 --home /home/sunbird/ --disabled-login --gecos "" sunbird \
     && mkdir -p /home/sunbird/
 RUN apt update \
