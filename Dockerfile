@@ -8,9 +8,8 @@ RUN apt update \
     && mkdir -p /home/sunbird/
 RUN apt update \
     && apt install -y fonts-noto-core fonts-noto-cjk fonts-noto-color-emoji fonts-noto-extra
-RUN echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections \
-    && apt update \
-    && apt install -y ttf-mscorefonts-installer
+RUN apt update \
+    && apt install -y fonts-dejavu-core fonts-dejavu-extra fonts-liberation
 ADD ./certificate-service-1.2.0-dist.zip /home/sunbird/
 RUN unzip /home/sunbird/certificate-service-1.2.0-dist.zip -d /home/sunbird/
 RUN chown -R sunbird:sunbird /home/sunbird
