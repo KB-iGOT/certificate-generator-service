@@ -2,12 +2,14 @@
 FROM openjdk:17-slim
 MAINTAINER "S M Y ALTAMASH <smy.altamash@gmail.com>"
 RUN apt update \
-    && apt install -y unzip curl \
+    && apt install -y unzip curl fontconfig ttf-mscorefonts-installer \
     && adduser --uid 1001 --home /home/sunbird/ --disabled-login --gecos "" sunbird \
     && mkdir -p /home/sunbird/
 RUN apt update \
     && apt install -y fonts-noto-core fonts-noto-cjk fonts-noto-color-emoji fonts-noto-extra
-
+RUN echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections \
+    && apt update \
+    && apt install -y ttf-mscorefonts-installer
 ADD ./certificate-service-1.2.0-dist.zip /home/sunbird/
 RUN unzip /home/sunbird/certificate-service-1.2.0-dist.zip -d /home/sunbird/
 RUN chown -R sunbird:sunbird /home/sunbird
