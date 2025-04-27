@@ -97,7 +97,8 @@ public class CertificateGenerator {
         QRCodeGenerationModel qrCodeGenerationModel = new QRCodeGenerationModel();
         qrCodeGenerationModel.setText(accessCode);
         qrCodeGenerationModel.setFileName(directory + getUUID(certificateExtension));
-        qrCodeGenerationModel.setData(properties.get(JsonKey.BASE_PATH).concat("/") + getUUID(certificateExtension));
+        qrCodeGenerationModel.setData(properties.get(JsonKey.BASE_PATH).concat("/") + "v2/" + getUUID(certificateExtension));
+        logger.info("QrCodeModel: " + qrCodeGenerationModel.getData());
         QRCodeImageGenerator qrCodeImageGenerator = new QRCodeImageGenerator();
         File qrCodeFile = qrCodeImageGenerator.createQRImages(qrCodeGenerationModel);
 
@@ -114,7 +115,8 @@ public class CertificateGenerator {
         QRCodeGenerationModel qrCodeGenerationModel = new QRCodeGenerationModel();
         qrCodeGenerationModel.setText(accessCode);
         qrCodeGenerationModel.setFileName(directory + getUUID(certificateExtension));
-        qrCodeGenerationModel.setData(properties.get(JsonKey.BASE_PATH).concat("/") + "dynamic/" + getUUID(certificateExtension));
+        qrCodeGenerationModel.setData(properties.get(JsonKey.BASE_PATH).concat("/") + "v2/" + getUUID(certificateExtension));
+        logger.info("QrCodeModel Second Method: " + qrCodeGenerationModel.getData());
         QRCodeImageGenerator qrCodeImageGenerator = new QRCodeImageGenerator();
         File qrCodeFile = qrCodeImageGenerator.createQRImages(qrCodeGenerationModel);
 
