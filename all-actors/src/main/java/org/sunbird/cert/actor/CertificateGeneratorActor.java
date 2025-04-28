@@ -102,7 +102,7 @@ public class CertificateGeneratorActor extends BaseActor {
             String courseId = (String) request.getRequest().get(JsonKeys.COURSE_ID);
             String batchId = (String) request.getRequest().get(JsonKeys.BATCH_ID);
             String userId = (String) request.getRequest().get(JsonKeys.USER_ID);
-            List<String> userToken = scala.collection.JavaConverters.seqAsJavaList(
+            /*List<String> userToken = scala.collection.JavaConverters.seqAsJavaList(
                     (scala.collection.Seq<String>) request.getHeaders().get(JsonKeys.X_AUTHENTICATED_USER_TOKEN)
             );
             String userIdFromToken = AccessTokenValidator.verifyUserToken(userToken.get(0), true);
@@ -114,7 +114,7 @@ public class CertificateGeneratorActor extends BaseActor {
             if (StringUtils.isNotEmpty(userIdFromToken) && !userId.equalsIgnoreCase(userIdFromToken)) {
                 logger.error("generateCertificateV2:Exception Occurred while generating certificate. User token is different from the request UserId" + userId);
                 throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "You are not authorized to get the certificate for other user", ResponseCode.BAD_REQUEST.getCode());
-            }
+            }*/
             Map<String, Object> contentInfo = issueCertificateContentHelper.getCourseInfo(courseId);
             boolean isUserEligibleForCertificate = true;
             boolean isEvent = false;
@@ -200,7 +200,7 @@ public class CertificateGeneratorActor extends BaseActor {
                         }
                         Map<String, Object> qrMap = new HashMap<>();
                         if (MapUtils.isNotEmpty(v2CertificateRegistryMap)) {
-                            qrMap = certificateGenerator.generateQrCodeFromAccessCode((String) qrMap.get(JsonKeys.ACCESS_CODE));
+                            qrMap = certificateGenerator.generateQrCodeFromAccessCode((String) v2CertificateRegistryMap.get(JsonKeys.ACCESS_CODE));
                         } else {
                             qrMap = certificateGenerator.generateQrCode();
                         }
