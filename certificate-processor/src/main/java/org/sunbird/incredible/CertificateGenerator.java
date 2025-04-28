@@ -52,9 +52,9 @@ public class CertificateGenerator {
         this.properties = properties;
     }
 
-    public CertificateExtension getCertificateExtension (CertModel certModel) throws SignatureException.UnreachableException,
+    public CertificateExtension getCertificateExtension (CertModel certModel, String certificateUUID) throws SignatureException.UnreachableException,
             InvalidDateFormatException, SignatureException.CreationException, IOException {
-        this.certificateExtension = certificateFactory.createCertificate(certModel, properties);
+        this.certificateExtension = certificateFactory.createCertificate(certModel, properties, certificateUUID);
         return certificateExtension;
     }
 

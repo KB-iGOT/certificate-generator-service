@@ -37,11 +37,15 @@ public class CertificateFactory {
 
     private ObjectMapper mapper = new ObjectMapper();
 
-    public CertificateExtension createCertificate(CertModel certModel, Map<String, String> properties)
+    public CertificateExtension createCertificate(CertModel certModel, Map<String, String> properties, String certificateUUID)
             throws InvalidDateFormatException, SignatureException.UnreachableException, IOException, SignatureException.CreationException {
 
         String basePath = getDomainUrl(properties);
-        uuid = basePath + "/" + UUID.randomUUID().toString();
+        if (StringUtils.isNotBlank(certificateUUID)) {
+            uuid = basePath + "/" + certificateUUID;
+        } else {
+            uuid = basePath + "/" + UUID.randomUUID().toString();
+        }
         CertificateExtensionBuilder certificateExtensionBuilder = new CertificateExtensionBuilder(properties.get(JsonKey.CONTEXT));
         CompositeIdentityObjectBuilder compositeIdentityObjectBuilder = new CompositeIdentityObjectBuilder(properties.get(JsonKey.CONTEXT));
         BadgeClassBuilder badgeClassBuilder = new BadgeClassBuilder(properties.get(JsonKey.CONTEXT));
