@@ -99,12 +99,17 @@ public class CertificateGeneratorActor extends BaseActor {
     private void generateCertificate(Request request) throws BaseException {
         try {
             logger.info("generateCertificate request received== {}", request.getRequest());
+            logger.info("generateCertificate request received== {}", request.getHeaders());
             String courseId = (String) request.getRequest().get(JsonKeys.COURSE_ID);
             String batchId = (String) request.getRequest().get(JsonKeys.BATCH_ID);
             String userId = (String) request.getRequest().get(JsonKeys.USER_ID);
             List<String> userToken = scala.collection.JavaConverters.seqAsJavaList(
                     (scala.collection.Seq<String>) request.getHeaders().get(JsonKeys.X_AUTHENTICATED_USER_TOKEN)
             );
+            if (CollectionUtils.isEmpty(userToken)) {
+                logger.error("generateCertificateV2:Exception Occurred while generating certificate. User token is not valid" + request.getHeaders());
+                throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "Token is not proper", ResponseCode.BAD_REQUEST.getCode());
+            }
             String userIdFromToken = AccessTokenValidator.verifyUserToken(userToken.get(0), true);
             logger.info("UserId from token:" + userIdFromToken);
             if (StringUtils.isEmpty(userIdFromToken)) {
