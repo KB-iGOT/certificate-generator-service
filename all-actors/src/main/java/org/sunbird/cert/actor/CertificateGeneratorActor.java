@@ -33,6 +33,7 @@ import org.sunbird.request.Request;
 import org.sunbird.request.RequestParams;
 import org.sunbird.response.Response;
 import scala.Option;
+import scala.collection.JavaConverters;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -99,16 +100,17 @@ public class CertificateGeneratorActor extends BaseActor {
     private void generateCertificate(Request request) throws BaseException {
         try {
             logger.info("generateCertificate request received== {}", request.getRequest());
-            logger.info("generateCertificate request received== {}", request.getHeaders());
+            logger.debug("generateCertificate request received== {}", request.getHeaders());
             String courseId = (String) request.getRequest().get(JsonKeys.COURSE_ID);
             String batchId = (String) request.getRequest().get(JsonKeys.BATCH_ID);
             String userId = (String) request.getRequest().get(JsonKeys.USER_ID);
-            List<String> userToken = scala.collection.JavaConverters.seqAsJavaList(
-                    (scala.collection.Seq<String>) request.getHeaders().get(JsonKeys.X_AUTHENTICATED_USER_TOKEN)
-            );
+            List<String> userToken = getHeaderAsList(request , JsonKeys.X_AUTHENTICATED_USER_TOKEN);
             if (CollectionUtils.isEmpty(userToken)) {
-                logger.error("generateCertificateV2:Exception Occurred while generating certificate. User token is not valid" + request.getHeaders());
-                throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "Token is not proper", ResponseCode.BAD_REQUEST.getCode());
+                userToken = getHeaderAsList(request , JsonKeys.X_AUTHENTICATED_USER_TOKEN_CAMEL_CASE);
+                if (CollectionUtils.isEmpty(userToken)) {
+                    logger.error("generateCertificateV2:Exception Occurred while generating certificate. User token is not valid" + request.getHeaders());
+                    throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "Token is not proper", ResponseCode.BAD_REQUEST.getCode());
+                }
             }
             String userIdFromToken = AccessTokenValidator.verifyUserToken(userToken.get(0), true);
             logger.info("UserId from token:" + userIdFromToken);
@@ -339,4 +341,12 @@ public class CertificateGeneratorActor extends BaseActor {
         return null;
     }
 
+    private List<String> getHeaderAsList(Request request, String headerKey) {
+        Option<scala.collection.Seq<String>> optionSeq = (Option<scala.collection.Seq<String>>) request.getHeaders().get(headerKey);
+        if (optionSeq.isDefined()) {
+            return JavaConverters.seqAsJavaList(optionSeq.get());
+        } else {
+            return Collections.emptyList();
+        }
+    }
 }
