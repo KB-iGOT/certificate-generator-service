@@ -55,12 +55,6 @@
             <artifactId>scala-library</artifactId>
             <version>2.12.19</version> <!-- Or the version you're targeting -->
         </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-inline</artifactId>
-            <version>5.2.0</version> <!-- Make sure version is compatible -->
-            <scope>test</scope>
-        </dependency>
     </dependencies>
     <build>
         <plugins>
