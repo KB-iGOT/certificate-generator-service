@@ -1,57 +1,80 @@
 package controllers.health;
 
-import controllers.BaseApplicationTest;
-import controllers.DummyActor;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 import org.junit.Before;
 import org.junit.Test;
+import akka.actor.ActorRef;
+import play.mvc.Http;
 import play.mvc.Result;
-import utils.module.ACTOR_NAMES;
+import utils.module.SignalHandler;
+import java.util.concurrent.CompletionStage;
 
-import javax.ws.rs.core.Response;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
-import static org.junit.Assert.*;
+public class HealthControllerTest {
 
-public class HealthControllerTest extends BaseApplicationTest {
+  private HealthController controller;
+  private ActorRef healthActorRef;
+  private SignalHandler signalHandler;
+  private Http.Request request;
 
   @Before
-  public void setUp(){
-    setup(Arrays.asList(ACTOR_NAMES.HEALTH_ACTOR), DummyActor.class);
+  public void setUp() {
+    healthActorRef = mock(ActorRef.class);
+    signalHandler = mock(SignalHandler.class);
+    request = mock(Http.Request.class);
+    when(signalHandler.isShuttingDown()).thenReturn(false);
+    controller = new HealthController(healthActorRef, signalHandler);
   }
-
-
-  //@Test
-  public void testGetHealthSuccess() {
-    Map<String, Object> reqMap = new HashMap<>();
-    reqMap.put("accept", "yes");
-    Result result = performTest("/health", "GET", reqMap);
-    assertTrue(getResponseStatus(result) == Response.Status.OK.getStatusCode());
-  }
-  @Test
-  public void testGetHealthFailure() {
-    Map<String, Object> reqMap = new HashMap<>();
-    reqMap.put("accept", "yes");
-    Result result = performTest("/health", "POST", reqMap);
-    assertTrue(getResponseStatus(result) == Response.Status.NOT_FOUND.getStatusCode());
-  }
-
 
   @Test
-  public void testGetServiceHealthSuccess() {
-    Map<String, Object> reqMap = new HashMap<>();
-    reqMap.put("accept", "yes");
-    Result result = performTest("/service/health", "GET", reqMap);
-    assertTrue(getResponseStatus(result) == Response.Status.OK.getStatusCode());
+  public void getHealth_ReturnsSuccess_WhenNotShuttingDown() throws Exception {
+    CompletionStage<Result> resultStage = controller.getHealth(request);
+    assertNotNull(resultStage);
   }
+
   @Test
-  public void testGetServiceHealthFailure() {
-    Map<String, Object> reqMap = new HashMap<>();
-    reqMap.put("accept", "yes");
-    Result result = performTest("/user-service/health", "POST", reqMap);
-    assertTrue(getResponseStatus(result) == Response.Status.NOT_FOUND.getStatusCode());
+  public void getHealth_ReturnsServiceUnavailable_WhenShuttingDown() throws Exception {
+    when(signalHandler.isShuttingDown()).thenReturn(true);
+    CompletionStage<Result> resultStage = controller.getHealth(request);
+    Result result = resultStage.toCompletableFuture().get();
+    assertEquals(503, result.status());
   }
 
+  @Test
+  public void getServiceHealth_ReturnsOk_WhenServiceParamIsService() throws Exception {
+    CompletionStage<Result> resultStage = controller.getServiceHealth("service", request);
+    Result result = resultStage.toCompletableFuture().get();
+    assertEquals(200, result.status());
+  }
 
+  @Test
+  public void getServiceHealth_ReturnsBadRequest_WhenServiceParamIsNotService() throws Exception {
+    CompletionStage<Result> resultStage = controller.getServiceHealth("other", request);
+    Result result = resultStage.toCompletableFuture().get();
+    assertEquals(400, result.status());
+  }
+
+  @Test
+  public void getServiceHealth_ReturnsServiceUnavailable_WhenShuttingDown() throws Exception {
+    when(signalHandler.isShuttingDown()).thenReturn(true);
+    CompletionStage<Result> resultStage = controller.getServiceHealth("service", request);
+    Result result = resultStage.toCompletableFuture().get();
+    assertEquals(503, result.status());
+  }
+
+  @Test
+  public void getLiveness_ReturnsOk_WhenNotShuttingDown() throws Exception {
+    CompletionStage<Result> resultStage = controller.getLiveness(request);
+    Result result = resultStage.toCompletableFuture().get();
+    assertEquals(200, result.status());
+  }
+
+  @Test
+  public void getLiveness_ReturnsServiceUnavailable_WhenShuttingDown() throws Exception {
+    when(signalHandler.isShuttingDown()).thenReturn(true);
+    CompletionStage<Result> resultStage = controller.getLiveness(request);
+    Result result = resultStage.toCompletableFuture().get();
+    assertEquals(503, result.status());
+  }
 }

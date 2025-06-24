@@ -1,54 +1,63 @@
 package org.sunbird.incredible.pojos.ob.valuator;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.sunbird.incredible.pojos.ob.exeptions.InvalidDateFormatException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class IssuedDateValuatorTest {
+class IssuedDateValuatorTest {
 
-    IssuedDateValuator issuedDateValuator = new IssuedDateValuator();
-    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-    Calendar cal = Calendar.getInstance();
+    private IssuedDateValuator issuedDateValuator;
+    private SimpleDateFormat simpleDateFormat;
+    private Calendar cal;
 
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
+        issuedDateValuator = new IssuedDateValuator();
+        simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        cal = Calendar.getInstance();
     }
 
-    @After
-    public void tearDown() throws Exception {
-    }
-
-    @Test
-    public void evaluateDateInFormat1() throws InvalidDateFormatException {
-        Date date = issuedDateValuator.convertToDate("2019-01-20");
-        cal.setTime(date);
-        assertEquals("2019-01-20T00:00:00Z", simpleDateFormat.format(cal.getTime()));
+    @AfterEach
+    void tearDown() {
+        // Cleanup logic if necessary
     }
 
     @Test
-    public void evaluatesDateInFormat2() throws InvalidDateFormatException {
-        Date date = issuedDateValuator.convertToDate("2019-02-12T10:11:11Z");
-        cal.setTime(date);
-        assertEquals("2019-02-12T10:11:11Z", simpleDateFormat.format(cal.getTime()));
+    void evaluatesDateInNullException() {
+        InvalidDateFormatException exception = assertThrows(
+                InvalidDateFormatException.class,
+                () -> issuedDateValuator.convertToDate(null)
+        );
+        assertEquals("issued date cannot be null", exception.getMessage(), "Custom message check optional");
     }
 
-    @Test(expected = InvalidDateFormatException.class)
-    public void evaluatesDateInNullException() throws InvalidDateFormatException {
-        issuedDateValuator.convertToDate(null);
-        fail("issued date cannot be null");
+    @Test
+    void evaluatesIssuedDateInExceptionForDifferentFormats() {
+        InvalidDateFormatException exception = assertThrows(
+                InvalidDateFormatException.class,
+                () -> issuedDateValuator.convertToDate("2019-02")
+        );
+        assertEquals("issued date is not in valid format", exception.getMessage(), "Custom message check optional");
     }
 
-    @Test(expected = InvalidDateFormatException.class)
-    public void evaluatesIssuedDateInExceptionForDifferentFormats() throws InvalidDateFormatException {
-        issuedDateValuator.convertToDate("2019-02");
-        fail("issued date cannot be this format");
+
+    @Test
+    void testEvaluatesWithFullDateTimeFormat() throws InvalidDateFormatException {
+        String input = "2023-06-15T10:30:00Z";
+        String result = issuedDateValuator.evaluates(input);
+        assertEquals("2023-06-15T10:30:00Z", result);
+    }
+
+    @Test
+    void testEvaluatesWithDateOnlyFormat() throws InvalidDateFormatException {
+        String input = "2023-06-15";
+        String result = issuedDateValuator.evaluates(input);
+        assertEquals("2023-06-15T00:00:00Z", result);
     }
 }
