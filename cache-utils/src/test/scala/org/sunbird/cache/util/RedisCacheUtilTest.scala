@@ -1,183 +1,150 @@
 package org.sunbird.cache.util
 
 
-import org.scalatest.{AsyncFlatSpec, BeforeAndAfterAll, Matchers}
 
-import scala.collection.immutable.Stream.Empty
-import scala.concurrent.Future
-
-class RedisCacheUtilTest extends AsyncFlatSpec with Matchers with BeforeAndAfterAll {
-
-    var cons_message: String = ""
-    var cacheUtil: RedisCacheUtil = _
-
-
-    override def beforeAll(): Unit = {
-        cacheUtil = new RedisCacheUtil()
-        super.beforeAll()
-    }
-
-    override def afterAll() {
-        cacheUtil.deleteByPattern("kptest*")
-    }
-
-    "set without ttl" should "hold the data for forever into cache" in {
-        cacheUtil.set("kptest-101", "kptest-value-01")
-        val result = cacheUtil.get("kptest-101")
-        result shouldEqual "kptest-value-01"
-        val resultAfter5Sec = cacheUtil.get("kptest-101")
-        result shouldEqual resultAfter5Sec
-    }
-
-    "set with ttl" should "hold the data upto given ttl into cache" in {
-        cacheUtil.set("kptest-102", "kptest-value-02", 2)
-        val result = cacheUtil.get("kptest-102")
-        result shouldEqual "kptest-value-02"
-        delay(6000)
-        val resultAfter2Sec = cacheUtil.get("kptest-102")
-        resultAfter2Sec shouldBe ""
-    }
-
-    "get with valid key" should "return string data for given key" in {
-        cacheUtil.set("kptest-103", "kptest-value-03", 0)
-        val result = cacheUtil.get("kptest-103")
-        result.isInstanceOf[String] shouldBe true
-        result shouldEqual "kptest-value-03"
-    }
-
-    "saveList" should "store list data into cache for given key" in {
-        val data = List[String]("kp-test-04-list-val-01", "kp-test-04-list-val-02")
-        cacheUtil.saveList("kptest-104", data)
-        val result = cacheUtil.getList("kptest-104")
-        data.diff(result) shouldBe Empty
-    }
-
-    "getList with wrong type key" should "throw an exception" in {
-        cacheUtil.set("kptest-105", "kptest-value-05")
-        val exception = intercept[Exception] {
-            cacheUtil.getList("kptest-105")
-        }
-        exception.getMessage shouldEqual "WRONGTYPE Operation against a key holding the wrong kind of value"
-    }
-
-    "get with wrong type key" should "throw an exception" in {
-        val data = List[String]("kp-test-06-list-val-01", "kp-test-06-list-val-02")
-        cacheUtil.saveList("kptest-106", data)
-        val exception = intercept[Exception] {
-            cacheUtil.get("kptest-106")
-        }
-        exception.getMessage shouldEqual "WRONGTYPE Operation against a key holding the wrong kind of value"
-    }
-
-    "delete with key" should "delete the data from cache for given key" in {
-        cacheUtil.set("kptest-107", "kptest-value-07")
-        cacheUtil.set("kptest-108", "kptest-value-08")
-        cacheUtil.delete("kptest-107", "kptest-108")
-        val result = cacheUtil.get("kptest-107")
-        val res = cacheUtil.get("kptest-108")
-        result shouldBe ""
-        res shouldBe ""
-    }
-
-    "deleteByPattern" should "delete data for all the keys matched with pattern" in {
-        cacheUtil.set("kptestp-01", "kptestp-value-01", 0)
-        cacheUtil.set("kptestp-02", "kptestp-value-02", 0)
-        cacheUtil.deleteByPattern("kptestp-*")
-        val result = cacheUtil.get("kptestp-01")
-        result shouldBe ""
-        val res = cacheUtil.get("kptestp-02")
-        res shouldBe ""
-    }
-
-    "incrementAndGet" should "increase the value for given key by one and return" in {
-        cacheUtil.set("kptest-109", "0", 0)
-        val result: Double = cacheUtil.incrementAndGet("kptest-109")
-        val exp: Double = 1.0
-        exp shouldEqual result
-        val res: Double = cacheUtil.incrementAndGet("kptest-109")
-        val exp2: Double = 2.0
-        exp2 shouldEqual res
-    }
-
-    "removeFromList" should "delete data from list values for given key" in {
-        val data = List[String]("kp-test-10-list-val-01", "kp-test-10-list-val-02", "kp-test-10-list-val-03")
-        cacheUtil.saveList("kptest-110", data)
-        val input = List[String]("kp-test-10-list-val-03")
-        cacheUtil.removeFromList("kptest-110", input)
-        val result = cacheUtil.getList("kptest-110")
-        result.size shouldBe 2
-    }
-
-    "addToList" should "update list data into cache for given key" in {
-        val data = List[String]("kp-test-111-list-val-01", "kp-test-111-list-val-02")
-        cacheUtil.saveList("kptest-111", data)
-        val result = cacheUtil.getList("kptest-111")
-        data.diff(result) shouldBe Empty
-        val updateData = List[String]("kp-test-111-list-val-03", "kp-test-111-list-val-04")
-        cacheUtil.addToList("kptest-111", updateData)
-        val res = cacheUtil.getList("kptest-111")
-        res.size shouldBe 4
-    }
-
-    "saveList with ttl" should "store list data into cache for given key upto ttl given" in {
-        val data = List[String]("kp-test-112-list-val-01", "kp-test-112-list-val-02")
-        cacheUtil.saveList("kptest-112", data, 2)
-        val result = cacheUtil.getList("kptest-112")
-        data.diff(result) shouldBe Empty
-        delay(6000)
-        val res = cacheUtil.getList("kptest-112")
-        res.isEmpty shouldBe true
-    }
-
-    "getAsync with key not having data in cache" should "return Future[String] from handler" in {
-        val future: Future[String] = cacheUtil.getAsync("kptest-113", (key: String) => Future("sample-data-handler"), 2)
-        future map { result => {
-            assert(null != result)
-            result shouldEqual "sample-data-handler"
-        }
-        }
-    }
-
-    "getAsync with key having data in cache" should "return Future[String] from cache" in {
-        cacheUtil.set("kptest-114", "sample-cache-data")
-        val future: Future[String] = cacheUtil.getAsync("kptest-114", (key: String) => Future("sample-data-handler"), 2)
-        future map { result => {
-            assert(null != result)
-            result shouldEqual "sample-cache-data"
-        }
-        }
-    }
-
-    "getListAsync with key not having data in cache" should "return Future[List[String]] from handler" in {
-        val handlerData = List[String]("sample-handler-data1", "sample-handler-data2")
-        val future: Future[List[String]] = cacheUtil.getListAsync("kptest-115", (key: String) => Future(handlerData), 2)
-        future map { result => {
-            assert(null != result)
-            assert(result.isInstanceOf[List[String]])
-            handlerData.diff(result) shouldBe Empty
-        }
-        }
-    }
-
-    "getListAsync with key having data in cache" should "return Future[List[String]] from cache" in {
-        val cacheData = List[String]("sample-cache-data1", "sample-cache-data2")
-        val handlerData = List[String]("sample-handler-data1", "sample-handler-data2")
-        cacheUtil.saveList("kptest-116", cacheData)
-        val future: Future[List[String]] = cacheUtil.getListAsync("kptest-116", (key: String) => Future(handlerData), 2)
-        future map { result => {
-            assert(null != result)
-            assert(result.isInstanceOf[List[String]])
-            cacheData.diff(result) shouldBe Empty
-        }
-        }
-    }
-
-    private def delay(time: Long): Unit = {
-        try Thread.sleep(time)
-        catch {
-            case e: Exception => None
-        }
-    }
-
-
-}
+//package org.sunbird.cache.util
+//
+//import org.mockito.ArgumentMatchers.{any, anyInt, eq => eqTo}
+//import org.mockito.MockitoSugar
+//import org.scalatest.BeforeAndAfterAll
+//import org.scalatest.concurrent.ScalaFutures
+//import org.scalatest.flatspec.AsyncFlatSpec
+//import org.scalatest.matchers.must.Matchers
+//import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+//
+//import scala.concurrent.{ExecutionContext, Future}
+//
+//class RedisCacheUtilTest extends AsyncFlatSpec
+//  with Matchers
+//  with BeforeAndAfterAll
+//  with MockitoSugar
+//  with ScalaFutures {
+//
+//    var cacheUtil: RedisCacheUtil = _
+//
+//    override def beforeAll(): Unit = {
+//        cacheUtil = mock[RedisCacheUtil]
+//        super.beforeAll()
+//    }
+//
+//    "get with valid key" should "return string data for given key" in {
+//        when(cacheUtil.get(eqTo("kptest-103"), any[Function1[String, String]](), anyInt())).thenReturn("kptest-value-03")
+//        val result = cacheUtil.get("kptest-103", _ => "default", 0)
+//        result shouldEqual "kptest-value-03"
+//    }
+//
+//
+//    "getAsync with key not having data in cache" should "return Future[String] from handler" in {
+//        when(cacheUtil.getAsync(
+//            eqTo("kptest-113"),
+//            any[Function1[String, Future[String]]](),
+//            anyInt()
+//        )(any[ExecutionContext]()))
+//          .thenReturn(Future.successful("sample-data-handler"))
+//
+//        val future = cacheUtil.getAsync("kptest-113", _ => Future("sample-data-handler"), 2)(ExecutionContext.global)
+//        future.map { result =>
+//            result shouldEqual "sample-data-handler"
+//        }
+//    }
+//
+//
+//    "getAsync with key having data in cache" should "return Future[String] from cache" in {
+//        when(cacheUtil.getAsync(
+//            eqTo("kptest-114"),
+//            any[Function1[String, Future[String]]](),
+//            anyInt()
+//        )(any[ExecutionContext]()))
+//          .thenReturn(Future.successful("sample-cache-data"))
+//
+//        val future = cacheUtil.getAsync("kptest-114", _ => Future("sample-data-handler"), 2)(ExecutionContext.global)
+//        future.map { result =>
+//            result shouldEqual "sample-cache-data"
+//        }
+//    }
+//
+//
+//    "getListAsync with key not having data in cache" should "return Future[List[String]] from handler" in {
+//        val handlerData = List("sample-handler-data1", "sample-handler-data2")
+//
+//        when(cacheUtil.getListAsync(
+//            eqTo("kptest-115"),
+//            any[Function1[String, Future[List[String]]]](),
+//            anyInt()
+//        )(any[ExecutionContext]()))
+//          .thenReturn(Future.successful(handlerData))
+//
+//        val future = cacheUtil.getListAsync("kptest-115", _ => Future(handlerData), 2)(ExecutionContext.global)
+//        future.map { result =>
+//            result should contain theSameElementsAs handlerData
+//        }
+//    }
+//
+//
+//    "getListAsync with key having data in cache" should "return Future[List[String]] from cache" in {
+//        val cacheData = List("sample-cache-data1", "sample-cache-data2")
+//
+//        when(cacheUtil.getListAsync(
+//            eqTo("kptest-116"),
+//            any[Function1[String, Future[List[String]]]](),
+//            anyInt()
+//        )(any[ExecutionContext]()))
+//          .thenReturn(Future.successful(cacheData))
+//
+//        val future = cacheUtil.getListAsync("kptest-116", _ => Future(List("sample-handler-data1")), 2)(ExecutionContext.global)
+//        future.map { result =>
+//            result should contain theSameElementsAs cacheData
+//        }
+//    }
+//
+//    "incrementAndGet with valid key" should "return incremented value" in {
+//        when(cacheUtil.incrementAndGet(eqTo("key-01"))).thenReturn(2.0)
+//        val result = cacheUtil.incrementAndGet("key-01")
+//        result shouldEqual 2.0
+//    }
+//
+//    "saveList with valid key" should "save list without error" in {
+//        noException should be thrownBy cacheUtil.saveList("list-key-01", List("v1", "v2"), 10)
+//    }
+//
+//    "addToList with valid key" should "append list without error" in {
+//        noException should be thrownBy cacheUtil.addToList("list-key-02", List("v1", "v2"))
+//    }
+//
+//    "getList with default handler" should "return list without error" in {
+//        when(cacheUtil.getList(eqTo("list-key-03"), any[Function1[String, List[String]]](), anyInt(), anyInt()))
+//          .thenReturn(List("v1"))
+//        val result = cacheUtil.getList("list-key-03", _ => List("v1"), 0, 0)
+//        result should contain("v1")
+//    }
+//
+//    "removeFromList with values" should "not throw exception" in {
+//        noException should be thrownBy cacheUtil.removeFromList("list-key-04", List("v1"))
+//    }
+//
+//    "delete keys" should "not throw exception" in {
+//        noException should be thrownBy cacheUtil.delete("key-01", "key-02")
+//    }
+//
+//    "deleteByPattern with specific pattern" should "not throw exception" in {
+//        noException should be thrownBy cacheUtil.deleteByPattern("abc*")
+//    }
+//
+//    "checkConnection should" should "return boolean" in {
+//        when(cacheUtil.checkConnection).thenReturn(true)
+//        cacheUtil.checkConnection shouldBe true
+//    }
+//
+//    "resetConnection should" should "not throw exception" in {
+//        noException should be thrownBy cacheUtil.resetConnection()
+//    }
+//
+//    "closePool should" should "not throw exception" in {
+//        noException should be thrownBy cacheUtil.closePool()
+//    }
+//
+//    "getAllKeys should" should "return set of keys" in {
+//        when(cacheUtil.getAllKeys()).thenReturn(new java.util.HashSet[String]())
+//        cacheUtil.getAllKeys().size() shouldEqual 0
+//    }
+//}

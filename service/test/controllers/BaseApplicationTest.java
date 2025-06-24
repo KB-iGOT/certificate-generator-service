@@ -3,9 +3,8 @@ package controllers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import play.Application;
 import play.Mode;
 import play.inject.guice.GuiceApplicationBuilder;
@@ -23,8 +22,7 @@ import java.util.Map;
 
 import static play.inject.Bindings.bind;
 
-@RunWith(PowerMockRunner.class)
-@PowerMockIgnore({"jdk.internal.reflect.*","javax.management.*","sun.security.ssl.*", "javax.net.ssl.*" , "javax.crypto.*"})
+@ExtendWith(MockitoExtension.class)
 public abstract class BaseApplicationTest {
     protected Application application;
 
