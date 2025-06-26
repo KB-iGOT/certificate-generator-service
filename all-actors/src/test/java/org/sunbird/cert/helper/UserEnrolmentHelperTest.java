@@ -9,7 +9,9 @@ import org.sunbird.JsonKeys;
 import org.sunbird.cassandra.CassandraOperation;
 import org.sunbird.helper.ServiceFactory;
 import org.sunbird.response.Response;
+import sun.misc.Unsafe;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -19,7 +21,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Disabled
 class UserEnrolmentHelperTest {
 
     private CassandraOperation cassandraOperationMock;
@@ -32,6 +33,11 @@ class UserEnrolmentHelperTest {
         mockedFactory = mockStatic(ServiceFactory.class);
         mockedFactory.when(ServiceFactory::getInstance).thenReturn(cassandraOperationMock);
         userEnrolmentHelper = UserEnrolmentHelper.getInstance(); // instance initialized while static mock is active
+    }
+    @BeforeEach
+    void resetMocksAndStaticFields() throws Exception {
+        reset(cassandraOperationMock);
+        setStaticFieldUsingUnsafe(UserEnrolmentHelper.class, "cassandraOperation", cassandraOperationMock);
     }
 
     @AfterAll
@@ -95,5 +101,19 @@ class UserEnrolmentHelperTest {
         assertNotNull(result);
         verify(cassandraOperationMock).updateRecord(eq(JsonKeys.COURSE_KEY_SPACE_NAME),
                 eq(JsonKeys.USER_ENROLMENTS), eq(attributeMap), anyMap());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void setStaticFieldUsingUnsafe(Class<?> clazz, String fieldName, Object newValue) throws Exception {
+        Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        Unsafe unsafe = (Unsafe) unsafeField.get(null);
+
+        Field field = clazz.getDeclaredField(fieldName);
+        field.setAccessible(true);
+
+        Object staticFieldBase = unsafe.staticFieldBase(field);
+        long staticFieldOffset = unsafe.staticFieldOffset(field);
+        unsafe.putObject(staticFieldBase, staticFieldOffset, newValue);
     }
 }

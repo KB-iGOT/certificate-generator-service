@@ -10,7 +10,9 @@ import org.sunbird.cassandra.CassandraOperation;
 import org.sunbird.helper.ServiceFactory;
 import org.sunbird.response.Response;
 import org.sunbird.HttpUtil;
+import sun.misc.Unsafe;
 
+import java.lang.reflect.Field;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,6 +43,11 @@ class CertRegistryHelperTest {
         httpUtilMockedStatic = mockStatic(HttpUtil.class);
 
         helper = CertRegistryHelper.getInstance();
+    }
+    @BeforeEach
+    void resetMocksAndStaticFields() throws Exception {
+        reset(cassandraOperation, propertiesCache);
+        setStaticFieldUsingUnsafe(IssueCertificateContentHelper.class, "cassandraOperation", cassandraOperation);
     }
 
     @AfterAll
@@ -154,4 +161,19 @@ class CertRegistryHelperTest {
         CertRegistryHelper instance2 = CertRegistryHelper.getInstance();
         assertSame(instance1, instance2);
     }
+
+    @SuppressWarnings("unchecked")
+    private static void setStaticFieldUsingUnsafe(Class<?> clazz, String fieldName, Object newValue) throws Exception {
+        Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        Unsafe unsafe = (Unsafe) unsafeField.get(null);
+
+        Field field = clazz.getDeclaredField(fieldName);
+        field.setAccessible(true);
+
+        Object staticFieldBase = unsafe.staticFieldBase(field);
+        long staticFieldOffset = unsafe.staticFieldOffset(field);
+        unsafe.putObject(staticFieldBase, staticFieldOffset, newValue);
+    }
+
 }
