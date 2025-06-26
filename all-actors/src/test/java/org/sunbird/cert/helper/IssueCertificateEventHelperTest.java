@@ -57,30 +57,25 @@ class IssueCertificateEventHelperTest {
     }
 
     @BeforeEach
-    void resetMocksAndStaticContentCache() {
+    void resetMocksAndStaticContentCache() throws Exception {
         reset(cassandraOperation, contentCache, propertiesCache);
+        setStaticFieldUsingUnsafe(IssueCertificateEventHelper.class, "cassandraOperation", cassandraOperation);
     }
 
 
-    public static void setFinalStatic(Class<?> clazz, String fieldName, Object newValue) {
-        try {
-            // Step 1: Get the field and make it accessible
-            Field field = clazz.getDeclaredField(fieldName);
-            field.setAccessible(true);
 
-            // Step 2: Get Unsafe instance
-            Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
-            unsafeField.setAccessible(true);
-            Unsafe unsafe = (Unsafe) unsafeField.get(null);
+    @SuppressWarnings("unchecked")
+    private static void setStaticFieldUsingUnsafe(Class<?> clazz, String fieldName, Object newValue) throws Exception {
+        Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        Unsafe unsafe = (Unsafe) unsafeField.get(null);
 
-            // Step 3: Get offset and override static final field
-            Object staticFieldBase = unsafe.staticFieldBase(field);
-            long staticFieldOffset = unsafe.staticFieldOffset(field);
+        Field field = clazz.getDeclaredField(fieldName);
+        field.setAccessible(true);
 
-            unsafe.putObject(staticFieldBase, staticFieldOffset, newValue);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to set final static field", e);
-        }
+        Object staticFieldBase = unsafe.staticFieldBase(field);
+        long staticFieldOffset = unsafe.staticFieldOffset(field);
+        unsafe.putObject(staticFieldBase, staticFieldOffset, newValue);
     }
 
     @Test
@@ -201,7 +196,7 @@ class IssueCertificateEventHelperTest {
         String courseMeta = "{\"name\":\"Course Name\",\"primaryCategory\":\"Category\",\"parentCollections\":[],\"posterImage\":\"img\",\"organisation\":[\"org\"]}";
 
         // Use setFinalStatic helper method instead of direct reflection
-        setFinalStatic(IssueCertificateEventHelper.class, "contentCache", contentCache);
+        setStaticFieldUsingUnsafe(IssueCertificateEventHelper.class, "contentCache", contentCache);
 
         when(contentCache.get(eq(courseId), any(), anyInt())).thenReturn(courseMeta);
 
@@ -224,69 +219,69 @@ class IssueCertificateEventHelperTest {
         RedisCacheUtil mockedRedis = mock(RedisCacheUtil.class);
 
         // Inject mock
-        setFinalStatic(IssueCertificateEventHelper.class, "contentCache", contentCache);
+        setStaticFieldUsingUnsafe(IssueCertificateEventHelper.class, "contentCache", contentCache);
 
         Map<String, Object> result = IssueCertificateEventHelper.getCourseInfo(courseId);
         assertEquals("Course Name", result.get("courseName"));
     }
 
-//    @Test
-//    void generateCertificateMap_returnsCertificateMap_whenUserMatchesCriteria() throws Exception {
-//        Map<String, Object> requestMap = new HashMap<>();
-//        requestMap.put(JsonKeys.COURSE_ID, "courseId");
-//        requestMap.put(JsonKeys.USER_ID, "userId");
-//        requestMap.put(JsonKeys.BATCH_ID, "batchId");
-//
-//        Map<String, Object> template = new HashMap<>();
-//        template.put("name", "CertName");
-//        template.put("url", "templateUrl");
-//        template.put("identifier", "templateId");
-//        template.put("criteria", "{\"enrollment\":{\"status\":2},\"users\":{}}");
-//        template.put("additionalProps", "{}");
-//        template.put(JsonKeys.ISSUER, "{}");
-//        template.put(JsonKeys.SIGNATORY_LIST, "signatoryList");
-//        template.put("signatoryList", "[]");
-//
-//        Map<String, Object> enrolMap = new HashMap<>();
-//        enrolMap.put("active", true);
-//        enrolMap.put("issued_certificates", new ArrayList<>());
-//        enrolMap.put("status", 2);
-//        enrolMap.put("completedon", new Date());
-//        Response cassandraResponse = new Response();
-//        cassandraResponse.put("response", Collections.singletonList(enrolMap));
-//        when(cassandraOperation.getRecordsByProperties(eq(JsonKeys.COURSE_KEY_SPACE_NAME), eq(JsonKeys.USER_ENTITY_ENROLMENTS), anyMap())).thenReturn(cassandraResponse);
-//
-//        when(propertiesCache.getProperty("learner_basePath")).thenReturn("http://learner/");
-//        when(propertiesCache.getProperty("user_read_api")).thenReturn("user/v1/read");
-//        when(propertiesCache.getProperty("cert_domain_url")).thenReturn("http://certs");
-//
-//        Map<String, Object> userDetails = new HashMap<>();
-//        userDetails.put("firstName", "John");
-//        userDetails.put("lastName", "Doe");
-//        userDetails.put("rootOrgId", "orgId");
-//        Map<String, Object> userResult = new HashMap<>();
-//        userResult.put(JsonKeys.RESPONSE, userDetails);
-////        when(cassandraOperation.getRecordsByProperties(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.USER_ENTITY_ENROLMENTS, anyMap())).thenReturn(cassandraResponse);
-//
-//        when(propertiesCache.getProperty("learner_basePath")).thenReturn("http://learner/");
-//        when(propertiesCache.getProperty("user_read_api")).thenReturn("user/v1/read");
-//        when(propertiesCache.getProperty("cert_domain_url")).thenReturn("http://certs");
-//
-//        Map<String, Object> userResponse = new HashMap<>();
-//        userResponse.put(JsonKeys.RESULT, userResult);
-//        httpUtilMockedStatic.when(() -> HttpUtil.sendGetRequest(contains("userId"), anyMap()))
-//                .thenReturn(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userResponse));
-//
-//        when(contentCache.get(eq("courseId"), any(), anyInt()))
-//                .thenReturn("{\"name\":\"Course Name\",\"primaryCategory\":\"Category\",\"parentCollections\":[],\"posterImage\":\"img\",\"organisation\":[\"org\"]}");
-//
-//        setFinalStatic(IssueCertificateEventHelper.class, "contentCache", contentCache);
-//
-//        Map<String, Object> result = IssueCertificateEventHelper.generateCertificateMap(requestMap, template);
-//        assertNotNull(result);
-//        assertEquals("CertName", result.get("name"));
-//        assertEquals("John Doe", ((List<Map<String, Object>>) result.get("data")).get(0).get("recipientName"));
-//    }
+    @Test
+    void generateCertificateMap_returnsCertificateMap_whenUserMatchesCriteria() throws Exception {
+        Map<String, Object> requestMap = new HashMap<>();
+        requestMap.put(JsonKeys.COURSE_ID, "courseId");
+        requestMap.put(JsonKeys.USER_ID, "userId");
+        requestMap.put(JsonKeys.BATCH_ID, "batchId");
+
+        Map<String, Object> template = new HashMap<>();
+        template.put("name", "CertName");
+        template.put("url", "templateUrl");
+        template.put("identifier", "templateId");
+        template.put("criteria", "{\"enrollment\":{\"status\":2},\"users\":{}}");
+        template.put("additionalProps", "{}");
+        template.put(JsonKeys.ISSUER, "{}");
+        template.put(JsonKeys.SIGNATORY_LIST, "signatoryList");
+        template.put("signatoryList", "[]");
+
+        Map<String, Object> enrolMap = new HashMap<>();
+        enrolMap.put("active", true);
+        enrolMap.put("issued_certificates", new ArrayList<>());
+        enrolMap.put("status", 2);
+        enrolMap.put("completedon", new Date());
+        Response cassandraResponse = new Response();
+        cassandraResponse.put("response", Collections.singletonList(enrolMap));
+        when(cassandraOperation.getRecordsByProperties(eq(JsonKeys.COURSE_KEY_SPACE_NAME), eq(JsonKeys.USER_ENTITY_ENROLMENTS), anyMap())).thenReturn(cassandraResponse);
+
+        when(propertiesCache.getProperty("learner_basePath")).thenReturn("http://learner/");
+        when(propertiesCache.getProperty("user_read_api")).thenReturn("user/v1/read");
+        when(propertiesCache.getProperty("cert_domain_url")).thenReturn("http://certs");
+
+        Map<String, Object> userDetails = new HashMap<>();
+        userDetails.put("firstName", "John");
+        userDetails.put("lastName", "Doe");
+        userDetails.put("rootOrgId", "orgId");
+        Map<String, Object> userResult = new HashMap<>();
+        userResult.put(JsonKeys.RESPONSE, userDetails);
+//        when(cassandraOperation.getRecordsByProperties(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.USER_ENTITY_ENROLMENTS, anyMap())).thenReturn(cassandraResponse);
+
+        when(propertiesCache.getProperty("learner_basePath")).thenReturn("http://learner/");
+        when(propertiesCache.getProperty("user_read_api")).thenReturn("user/v1/read");
+        when(propertiesCache.getProperty("cert_domain_url")).thenReturn("http://certs");
+
+        Map<String, Object> userResponse = new HashMap<>();
+        userResponse.put(JsonKeys.RESULT, userResult);
+        httpUtilMockedStatic.when(() -> HttpUtil.sendGetRequest(contains("userId"), anyMap()))
+                .thenReturn(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userResponse));
+
+        when(contentCache.get(eq("courseId"), any(), anyInt()))
+                .thenReturn("{\"name\":\"Course Name\",\"primaryCategory\":\"Category\",\"parentCollections\":[],\"posterImage\":\"img\",\"organisation\":[\"org\"]}");
+
+        setStaticFieldUsingUnsafe(IssueCertificateEventHelper.class, "contentCache", contentCache);
+
+        Map<String, Object> result = IssueCertificateEventHelper.generateCertificateMap(requestMap, template);
+        assertNotNull(result);
+        assertEquals("CertName", result.get("name"));
+        assertEquals("John Doe", ((List<Map<String, Object>>) result.get("data")).get(0).get("recipientName"));
+    }
 
     @Test
     void generateCertificateMap_returnsNull_whenUserDoesNotMatchCriteria() throws Exception {
@@ -332,7 +327,7 @@ class IssueCertificateEventHelperTest {
         when(contentCache.get(eq("courseId"), any(), anyInt()))
                 .thenReturn("{\"name\":\"Course Name\",\"primaryCategory\":\"Category\",\"parentCollections\":[],\"posterImage\":\"img\",\"organisation\":[\"org\"]}");
 
-        setFinalStatic(IssueCertificateEventHelper.class, "contentCache", contentCache);
+        setStaticFieldUsingUnsafe(IssueCertificateEventHelper.class, "contentCache", contentCache);
 
         Map<String, Object> result = IssueCertificateEventHelper.generateCertificateMap(requestMap, template);
         assertNull(result);
