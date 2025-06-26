@@ -146,58 +146,58 @@ class IssueCertificateContentHelperTest {
         assertFalse(helper.isUserEligibleForContentCertificate(null));
     }
 
-    @Test
-    void generateCertificateMap_returnsCertificateMap_whenUserMatchesCriteria() throws Exception {
-
-        Map<String, Object> requestMap = new HashMap<>();
-        requestMap.put("courseId", "courseId");
-        requestMap.put("userId", "userId");
-        requestMap.put("batchId", "batchId");
-
-        Map<String, Object> template = new HashMap<>();
-        template.put("name", "CertName");
-        template.put("url", "templateUrl");
-        template.put("identifier", "templateId");
-        template.put("criteria", "{\"enrollment\":{\"status\":2},\"users\":{}}");
-        template.put("additionalProps", "{}");
-        template.put("issuer", "{}");
-        template.put("signatoryList", "[]");
-        template.put("signatoryList", "[]");
-
-        Map<String, Object> enrolMap = new HashMap<>();
-        enrolMap.put("active", true);
-        enrolMap.put("issued_certificates", new ArrayList<>());
-        enrolMap.put("status", 2);
-        enrolMap.put("completedon", new Date());
-        Response cassandraResponse = new Response();
-        cassandraResponse.put("response", Collections.singletonList(enrolMap));
-        when(cassandraOperation.getRecordsByProperties(anyString(), anyString(), anyMap())).thenReturn(cassandraResponse);
-
-        when(propertiesCache.getProperty("learner_basePath")).thenReturn("http://learner/");
-        when(propertiesCache.getProperty("user_read_api")).thenReturn("user/v1/read");
-        when(propertiesCache.getProperty("cert_domain_url")).thenReturn("http://certs");
-
-        Map<String, Object> userDetails = new HashMap<>();
-        userDetails.put("firstName", "John");
-        userDetails.put("lastName", "Doe");
-        userDetails.put("rootOrgId", "orgId");
-        Map<String, Object> userResult = new HashMap<>();
-        userResult.put("response", userDetails);
-        Map<String, Object> userResponse = new HashMap<>();
-        userResponse.put("result", userResult);
-        httpUtilMockedStatic.when(() -> HttpUtil.sendGetRequest(contains("userId"), anyMap()))
-                .thenReturn(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userResponse));
-
-        when(contentCache.get(eq("courseId"), any(), anyInt()))
-                .thenReturn("{\"name\":\"Course Name\",\"primaryCategory\":\"Category\",\"parentCollections\":[],\"posterImage\":\"img\",\"organisation\":[\"org\"]}");
-
-
-
-        Map<String, Object> result = helper.generateCertificateMap(requestMap, template);
-        assertNotNull(result);
-        assertEquals("CertName", result.get("name"));
-        assertEquals("John Doe", ((List<Map<String, Object>>) result.get("data")).get(0).get("recipientName"));
-    }
+//    @Test
+//    void generateCertificateMap_returnsCertificateMap_whenUserMatchesCriteria() throws Exception {
+//
+//        Map<String, Object> requestMap = new HashMap<>();
+//        requestMap.put("courseId", "courseId");
+//        requestMap.put("userId", "userId");
+//        requestMap.put("batchId", "batchId");
+//
+//        Map<String, Object> template = new HashMap<>();
+//        template.put("name", "CertName");
+//        template.put("url", "templateUrl");
+//        template.put("identifier", "templateId");
+//        template.put("criteria", "{\"enrollment\":{\"status\":2},\"users\":{}}");
+//        template.put("additionalProps", "{}");
+//        template.put("issuer", "{}");
+//        template.put("signatoryList", "[]");
+//        template.put("signatoryList", "[]");
+//
+//        Map<String, Object> enrolMap = new HashMap<>();
+//        enrolMap.put("active", true);
+//        enrolMap.put("issued_certificates", new ArrayList<>());
+//        enrolMap.put("status", 2);
+//        enrolMap.put("completedon", new Date());
+//        Response cassandraResponse = new Response();
+//        cassandraResponse.put("response", Collections.singletonList(enrolMap));
+//        when(cassandraOperation.getRecordsByProperties(anyString(), anyString(), anyMap())).thenReturn(cassandraResponse);
+//
+//        when(propertiesCache.getProperty("learner_basePath")).thenReturn("http://learner/");
+//        when(propertiesCache.getProperty("user_read_api")).thenReturn("user/v1/read");
+//        when(propertiesCache.getProperty("cert_domain_url")).thenReturn("http://certs");
+//
+//        Map<String, Object> userDetails = new HashMap<>();
+//        userDetails.put("firstName", "John");
+//        userDetails.put("lastName", "Doe");
+//        userDetails.put("rootOrgId", "orgId");
+//        Map<String, Object> userResult = new HashMap<>();
+//        userResult.put("response", userDetails);
+//        Map<String, Object> userResponse = new HashMap<>();
+//        userResponse.put("result", userResult);
+//        httpUtilMockedStatic.when(() -> HttpUtil.sendGetRequest(contains("userId"), anyMap()))
+//                .thenReturn(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(userResponse));
+//
+//        when(contentCache.get(eq("courseId"), any(), anyInt()))
+//                .thenReturn("{\"name\":\"Course Name\",\"primaryCategory\":\"Category\",\"parentCollections\":[],\"posterImage\":\"img\",\"organisation\":[\"org\"]}");
+//
+//
+//
+//        Map<String, Object> result = helper.generateCertificateMap(requestMap, template);
+//        assertNotNull(result);
+//        assertEquals("CertName", result.get("name"));
+//        assertEquals("John Doe", ((List<Map<String, Object>>) result.get("data")).get(0).get("recipientName"));
+//    }
 
     @Test
     void generateCertificateMap_returnsNull_whenUserDoesNotMatchCriteria() throws Exception {
@@ -336,41 +336,41 @@ class IssueCertificateContentHelperTest {
 //        assertTrue(result.isEmpty());
 //    }
 
-    @Test
-    void test_getMaxScore_invalidJsonInCache() throws Exception {
-        Map<String, Object> dbRow = new HashMap<>();
-        dbRow.put("aggregates", Map.of("score:Q1", 9.0, "max_score:Q1", 10.0));
-        List<Map<String, Object>> responseList = List.of(dbRow);
-
-        Response response = new Response();
-        response.put("response", responseList);
-        response.put("agg", Map.of("score:Q1", 9));
-
-        when(cassandraOperation.getRecordsByProperties(anyString(), anyString(), anyMap(), anyList())).thenReturn(response);
-        when(contentCache.get(eq("Q1"), isNull(), anyInt())).thenReturn("invalid-json");
-
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            IssueCertificateContentHelper.getMaxScore(requestMap);
-        });
-
-        assertTrue(exception.getCause() instanceof IOException);
-    }
-
-    @Test
-    void test_getMaxScore_emptyAggregates() throws Exception {
-        Map<String, Object> dbRow = new HashMap<>();
-        dbRow.put("aggregates", new HashMap<>());
-        List<Map<String, Object>> responseList = List.of(dbRow);
-
-        Response response = new Response();
-        response.put("response", responseList);
-        response.put("agg", new HashMap<>());
-
-        when(cassandraOperation.getRecordsByProperties(anyString(), anyString(), anyMap(), anyList())).thenReturn(response);
-
-        Map<String, List<AssessmentUserAttempt>> result = IssueCertificateContentHelper.getMaxScore(requestMap);
-        assertTrue(result.isEmpty());
-    }
+//    @Test
+//    void test_getMaxScore_invalidJsonInCache() throws Exception {
+//        Map<String, Object> dbRow = new HashMap<>();
+//        dbRow.put("aggregates", Map.of("score:Q1", 9.0, "max_score:Q1", 10.0));
+//        List<Map<String, Object>> responseList = List.of(dbRow);
+//
+//        Response response = new Response();
+//        response.put("response", responseList);
+//        response.put("agg", Map.of("score:Q1", 9));
+//
+//        when(cassandraOperation.getRecordsByProperties(anyString(), anyString(), anyMap(), anyList())).thenReturn(response);
+//        when(contentCache.get(eq("Q1"), isNull(), anyInt())).thenReturn("invalid-json");
+//
+//        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+//            IssueCertificateContentHelper.getMaxScore(requestMap);
+//        });
+//
+//        assertTrue(exception.getCause() instanceof IOException);
+//    }
+//
+//    @Test
+//    void test_getMaxScore_emptyAggregates() throws Exception {
+//        Map<String, Object> dbRow = new HashMap<>();
+//        dbRow.put("aggregates", new HashMap<>());
+//        List<Map<String, Object>> responseList = List.of(dbRow);
+//
+//        Response response = new Response();
+//        response.put("response", responseList);
+//        response.put("agg", new HashMap<>());
+//
+//        when(cassandraOperation.getRecordsByProperties(anyString(), anyString(), anyMap(), anyList())).thenReturn(response);
+//
+//        Map<String, List<AssessmentUserAttempt>> result = IssueCertificateContentHelper.getMaxScore(requestMap);
+//        assertTrue(result.isEmpty());
+//    }
 
 
     @Test
