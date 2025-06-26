@@ -30,6 +30,8 @@
         <jacoco.version>0.8.8</jacoco.version>
         <httpClient.version>4.5.14</httpClient.version>
         <jacoco.maven.plugin.version>0.8.10</jacoco.maven.plugin.version>
+        <sonar.java.binaries>target/scala-2.13/classes</sonar.java.binaries>
+        <sonar.scala.coverage.reportPath>${project.basedir}/target/scoverage.xml</sonar.scala.coverage.reportPath>
     </properties>
 
     <modules>
@@ -40,4 +42,16 @@
         <module>cache-utils</module>
         <module>service</module>
     </modules>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>4.0.0.4121</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>
