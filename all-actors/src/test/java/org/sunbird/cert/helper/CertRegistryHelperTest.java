@@ -47,7 +47,7 @@ class CertRegistryHelperTest {
     @BeforeEach
     void resetMocksAndStaticFields() throws Exception {
         reset(cassandraOperation, propertiesCache);
-        setStaticFieldUsingUnsafe(IssueCertificateContentHelper.class, "cassandraOperation", cassandraOperation);
+        setStaticFieldUsingUnsafe(CertRegistryHelper.class, "cassandraOperation", cassandraOperation);
     }
 
     @AfterAll
