@@ -30,7 +30,7 @@
         <jacoco.version>0.8.8</jacoco.version>
         <httpClient.version>4.5.14</httpClient.version>
         <jacoco.maven.plugin.version>0.8.10</jacoco.maven.plugin.version>
-        <sonar.java.binaries>target/scala-2.13/classes</sonar.java.binaries>
+        <sonar.java.binaries>${project.basedir}/target/scala-2.13/classes</sonar.java.binaries>
         <sonar.scala.coverage.reportPath>${project.basedir}/target/scoverage.xml</sonar.scala.coverage.reportPath>
     </properties>
 
