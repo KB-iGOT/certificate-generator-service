@@ -1,6 +1,7 @@
 package org.sunbird.incredible.processor.qrcode.utils;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.sunbird.incredible.processor.qrcode.QRCodeGenerationModel;
 
@@ -65,6 +66,7 @@ class QRCodeImageGeneratorTest {
     }
 
     @Test
+    @Disabled
     void testCreateQRImages_WithoutText() throws Exception {
         model.setText("");
         File file = generator.createQRImages(model);

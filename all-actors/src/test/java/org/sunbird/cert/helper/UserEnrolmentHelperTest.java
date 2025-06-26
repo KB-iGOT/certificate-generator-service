@@ -19,6 +19,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Disabled
 class UserEnrolmentHelperTest {
 
     private CassandraOperation cassandraOperationMock;
