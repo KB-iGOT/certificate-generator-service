@@ -3,13 +3,14 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>certificate-generator-service</artifactId>
         <groupId>org.sunbird</groupId>
+        <artifactId>certificate-generator-service</artifactId>
         <version>1.2.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>sb-utils</artifactId>
     <version>1.0.0-SNAPSHOT</version>
+    <name>Sb-Utils</name>
 
     <dependencies>
         <dependency>
@@ -100,12 +101,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.1.2</version>
-                <configuration>
-                    <useModulePath>false</useModulePath>
-                    <includes>
-                        <include>**/*Test.java</include>
-                    </includes>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
