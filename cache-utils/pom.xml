@@ -15,7 +15,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scoverage.plugin.version>1.4.1</scoverage.plugin.version>
-        <sonar.java.binaries>${project.basedir}/target/scala-2.13/classes</sonar.java.binaries>
+        <sonar.java.binaries>${project.basedir}/target/classes</sonar.java.binaries>
         <sonar.coverageReportPaths>${project.basedir}/target/scoverage.xml</sonar.coverageReportPaths>
     </properties>
     <dependencies>
