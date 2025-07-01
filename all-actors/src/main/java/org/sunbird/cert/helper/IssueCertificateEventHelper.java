@@ -194,12 +194,10 @@ public class IssueCertificateEventHelper {
         Map<String, Object> eData = new HashMap<>();
         eData.put("issuedDate", dateFormatter.format(enrolledUser.get(JsonKeys.ISSUED_ON)));
         String finalRecipientName = recipientName;
-        eData.put("data", Collections.singletonList(
-                new HashMap<String, Object>() {{
-                    put("recipientName", finalRecipientName);
-                    put("recipientId", requestMap.get(JsonKeys.USER_ID));
-                }}
-        ));
+        Map<String, Object> recipientData = new HashMap<>();
+        recipientData.put("recipientName", finalRecipientName);
+        recipientData.put("recipientId", requestMap.get(JsonKeys.USER_ID));
+        eData.put("data", Collections.singletonList(recipientData));
         eData.put("reIssueDate", "");
         eData.put("criteria", Collections.singletonMap("narrative", certName));
         eData.put("svgTemplate", template.getOrDefault("url", ""));

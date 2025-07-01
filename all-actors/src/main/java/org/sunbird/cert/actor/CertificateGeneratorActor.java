@@ -73,23 +73,25 @@ public class CertificateGeneratorActor extends BaseActor {
         logger.info("onReceive method call End");
     }
 
-    private BaseStorageService getStorageService() {
-        if(storageService == null) {
+    private BaseStorageService getStorageService() throws BaseException {
+        if (storageService == null) {
             StorageConfig storageConfig = null;
-            if (certVar.getCloudStorageType().equalsIgnoreCase(certVar.getAzureStorage())) {
-                storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getAzureStorageKey(), certVar.getAzureStorageSecret(), Option.apply(null), Option.empty());
-            } else if (certVar.getCloudStorageType().equalsIgnoreCase(certVar.getAwsStorage())) {
-                storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getAwsStorageKey(), certVar.getAwsStorageSecret(), Option.apply(null), Option.empty());
-            } else if (certVar.getCloudStorageType().equalsIgnoreCase(certVar.getCephs3Storage())) {
-                storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getCephs3StorageKey(), certVar.getCephs3StorageSecret(), Option.apply(certVar.getCephs3StorageEndPoint()), Option.empty());
-            } else if (certVar.getCloudStorageType().equalsIgnoreCase(certVar.getGCPStorage())) {
-                storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getGCPStorageKey(), certVar.getGCPStorageSecret(), Option.apply(certVar.getGCPStorageEndPoint()), Option.empty());
-            } else
-                try {
-                    throw new BaseException(IResponseMessage.INTERNAL_ERROR, "Error while initialising cloud storage", ResponseCode.SERVER_ERROR.getCode());
-                } catch (BaseException e) {
-                    logger.error("Error while initialising cloud storage. : {}", e.getMessage());
-                }
+            String cloudStorageType = certVar.getCloudStorageType();
+
+            if (cloudStorageType.equalsIgnoreCase(certVar.getAzureStorage())) {
+                storageConfig = new StorageConfig(cloudStorageType, certVar.getAzureStorageKey(), certVar.getAzureStorageSecret(), Option.apply(null), Option.empty());
+            } else if (cloudStorageType.equalsIgnoreCase(certVar.getAwsStorage())) {
+                storageConfig = new StorageConfig(cloudStorageType, certVar.getAwsStorageKey(), certVar.getAwsStorageSecret(), Option.apply(null), Option.empty());
+            } else if (cloudStorageType.equalsIgnoreCase(certVar.getCephs3Storage())) {
+                storageConfig = new StorageConfig(cloudStorageType, certVar.getCephs3StorageKey(), certVar.getCephs3StorageSecret(), Option.apply(certVar.getCephs3StorageEndPoint()), Option.empty());
+            } else if (cloudStorageType.equalsIgnoreCase(certVar.getGCPStorage())) {
+                storageConfig = new StorageConfig(cloudStorageType, certVar.getGCPStorageKey(), certVar.getGCPStorageSecret(), Option.apply(certVar.getGCPStorageEndPoint()), Option.empty());
+            } else {
+                String errorMsg = "Error while initialising cloud storage. Unknown cloudStorageType: " + cloudStorageType;
+                logger.error(errorMsg);
+                throw new BaseException(IResponseMessage.INTERNAL_ERROR, errorMsg, ResponseCode.SERVER_ERROR.getCode());
+            }
+
             logger.info("CertificateGeneratorActor:getStorageService:storage object formed: {}", storageConfig.toString());
             storageService = StorageServiceFactory.getStorageService(storageConfig);
         }
@@ -260,9 +262,12 @@ public class CertificateGeneratorActor extends BaseActor {
 
     private String encodeQrCode(File file) throws IOException {
         byte[] fileContent = FileUtils.readFileToByteArray(file);
-        file.delete();
+        if (!file.delete()) {
+            logger.debug("Failed to delete temporary file: {}", file.getAbsolutePath());
+        }
         return Base64.getEncoder().encodeToString(fileContent);
     }
+
 
     private HashMap<String, String> populatePropertiesMap(Request request) {
         HashMap<String, String> properties = new HashMap<>();
@@ -310,14 +315,26 @@ public class CertificateGeneratorActor extends BaseActor {
         try {
             File directory = new File(path);
             File[] files = directory.listFiles();
-            for (File file : files) {
-                if (file.getName().startsWith(fileName)) file.delete();
+
+            if (files != null) {
+                for (File file : files) {
+                    if (file.getName().startsWith(fileName)) {
+                        boolean deleted = file.delete();
+                        if (!deleted) {
+                            logger.debug("Failed to delete file: {}", file.getAbsolutePath());
+                        }
+                    }
+                }
+            } else {
+                logger.debug("Directory {} is empty or does not exist.", path);
             }
+
             logger.info("CertificateGeneratorActor: cleanUp completed");
         } catch (Exception ex) {
-            logger.error(ex.getMessage(), ex);
+            logger.error("Error during cleanup: {} {}", ex.getMessage(), ex);
         }
     }
+
 
     public Map<String, Object> getCertificateMetaData(Request request, Map<String, Object> template, boolean isEvent) {
         List<Map<String, Object>> templateResponse = (List<Map<String, Object>>) template.get(JsonKey.RESPONSE);

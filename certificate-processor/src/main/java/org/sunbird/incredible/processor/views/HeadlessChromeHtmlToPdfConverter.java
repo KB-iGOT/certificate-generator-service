@@ -39,8 +39,11 @@ public class HeadlessChromeHtmlToPdfConverter {
             if(process.waitFor()==1){
                 process.destroy();
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // ✅ Re-interrupt the thread
+            logger.error("Thread was interrupted while waiting for the process to complete", e);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Exception in converting HTML to PDF", e);
         }
     }
 

@@ -193,11 +193,11 @@ public class HttpUtil {
 
 
   public static Map<String, String> getHeader(Map<String, String> input) throws Exception {
-    return new HashMap<String, String>() {
-      {
-        put("Content-Type", "application/json");
-        if (input != null) putAll(input);
-      }
-    };
+    Map<String, String> headers = new HashMap<>();
+    headers.put("Content-Type", "application/json");
+    if (input != null) {
+      headers.putAll(input);
+    }
+    return headers;
   }
 }

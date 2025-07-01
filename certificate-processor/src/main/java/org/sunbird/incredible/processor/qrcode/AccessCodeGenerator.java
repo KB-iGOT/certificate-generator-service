@@ -33,7 +33,7 @@ public class AccessCodeGenerator {
         String code = null;
         while (codesCount < count) {
             lastIndex = getMaxIndex();
-            BigDecimal number = new BigDecimal(lastIndex);
+            BigDecimal number = BigDecimal.valueOf(lastIndex);
             BigDecimal num = number.multiply(largePrimeNumber).remainder(exponent);
             code = baseN(num, totalChars);
             if (code.length() == length && isValidCode(code)) {
@@ -49,7 +49,7 @@ public class AccessCodeGenerator {
             return "0";
         }
         double div = Math.floor(num.doubleValue() / base);
-        String val = baseN(new BigDecimal(div), base);
+        String val = baseN(BigDecimal.valueOf(div), base);
         return StringUtils.stripStart(val, stripChars) + ALPHABET[num.remainder(new BigDecimal(base)).intValue()];
     }
 
@@ -64,7 +64,7 @@ public class AccessCodeGenerator {
      * @param code
      * @return Boolean
      */
-    private Boolean isValidCode(String code) {
+    private boolean isValidCode(String code) {
         Matcher matcher = pattern.matcher(code);
         return matcher.matches();
     }

@@ -12,24 +12,23 @@ public class ZipEditorUtil {
 
     public static File zipFiles(List<File> files, String zipName) throws IOException {
         File zipFile = new File(zipName + ".zip");
-        FileOutputStream fos = new FileOutputStream(zipFile);
-        ZipOutputStream zos = new ZipOutputStream(fos);
-        for (File file : files) {
-            String filePath = file.getAbsolutePath();
-            ZipEntry zipEntry = new ZipEntry(file.getName());
-            zos.putNextEntry(zipEntry);
-            FileInputStream fis = new FileInputStream(filePath);
-            byte[] buffer = new byte[1024];
-            int len;
-            while ((len = fis.read(buffer)) > 0) {
-                zos.write(buffer, 0, len);
-            }
-            zos.closeEntry();
-            fis.close();
-        }
-        zos.close();
-        fos.close();
 
+        try (FileOutputStream fos = new FileOutputStream(zipFile);
+             ZipOutputStream zos = new ZipOutputStream(fos)) {
+            for (File file : files) {
+                String filePath = file.getAbsolutePath();
+                ZipEntry zipEntry = new ZipEntry(file.getName());
+                zos.putNextEntry(zipEntry);
+                try (FileInputStream fis = new FileInputStream(filePath)) {
+                    byte[] buffer = new byte[1024];
+                    int len;
+                    while ((len = fis.read(buffer)) > 0) {
+                        zos.write(buffer, 0, len);
+                    }
+                }
+                zos.closeEntry();
+            }
+        }
         return zipFile;
     }
 }
