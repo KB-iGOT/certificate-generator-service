@@ -26,6 +26,8 @@ import java.awt.FontFormatException;
 import java.io.*;
 import java.util.*;
 
+import static java.awt.Font.SANS_SERIF;
+
 public class QRCodeImageGenerator {
 
     private static Logger logger = LoggerFactory.getLogger(QRCodeImageGenerator.class);
@@ -222,6 +224,10 @@ public class QRCodeImageGenerator {
             basicFont = Font.createFont(Font.TRUETYPE_FONT, inputStream);
         } catch (Exception e) {
             logger.error("Exception occurred during font creation " + e);
+        }
+        if (basicFont == null) {
+            logger.warn("Falling back to default system font for {}", fontName);
+            basicFont = new Font(SANS_SERIF, Font.BOLD, fontSize);
         }
         Map<TextAttribute, Object> attributes = new HashMap<TextAttribute, Object>();
         attributes.put(TextAttribute.TRACKING, tracking);

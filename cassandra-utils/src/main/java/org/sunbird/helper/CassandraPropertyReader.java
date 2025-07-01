@@ -31,13 +31,9 @@ public class CassandraPropertyReader {
     }
   }
 
-  public static CassandraPropertyReader getInstance() {
-    if (null == cassandraPropertyReader) {
-      synchronized (CassandraPropertyReader.class) {
-        if (null == cassandraPropertyReader) {
-          cassandraPropertyReader = new CassandraPropertyReader();
-        }
-      }
+  public static synchronized CassandraPropertyReader getInstance() {
+    if (cassandraPropertyReader == null) {
+      cassandraPropertyReader = new CassandraPropertyReader();
     }
     return cassandraPropertyReader;
   }

@@ -200,7 +200,9 @@ public class HTMLTemplateZip {
             logger.info("Exception while deleting directory  " + directory.getName() + " " + e.getMessage());
         }
         File zipFile = new File(zipFilePath + zipFileName);
-        zipFile.delete();
+        if (!zipFile.delete()) {
+            logger.warn("Failed to delete zip file: {}", zipFile.getAbsolutePath());
+        }
         logger.info("HTMLTemplateZip: cleanUp completed");
     }
 

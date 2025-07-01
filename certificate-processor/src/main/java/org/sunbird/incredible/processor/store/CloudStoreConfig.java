@@ -56,7 +56,7 @@ public class CloudStoreConfig {
     }
 
     public void setEndpoint(String endpoint) {
-        this.key = endpoint;
+        this.endpoint = endpoint;
     }
 
     @Override

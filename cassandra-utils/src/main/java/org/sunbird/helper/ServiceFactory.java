@@ -18,13 +18,9 @@ public class ServiceFactory {
    *
    * @return
    */
-  public static CassandraOperation getInstance() {
-    if (null == operation) {
-      synchronized (ServiceFactory.class) {
-        if (null == operation) {
-          operation = new CassandraDACImpl();
-        }
-      }
+  public static synchronized CassandraOperation getInstance() {
+    if (operation == null) {
+      operation = new CassandraDACImpl();
     }
     return operation;
   }

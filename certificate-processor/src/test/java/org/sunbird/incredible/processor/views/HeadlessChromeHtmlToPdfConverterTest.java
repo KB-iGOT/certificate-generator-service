@@ -97,4 +97,47 @@ class HeadlessChromeHtmlToPdfConverterTest {
             assertTrue(false, "Should not throw exception");
         }
     }
+
+    @Test
+    public void testConvert_InterruptedException() throws Exception {
+        System.setProperty("os.name", "Linux");
+
+        Runtime mockRuntime = mock(Runtime.class);
+        when(mockRuntime.exec(any(String[].class))).thenReturn(mockProcess);
+
+        when(mockProcess.getInputStream()).thenReturn(new ByteArrayInputStream("".getBytes()));
+        when(mockProcess.getErrorStream()).thenReturn(new ByteArrayInputStream("".getBytes()));
+        when(mockProcess.waitFor()).thenThrow(new InterruptedException("Mock interruption"));
+
+        try (MockedStatic<Runtime> runtimeMock = mockStatic(Runtime.class)) {
+            runtimeMock.when(Runtime::getRuntime).thenReturn(mockRuntime);
+
+            Thread.interrupted(); // clear current thread interrupt status
+            HeadlessChromeHtmlToPdfConverter.convert(mockHtmlFile, mockPdfFile);
+
+            // After exception, thread should be interrupted
+            assertTrue(Thread.currentThread().isInterrupted());
+        }
+    }
+
+    @Test
+    public void testConvert_ProcessReturnsOne_ShouldDestroy() throws Exception {
+        System.setProperty("os.name", "Linux");
+
+        when(mockProcess.getInputStream()).thenReturn(new ByteArrayInputStream("Mock".getBytes()));
+        when(mockProcess.getErrorStream()).thenReturn(new ByteArrayInputStream("MockErr".getBytes()));
+        when(mockProcess.waitFor()).thenReturn(1);
+
+        Runtime mockRuntime = mock(Runtime.class);
+        when(mockRuntime.exec(any(String[].class))).thenReturn(mockProcess);
+
+        try (MockedStatic<Runtime> runtimeMock = mockStatic(Runtime.class)) {
+            runtimeMock.when(Runtime::getRuntime).thenReturn(mockRuntime);
+
+            HeadlessChromeHtmlToPdfConverter.convert(mockHtmlFile, mockPdfFile);
+
+            verify(mockProcess).destroy();
+        }
+    }
+
 }
