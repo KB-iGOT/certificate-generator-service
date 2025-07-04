@@ -23,12 +23,12 @@
         </pluginRepository>
     </pluginRepositories>
     <dependencies>
-        <dependency>
-            <groupId>com.typesafe.play</groupId>
-            <artifactId>play-netty-server_${scala.major.version}</artifactId>
-            <version>${play2.version}</version>
-            <scope>runtime</scope>
-        </dependency>
+      <dependency>
+        <groupId>com.typesafe.play</groupId>
+        <artifactId>play-netty-server_${scala.major.version}</artifactId>
+        <version>${play2.version}</version>
+        <scope>runtime</scope>
+      </dependency>
         <dependency>
             <groupId>com.typesafe.play</groupId>
             <artifactId>play_${scala.major.version}</artifactId>
@@ -149,11 +149,26 @@
             <version>1.2.12</version>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.2.0</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>1.14.12</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy-agent</artifactId>
+            <version>1.14.12</version>
+            <scope>test</scope>
+        </dependency>
+
         <!--Play Helper Class for Testing Controllers  -->
         <dependency>
             <groupId>com.typesafe.play</groupId>
@@ -171,34 +186,16 @@
             <groupId>org.sunbird</groupId>
             <artifactId>sb-utils</artifactId>
             <version>1.0.0-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.sunbird</groupId>
             <artifactId>cassandra-utils</artifactId>
             <version>1.0-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-inline</artifactId>
-            <version>5.2.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy</artifactId>
-            <version>1.12.22</version>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_2.12</artifactId>
+            <version>3.2.17</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -249,7 +246,6 @@
                 <version>3.0.0-M4</version>
                 <configuration>
                     <includes>
-                        <include>**/*Spec.java</include>
                         <include>**/*Test.java</include>
                     </includes>
                 </configuration>
@@ -258,6 +254,16 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.8</version>
+                <configuration>
+                    <destFile>${basedir}/target/coverage-reports/jacoco-unit.exec</destFile>
+                    <dataFile>${basedir}/target/coverage-reports/jacoco-unit.exec</dataFile>
+                    <excludes>
+                        <exclude>**/common/**</exclude>
+                        <exclude>**/routes/**</exclude>
+                        <exclude>**/Reverse*/**</exclude>
+                        <exclude>**/*.javascript/**</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <id>jacoco-initialize</id>
@@ -272,30 +278,29 @@
                             <goal>report</goal>
                         </goals>
                     </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
                 </executions>
             </plugin>
 
+            <!-- ScalaTest plugin -->
             <plugin>
-                <groupId>org.scoverage</groupId>
-                <artifactId>scoverage-maven-plugin</artifactId>
-                <version>${scoverage.plugin.version}</version>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-maven-plugin</artifactId>
+                <version>2.0.0</version>
+                <executions>
+                    <execution>
+                        <id>scalatest</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
                 <configuration>
-                    <scalaVersion>${scala.version}</scalaVersion>
-                    <aggregate>true</aggregate>
-                    <highlighting>true</highlighting>
+                    <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.sonarsource.scanner.maven</groupId>
-                <artifactId>sonar-maven-plugin</artifactId>
-                <version>4.0.0.4121</version>
             </plugin>
         </plugins>
     </build>

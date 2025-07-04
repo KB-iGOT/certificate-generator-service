@@ -1,10 +1,11 @@
 package controllers.health;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
-import org.junit.Before;
-import org.junit.Test;
 import akka.actor.ActorRef;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import play.mvc.Http;
 import play.mvc.Result;
 import utils.module.SignalHandler;
@@ -18,7 +19,7 @@ public class HealthControllerTest {
   private SignalHandler signalHandler;
   private Http.Request request;
 
-  @Before
+  @BeforeEach
   public void setUp() {
     healthActorRef = mock(ActorRef.class);
     signalHandler = mock(SignalHandler.class);

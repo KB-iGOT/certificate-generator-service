@@ -1,9 +1,8 @@
 package utils.module;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import play.mvc.Http;
 import play.mvc.Result;
 import play.mvc.Action;
@@ -14,6 +13,11 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+
 public class OnRequestHandlerTest {
 
     private OnRequestHandler handler;
@@ -21,7 +25,7 @@ public class OnRequestHandlerTest {
     private Http.Headers headers;
     private Method method;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         handler = new OnRequestHandler();
         request = mock(Http.Request.class);

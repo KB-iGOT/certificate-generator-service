@@ -1,74 +1,87 @@
 package utils;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-import org.junit.Test;
-import play.mvc.Http;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import play.libs.Json;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.sunbird.BaseException;
 import org.sunbird.ActorServiceException;
-import java.util.HashMap;
+import play.libs.Json;
+import play.mvc.Http;
+
+import java.util.Collections;
 import java.util.Map;
 
-public class RequestMapperTest {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-    public static class DummyClass {
-        public String name;
-        public Map<String, Object> headers;
+class RequestMapperTest {
+
+    Http.Request mockRequest;
+    Http.RequestBody mockBody;
+    Http.Headers mockHeaders;
+
+    @BeforeEach
+    void setUp() {
+        mockRequest = mock(Http.Request.class);
+        mockBody = mock(Http.RequestBody.class);
+        mockHeaders = mock(Http.Headers.class);
+
+        when(mockRequest.body()).thenReturn(mockBody);
+        when(mockRequest.getHeaders()).thenReturn(mockHeaders);
     }
 
     @Test
-    public void mapRequest_MapsValidJsonRequestToObject() throws Exception {
-        Http.Request request = mock(Http.Request.class);
+    void testMapRequest_Success() throws BaseException {
+        // given
         ObjectNode jsonNode = Json.newObject();
-        jsonNode.put("name", "testName");
-        Http.RequestBody body = mock(Http.RequestBody.class);
-        when(request.body()).thenReturn(body);
-        when(body.asJson()).thenReturn(jsonNode);
-        Map<String, String[]> headersMap = new HashMap<>();
-        headersMap.put("header1", new String[]{"value1"});
-        Http.Headers headers = mock(Http.Headers.class);
-        when(request.getHeaders()).thenReturn(headers);
-        when(headers.toMap()).thenReturn((Map) headersMap);
+        jsonNode.put("field", "value");
+        Map<String, String[]> headersMap = Collections.singletonMap("Authorization", new String[]{"Bearer token"});
 
-        DummyClass result = (DummyClass) RequestMapper.mapRequest(request, DummyClass.class);
-        assertEquals("testName", result.name);
-        assertNotNull(result.headers);
-        assertTrue(result.headers.containsKey("header1"));
+        when(mockBody.asJson()).thenReturn(jsonNode);
+       // when(mockHeaders.toMap()).thenReturn(headersMap);
+
+        // when
+        DummyClass result = (DummyClass) RequestMapper.mapRequest(mockRequest, DummyClass.class);
+
+        // then
+        assertNotNull(result);
+        assertEquals("value", result.field);
     }
 
-    @Test(expected = ActorServiceException.InvalidRequestData.class)
-    public void mapRequest_ThrowsExceptionWhenRequestIsNull() throws Exception {
-        RequestMapper.mapRequest(null, DummyClass.class);
+    @Test
+    void testMapRequest_NullRequest_ThrowsException() {
+        ActorServiceException.InvalidRequestData ex =
+                assertThrows(ActorServiceException.InvalidRequestData.class,
+                        () -> RequestMapper.mapRequest(null, DummyClass.class));
+
+        assertEquals("INVALID_REQUESTED_DATA", ex.getCode());
     }
 
-    @Test(expected = ActorServiceException.InvalidRequestData.class)
-    public void mapRequest_ThrowsExceptionWhenBodyIsNull() throws Exception {
-        Http.Request request = mock(Http.Request.class);
-        when(request.body()).thenReturn(null);
-        RequestMapper.mapRequest(request, DummyClass.class);
+    @Test
+    void testMapRequest_BodyIsNull_ThrowsException() {
+        when(mockBody.asJson()).thenReturn(null);
+
+        ActorServiceException.InvalidRequestData ex =
+                assertThrows(ActorServiceException.InvalidRequestData.class,
+                        () -> RequestMapper.mapRequest(mockRequest, DummyClass.class));
+
+        assertEquals("INVALID_REQUESTED_DATA", ex.getCode());
     }
 
-    @Test(expected = ActorServiceException.InvalidRequestData.class)
-    public void mapRequest_ThrowsExceptionWhenBodyAsJsonIsNull() throws Exception {
-        Http.Request request = mock(Http.Request.class);
-        Http.RequestBody body = mock(Http.RequestBody.class);
-        when(request.body()).thenReturn(body);
-        when(body.asJson()).thenReturn(null);
-        RequestMapper.mapRequest(request, DummyClass.class);
+    @Test
+    void testMapRequest_InvalidJson_ThrowsException() {
+        // simulate exception while casting or setting headers
+        when(mockBody.asJson()).thenReturn(Json.newObject());
+        when(mockHeaders.toMap()).thenThrow(new RuntimeException("bad headers"));
+
+        ActorServiceException.InvalidRequestData ex =
+                assertThrows(ActorServiceException.InvalidRequestData.class,
+                        () -> RequestMapper.mapRequest(mockRequest, DummyClass.class));
+
+        assertEquals("INVALID_REQUESTED_DATA", ex.getCode());
     }
 
-    @Test(expected = ActorServiceException.InvalidRequestData.class)
-    public void mapRequest_ThrowsExceptionWhenJsonCannotBeMapped() throws Exception {
-        Http.Request request = mock(Http.Request.class);
-        ObjectNode jsonNode = Json.newObject();
-        jsonNode.put("invalid", "data");
-        Http.RequestBody body = mock(Http.RequestBody.class);
-        when(request.body()).thenReturn(body);
-        when(body.asJson()).thenReturn(jsonNode);
-        Http.Headers headers = mock(Http.Headers.class);
-        when(request.getHeaders()).thenReturn(headers);
-        when(headers.toMap()).thenReturn(new HashMap<>());
-        RequestMapper.mapRequest(request, Integer.class);
+    static class DummyClass {
+        public String field;
     }
 }

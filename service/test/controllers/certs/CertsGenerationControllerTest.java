@@ -1,9 +1,10 @@
 package controllers.certs;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.junit.Assert.*;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import play.mvc.Http;
 import play.mvc.Result;
 import akka.actor.ActorRef;
@@ -16,7 +17,7 @@ public class CertsGenerationControllerTest {
     private ActorRef mockActorRef;
     private Http.Request mockRequest;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         controller = new CertsGenerationController();
         mockActorRef = mock(ActorRef.class);

@@ -1,11 +1,9 @@
 package controllers;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-import org.junit.Before;
-import org.junit.Test;
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.sunbird.request.Request;
 import org.sunbird.response.Response;
 import org.sunbird.BaseException;
@@ -16,12 +14,15 @@ import scala.concurrent.Future;
 import scala.concurrent.Promise;
 import java.util.concurrent.CompletionStage;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 public class RequestHandlerTest {
 
     private RequestHandler handler;
     private Http.Request httpRequest;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         handler = new RequestHandler();
         httpRequest = mock(Http.Request.class);

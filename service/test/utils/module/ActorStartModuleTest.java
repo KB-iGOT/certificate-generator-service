@@ -1,15 +1,19 @@
 package utils.module;
 
-import static org.mockito.Mockito.*;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 public class ActorStartModuleTest {
 
     private ActorStartModule module;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         module = spy(new ActorStartModule());
     }

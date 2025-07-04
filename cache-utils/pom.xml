@@ -15,20 +15,21 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scoverage.plugin.version>1.4.1</scoverage.plugin.version>
-        <sonar.java.binaries>${project.basedir}/target/classes</sonar.java.binaries>
-        <sonar.coverageReportPaths>${project.basedir}/target/scoverage.xml</sonar.coverageReportPaths>
+        <scala.version>2.12.10</scala.version> <!-- match with your scala-library dependency -->
+        <scala.major.version>2.12</scala.major.version>
+        <sonar.scala.scoverage.reportPath>target/scoverage.xml</sonar.scala.scoverage.reportPath>
     </properties>
     <dependencies>
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_${scala.major.version}</artifactId>
-            <version>3.2.7</version>
+            <version>3.1.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.scalamock</groupId>
             <artifactId>scalamock_${scala.major.version}</artifactId>
-            <version>6.1.1</version>
+            <version>4.4.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -52,32 +53,7 @@
             <artifactId>slf4j-api</artifactId>
             <version>1.7.25</version>
         </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.module</groupId>
-            <artifactId>jackson-module-scala_${scala.major.version}</artifactId>
-            <version>2.17.2</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-            <version>${scala.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-compiler</artifactId>
-            <version>${scala.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-reflect</artifactId>
-            <version>${scala.version}</version>
-        </dependency>
+
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
@@ -96,7 +72,7 @@
         </dependency>
         <dependency>
             <groupId>org.scalatestplus</groupId>
-            <artifactId>mockito-3-4_2.13</artifactId>
+            <artifactId>mockito-3-4_${scala.major.version}</artifactId>
             <version>3.2.10.0</version>
             <scope>test</scope>
         </dependency>
@@ -109,7 +85,7 @@
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
-                <version>4.4.0</version>
+                <version>4.5.6</version> <!-- Updated version -->
                 <configuration>
                     <scalaVersion>${scala.version}</scalaVersion>
                     <checkMultipleScalaVersions>false</checkMultipleScalaVersions>
@@ -167,7 +143,25 @@
                     </execution>
                 </executions>
             </plugin>
-
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.8</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>

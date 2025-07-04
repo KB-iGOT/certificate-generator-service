@@ -1,22 +1,24 @@
 package controllers;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-import org.junit.Before;
-import org.junit.Test;
+
 import akka.actor.ActorRef;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import play.libs.concurrent.HttpExecutionContext;
 import play.mvc.Http;
 import play.mvc.Result;
 import java.util.concurrent.CompletionStage;
 import org.sunbird.RequestValidatorFunction;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 public class BaseControllerTest {
 
     private BaseController baseController;
     private HttpExecutionContext httpExecutionContext;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         httpExecutionContext = mock(HttpExecutionContext.class);
         when(httpExecutionContext.current()).thenReturn(runnable -> runnable.run());
