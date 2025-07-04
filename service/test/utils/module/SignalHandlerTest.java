@@ -1,11 +1,13 @@
 package utils.module;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-import org.junit.Test;
+
 import akka.actor.ActorSystem;
+import org.junit.jupiter.api.Test;
 import play.api.Application;
 import javax.inject.Provider;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 public class SignalHandlerTest {
 

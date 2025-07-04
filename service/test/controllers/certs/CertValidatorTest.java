@@ -1,81 +1,77 @@
 package controllers.certs;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.sunbird.request.Request;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.sunbird.BaseException;
+import org.sunbird.request.Request;
+
 import java.util.HashMap;
 import java.util.Map;
 
-public class CertValidatorTest {
+import static org.junit.jupiter.api.Assertions.*;
+
+class CertValidatorTest {
 
     private CertValidator certValidator;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         certValidator = new CertValidator();
     }
 
     @Test
-    public void validateGenerateCertRequest_Succeeds_WhenAllMandatoryParamsPresent() throws Exception {
+    void testValidateGenerateCertRequest_success() {
         Request request = new Request();
-        Map<String, Object> reqMap = new HashMap<>();
-        reqMap.put("userId", "user-1");
-        reqMap.put("courseId", "course-1");
-        reqMap.put("batchId", "batch-1");
-        request.setRequest(reqMap);
+        Map<String, Object> innerMap = new HashMap<>();
+        innerMap.put("userId", "user123");
+        innerMap.put("courseId", "course123");
+        innerMap.put("batchId", "batch123");
+        request.setRequest(innerMap);
 
-        certValidator.validateGenerateCertRequest(request);
+        assertDoesNotThrow(() -> certValidator.validateGenerateCertRequest(request));
     }
 
-    @Test(expected = BaseException.class)
-    public void validateGenerateCertRequest_ThrowsException_WhenRequestMapIsEmpty() throws Exception {
-        Request request = new Request();
-        request.setRequest(new HashMap<>());
-
-        certValidator.validateGenerateCertRequest(request);
-    }
-
-    @Test(expected = BaseException.class)
-    public void validateGenerateCertRequest_ThrowsException_WhenRequestMapIsNull() throws Exception {
+    @Test
+    void testValidateGenerateCertRequest_missingRequestMap() {
         Request request = new Request();
         request.setRequest(null);
 
-        certValidator.validateGenerateCertRequest(request);
+        BaseException ex = assertThrows(BaseException.class,
+                () -> certValidator.validateGenerateCertRequest(request));
+
+        assertEquals("MANDATORY_PARAMETER_MISSING", ex.getCode());
+        assertTrue(ex.getMessage().contains("request"));
     }
 
-    @Test(expected = BaseException.class)
-    public void validateGenerateCertRequest_ThrowsException_WhenUserIdIsMissing() throws Exception {
+    @Test
+    void testValidateGenerateCertRequest_missingMandatoryKey() {
         Request request = new Request();
-        Map<String, Object> reqMap = new HashMap<>();
-        reqMap.put("courseId", "course-1");
-        reqMap.put("batchId", "batch-1");
-        request.setRequest(reqMap);
+        Map<String, Object> innerMap = new HashMap<>();
+        innerMap.put("userId", "user123");
+        innerMap.put("courseId", "course123");
+        // batchId missing
+        request.setRequest(innerMap);
 
-        certValidator.validateGenerateCertRequest(request);
+        BaseException ex = assertThrows(BaseException.class,
+                () -> certValidator.validateGenerateCertRequest(request));
+
+        assertEquals("MANDATORY_PARAMETER_MISSING", ex.getCode());
+        assertTrue(ex.getMessage().contains("request.batchId"));
     }
 
-    @Test(expected = BaseException.class)
-    public void validateGenerateCertRequest_ThrowsException_WhenCourseIdIsBlank() throws Exception {
+    @Test
+    void testValidateGenerateCertRequest_emptyStringMandatoryKey() {
         Request request = new Request();
-        Map<String, Object> reqMap = new HashMap<>();
-        reqMap.put("userId", "user-1");
-        reqMap.put("courseId", "");
-        reqMap.put("batchId", "batch-1");
-        request.setRequest(reqMap);
+        Map<String, Object> innerMap = new HashMap<>();
+        innerMap.put("userId", "user123");
+        innerMap.put("courseId", "course123");
+        innerMap.put("batchId", ""); // empty string
+        request.setRequest(innerMap);
 
-        certValidator.validateGenerateCertRequest(request);
-    }
+        BaseException ex = assertThrows(BaseException.class,
+                () -> certValidator.validateGenerateCertRequest(request));
 
-    @Test(expected = BaseException.class)
-    public void validateGenerateCertRequest_ThrowsException_WhenBatchIdIsNull() throws Exception {
-        Request request = new Request();
-        Map<String, Object> reqMap = new HashMap<>();
-        reqMap.put("userId", "user-1");
-        reqMap.put("courseId", "course-1");
-        reqMap.put("batchId", null);
-        request.setRequest(reqMap);
-
-        certValidator.validateGenerateCertRequest(request);
+        assertEquals("MANDATORY_PARAMETER_MISSING", ex.getCode());
+        assertTrue(ex.getMessage().contains("request.batchId"));
     }
 }

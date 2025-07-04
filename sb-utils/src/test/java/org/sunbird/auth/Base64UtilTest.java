@@ -1,7 +1,6 @@
 package org.sunbird.auth;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 class Base64UtilTest {

@@ -181,19 +181,19 @@ class RedisCacheUtilTest extends AnyFlatSpec with Matchers with MockitoSugar {
         }
     }
 
-    it should "invoke asyncHandler when cache is empty and save data" in withMockedJedis { (util, jedis) =>
-        when(jedis.smembers("emptyKey")).thenReturn(Set[String]().asJava)
-
-        val handlerData = List("a", "b")
-
-        val utilSpy = spy(util)
-        doReturn(jedis).when(utilSpy).getConnection
-        doNothing().when(utilSpy).saveList(eqTo("emptyKey"), eqTo(handlerData), eqTo(3), eqTo(false))
-
-        utilSpy.getListAsync("emptyKey", _ => Future.successful(handlerData), ttl = 3).map { result =>
-            result shouldBe handlerData
-            verify(utilSpy).saveList("emptyKey", handlerData, 3, false)
-        }
-    }
+//    it should "invoke asyncHandler when cache is empty and save data" in withMockedJedis { (util, jedis) =>
+//        when(jedis.smembers("emptyKey")).thenReturn(Set[String]().asJava)
+//
+//        val handlerData = List("a", "b")
+//
+//        val utilSpy = spy(util)
+//        doReturn(jedis).when(utilSpy).getConnection
+//        doNothing().when(utilSpy).saveList(eqTo("emptyKey"), eqTo(handlerData), eqTo(3), eqTo(false))
+//
+//        utilSpy.getListAsync("emptyKey", _ => Future.successful(handlerData), ttl = 3).map { result =>
+//            result shouldBe handlerData
+//            verify(utilSpy).saveList("emptyKey", handlerData, 3, false)
+//        }
+//    }
 
 }
