@@ -30,7 +30,7 @@ public class UserEnrolmentHelper {
         primaryKey.put(JsonKeys.USER_ID, userId);
         primaryKey.put(JsonKeys.COURSE_ID, courseId);
         primaryKey.put(JsonKeys.BATCH_ID, batchId);
-        return cassandraOperation.getRecordsByProperties(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.USER_ENROLMENTS, primaryKey);
+        return cassandraOperation.getRecordsByProperties(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.USER_ENROLMENTS_V2, primaryKey);
     }
 
     public Response getUserEventEnrollmentRecord(String courseId, String batchId, String userId) throws BaseException {
@@ -56,6 +56,6 @@ public class UserEnrolmentHelper {
         primaryKey.put(JsonKeys.USER_ID, userId);
         primaryKey.put(JsonKeys.COURSE_ID, courseId);
         primaryKey.put(JsonKeys.BATCH_ID, batchId);
-        return cassandraOperation.updateRecord(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.USER_ENROLMENTS, attributeMap, primaryKey);
+        return cassandraOperation.updateRecord(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.USER_ENROLMENTS_V2, attributeMap, primaryKey);
     }
 }

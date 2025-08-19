@@ -105,7 +105,7 @@ public class IssueCertificateContentHelper {
             primaryKey.put(JsonKeys.USER_ID, userId);
             primaryKey.put(JsonKeys.COURSE_ID, courseId);
             primaryKey.put(JsonKeys.BATCH_ID, batchId);
-            Response row = cassandraOperation.getRecordsByProperties(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.USER_ENROLMENTS, primaryKey);
+            Response row = cassandraOperation.getRecordsByProperties(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.USER_ENROLMENTS_V2, primaryKey);
             if (row != null) {
                 List<Map<String, Object>> mapList = (List<Map<String, Object>>) row.get(JsonKeys.RESPONSE);
                 if (CollectionUtils.isNotEmpty(mapList)) {
