@@ -99,7 +99,6 @@ public class CertificateGeneratorActor extends BaseActor {
     private void generateCertificate(Request request) throws BaseException {
         try {
             logger.info("generateCertificate request received== {}", request.getRequest());
-            logger.debug("generateCertificate request received== {}", request.getHeaders());
             String courseId = (String) request.getRequest().get(JsonKeys.COURSE_ID);
             String batchId = (String) request.getRequest().get(JsonKeys.BATCH_ID);
             String userId = (String) request.getRequest().get(JsonKeys.USER_ID);

@@ -1,5 +1,6 @@
 package org.sunbird.cert.actor;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.sunbird.BaseActor;
 import org.sunbird.BaseException;
@@ -15,10 +16,7 @@ import org.sunbird.request.Request;
 import org.sunbird.response.Response;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CertBackgroundActor extends BaseActor {
     private static final CertRegistryHelper certRegistryHelper = CertRegistryHelper.getInstance();
@@ -61,7 +59,18 @@ public class CertBackgroundActor extends BaseActor {
             if (MapUtils.isNotEmpty(certificateRegistryResponse)) {
                 Map<String, Object> certificateMap = new HashMap<>();
                 certificateMap.put(JsonKeys.IDENTIFIER, uuid);
-                certificateMap.put(JsonKeys.LAST_ISSUED_ON, formatter.format(new Date()));
+                if (CollectionUtils.isNotEmpty(issuedCertificateList)) {
+                    String lastIssuedOn = issuedCertificateList.stream()
+                            .filter(cert -> !cert.containsKey(JsonKeys.VERSION))
+                            .map(cert -> (String) cert.get(JsonKeys.LAST_ISSUED_ON))
+                            .filter(Objects::nonNull)
+                            .findFirst()
+                            .orElseGet(() -> formatter.format(new Date()));
+                    certificateMap.put(JsonKeys.LAST_ISSUED_ON, lastIssuedOn);
+                } else {
+                    certificateMap.put(JsonKeys.LAST_ISSUED_ON, formatter.format(new Date()));
+                }
+
                 certificateMap.put(JsonKeys.TOKEN, accessCode);
                 certificateMap.put(JsonKeys.NAME, certificateTemplate.get(JsonKeys.NAME));
                 certificateMap.put(JsonKeys.VERSION, JsonKeys.VERSION_2);
