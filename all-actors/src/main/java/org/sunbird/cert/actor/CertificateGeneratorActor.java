@@ -2,6 +2,7 @@ package org.sunbird.cert.actor;
 
 import akka.actor.ActorRef;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -54,6 +55,7 @@ public class CertificateGeneratorActor extends BaseActor {
     private static final IssueCertificateEventHelper issueCertificateEventHelper = IssueCertificateEventHelper.getInstance();
     private static final CertRegistryHelper certRegistryHelper = CertRegistryHelper.getInstance();
     private static final UserEnrolmentHelper userEnrolmentHelper = UserEnrolmentHelper.getInstance();
+    private static final PropertiesCache propertiesCache = PropertiesCache.getInstance();
 
     @Inject
     @Named("certificate_background_actor")
@@ -217,6 +219,27 @@ public class CertificateGeneratorActor extends BaseActor {
                             qrMap = certificateGenerator.generateQrCode();
                         }
                         String encodedQrCode = encodeQrCode((File) qrMap.get(JsonKey.QR_CODE_FILE));
+                        if (CollectionUtils.isNotEmpty(issuedCertificateList)) {
+                            String specialEventCertificate = issuedCertificateList.stream()
+                                    .filter(cert -> cert.containsKey(JsonKeys.EVENT_ISSUE_NAME)) // keep only those with the key
+                                    .map(cert -> (String) cert.get(JsonKeys.EVENT_ISSUE_NAME))
+                                    .filter(Objects::nonNull)
+                                    .findFirst()
+                                    .orElse(null);
+                            if (StringUtils.isNotBlank(specialEventCertificate)) {
+                                String specialEventProperty = propertiesCache.getProperty(JsonKeys.SPECIAL_CERTIFICATE_EVENT_MAP);
+                                Map<String, String> specialEventCertifcateMap = mapper.readValue(specialEventProperty, new TypeReference<>() {
+                                });
+                                if (MapUtils.isNotEmpty(specialEventCertifcateMap)) {
+                                    logger.info("The size for specialEvent Certificate is: " + specialEventCertifcateMap.size());
+                                    String svgTemplate = specialEventCertifcateMap.get(specialEventCertificate);
+                                    logger.info("The svg template is: " + svgTemplate);
+                                    ((Map) request.get(JsonKey.CERTIFICATE)).put(JsonKey.SVG_TEMPLATE, svgTemplate);
+                                }
+                            }
+
+                        }
+
                         SvgGenerator svgGenerator = new SvgGenerator((String) ((Map) request.get(JsonKey.CERTIFICATE)).get(JsonKey.SVG_TEMPLATE), directory);
                         encodedSvg = svgGenerator.generate(certificateExtension, encodedQrCode, getStorageService());
                         if (MapUtils.isEmpty(v2CertificateRegistryMap)) {

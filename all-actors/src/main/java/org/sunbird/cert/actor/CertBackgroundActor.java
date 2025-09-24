@@ -2,9 +2,11 @@ package org.sunbird.cert.actor;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.sunbird.BaseActor;
 import org.sunbird.BaseException;
 import org.sunbird.JsonKeys;
+import org.sunbird.PropertiesCache;
 import org.sunbird.cert.helper.CertRegistryHelper;
 import org.sunbird.cert.helper.IssueCertificateContentHelper;
 import org.sunbird.cert.helper.IssueCertificateEventHelper;
@@ -24,6 +26,7 @@ public class CertBackgroundActor extends BaseActor {
     private static final IssueCertificateEventHelper issueCertificateEventHelper = IssueCertificateEventHelper.getInstance();
     private static final UserEnrolmentHelper userEnrolmentHelper = UserEnrolmentHelper.getInstance();
     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+    private static final PropertiesCache propertiesCache = PropertiesCache.getInstance();
 
     @Override
     public void onReceive(Request request) throws Throwable {
@@ -60,13 +63,28 @@ public class CertBackgroundActor extends BaseActor {
                 Map<String, Object> certificateMap = new HashMap<>();
                 certificateMap.put(JsonKeys.IDENTIFIER, uuid);
                 if (CollectionUtils.isNotEmpty(issuedCertificateList)) {
-                    String lastIssuedOn = issuedCertificateList.stream()
+                    Map<String, String> certValues = issuedCertificateList.stream()
                             .filter(cert -> !cert.containsKey(JsonKeys.VERSION))
-                            .map(cert -> (String) cert.get(JsonKeys.LAST_ISSUED_ON))
-                            .filter(Objects::nonNull)
                             .findFirst()
-                            .orElseGet(() -> formatter.format(new Date()));
-                    certificateMap.put(JsonKeys.LAST_ISSUED_ON, lastIssuedOn);
+                            .map(cert -> {
+                                Map<String, String> values = new HashMap<>();
+                                values.put(JsonKeys.LAST_ISSUED_ON,
+                                        (String) cert.getOrDefault(JsonKeys.LAST_ISSUED_ON, formatter.format(new Date())));
+                                values.put(JsonKeys.EVENT_ISSUE_NAME, (String) cert.get(JsonKeys.EVENT_ISSUE_NAME));
+                                return values;
+                            })
+                            .orElseGet(() -> {
+                                Map<String, String> values = new HashMap<>();
+                                values.put(JsonKeys.LAST_ISSUED_ON, formatter.format(new Date()));
+                                return values;
+                            });
+
+                    certificateMap.put(JsonKeys.LAST_ISSUED_ON, certValues.get(JsonKeys.LAST_ISSUED_ON));
+                    if (StringUtils.isNotBlank(certValues.get(JsonKeys.EVENT_ISSUE_NAME))) {
+                        logger.info("The Special Event Certificate is present and value is::: " + certValues.get(JsonKeys.EVENT_ISSUE_NAME) + " for old Certificates.");
+                        certificateMap.put(JsonKeys.EVENT_ISSUE_NAME, certValues.get(JsonKeys.EVENT_ISSUE_NAME));
+                    }
+
                 } else {
                     certificateMap.put(JsonKeys.LAST_ISSUED_ON, formatter.format(new Date()));
                 }
@@ -74,6 +92,11 @@ public class CertBackgroundActor extends BaseActor {
                 certificateMap.put(JsonKeys.TOKEN, accessCode);
                 certificateMap.put(JsonKeys.NAME, certificateTemplate.get(JsonKeys.NAME));
                 certificateMap.put(JsonKeys.VERSION, JsonKeys.VERSION_2);
+                String specialEventCertificateName = propertiesCache.getProperty(JsonKeys.SPECIAL_EVENT_CERTIFICATE_NAME);
+                if (StringUtils.isNotBlank(specialEventCertificateName)) {
+                    logger.info("The Special Event Certificate is present and value is::: " + specialEventCertificateName);
+                    certificateMap.put(JsonKeys.EVENT_ISSUE_NAME, specialEventCertificateName);
+                }
                 issuedCertificateList.add(certificateMap);
                 updateUserEnrolmentRecord(userId, courseId, batchId, issuedCertificateList, isEvent);
             } else {
