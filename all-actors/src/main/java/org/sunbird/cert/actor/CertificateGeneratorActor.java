@@ -219,15 +219,23 @@ public class CertificateGeneratorActor extends BaseActor {
                             qrMap = certificateGenerator.generateQrCode();
                         }
                         String encodedQrCode = encodeQrCode((File) qrMap.get(JsonKey.QR_CODE_FILE));
+                        String specialEventCertificate = null;
                         if (CollectionUtils.isNotEmpty(issuedCertificateList)) {
-                            String specialEventCertificate = issuedCertificateList.stream()
+                            specialEventCertificate = issuedCertificateList.stream()
                                     .filter(cert -> cert.containsKey(JsonKeys.EVENT_ISSUE_NAME)) // keep only those with the key
                                     .map(cert -> (String) cert.get(JsonKeys.EVENT_ISSUE_NAME))
                                     .filter(Objects::nonNull)
                                     .findFirst()
                                     .orElse(null);
-                            if (StringUtils.isNotBlank(specialEventCertificate)) {
-                                String specialEventProperty = propertiesCache.getProperty(JsonKeys.SPECIAL_CERTIFICATE_EVENT_MAP);
+
+                        } else {
+                            specialEventCertificate = propertiesCache.getProperty(JsonKeys.SPECIAL_EVENT_CERTIFICATE_NAME);
+
+                        }
+
+                        if (StringUtils.isNotBlank(specialEventCertificate)) {
+                            String specialEventProperty = propertiesCache.getProperty(JsonKeys.SPECIAL_CERTIFICATE_EVENT_MAP);
+                            if (StringUtils.isNotBlank(specialEventProperty)) {
                                 Map<String, String> specialEventCertifcateMap = mapper.readValue(specialEventProperty, new TypeReference<>() {
                                 });
                                 if (MapUtils.isNotEmpty(specialEventCertifcateMap)) {
@@ -237,7 +245,6 @@ public class CertificateGeneratorActor extends BaseActor {
                                     ((Map) request.get(JsonKey.CERTIFICATE)).put(JsonKey.SVG_TEMPLATE, svgTemplate);
                                 }
                             }
-
                         }
 
                         SvgGenerator svgGenerator = new SvgGenerator((String) ((Map) request.get(JsonKey.CERTIFICATE)).get(JsonKey.SVG_TEMPLATE), directory);
