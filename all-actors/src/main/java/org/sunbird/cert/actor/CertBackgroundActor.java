@@ -80,9 +80,10 @@ public class CertBackgroundActor extends BaseActor {
                             });
 
                     certificateMap.put(JsonKeys.LAST_ISSUED_ON, certValues.get(JsonKeys.LAST_ISSUED_ON));
-                    if (StringUtils.isNotBlank(certValues.get(JsonKeys.EVENT_ISSUE_NAME))) {
+                    Object eventIssueName = request.getRequest().get(JsonKeys.EVENT_ISSUE_NAME);
+                    if (eventIssueName instanceof String && StringUtils.isNotBlank((String) eventIssueName)) {
                         logger.info("The Special Event Certificate is present and value is::: " + certValues.get(JsonKeys.EVENT_ISSUE_NAME) + " for old Certificates.");
-                        certificateMap.put(JsonKeys.EVENT_ISSUE_NAME, certValues.get(JsonKeys.EVENT_ISSUE_NAME));
+                        certificateMap.put(JsonKeys.EVENT_ISSUE_NAME, request.getRequest().get(JsonKeys.EVENT_ISSUE_NAME));
                     }
 
                 } else {
@@ -92,7 +93,7 @@ public class CertBackgroundActor extends BaseActor {
                 certificateMap.put(JsonKeys.TOKEN, accessCode);
                 certificateMap.put(JsonKeys.NAME, certificateTemplate.get(JsonKeys.NAME));
                 certificateMap.put(JsonKeys.VERSION, JsonKeys.VERSION_2);
-                String specialEventCertificateName = propertiesCache.getProperty(JsonKeys.SPECIAL_EVENT_CERTIFICATE_NAME);
+                String specialEventCertificateName = propertiesCache.getProperty(JsonKeys.SPECIAL_CERTIFICATE_TEMPLATE_MAP);
                 if (StringUtils.isNotBlank(specialEventCertificateName)) {
                     logger.info("The Special Event Certificate is present and value is::: " + specialEventCertificateName);
                     certificateMap.put(JsonKeys.EVENT_ISSUE_NAME, specialEventCertificateName);

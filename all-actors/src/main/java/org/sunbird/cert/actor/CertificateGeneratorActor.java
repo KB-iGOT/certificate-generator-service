@@ -2,16 +2,24 @@ package org.sunbird.cert.actor;
 
 import akka.actor.ActorRef;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.sunbird.*;
 import org.sunbird.auth.AccessTokenValidator;
+import org.sunbird.cache.platform.Platform;
 import org.sunbird.cert.actor.operation.CertActorOperation;
 import org.sunbird.cert.helper.CertRegistryHelper;
 import org.sunbird.cert.helper.IssueCertificateContentHelper;
@@ -39,7 +47,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDate;
 import java.util.*;
+
+import static org.sunbird.cert.helper.IssueCertificateEventHelper.getAPICall;
 
 /**
  * This actor is responsible for certificate generation.
@@ -56,6 +68,10 @@ public class CertificateGeneratorActor extends BaseActor {
     private static final CertRegistryHelper certRegistryHelper = CertRegistryHelper.getInstance();
     private static final UserEnrolmentHelper userEnrolmentHelper = UserEnrolmentHelper.getInstance();
     private static final PropertiesCache propertiesCache = PropertiesCache.getInstance();
+    private static final int eventCacheTTL = Platform.getInteger("special.event.cache.ttl", 24);
+    private static Map<String, String> specialEventCertificateTemplateMap;
+    private static final Cache<LocalDate, Map<String, String>> todayCertificateCache = Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(eventCacheTTL)).build();
+    private static final Logger log = LoggerFactory.getLogger(CertificateGenerator.class);
 
     @Inject
     @Named("certificate_background_actor")
@@ -63,6 +79,21 @@ public class CertificateGeneratorActor extends BaseActor {
 
     static {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        try {
+            String json = Platform.getString(JsonKeys.SPECIAL_CERTIFICATE_TEMPLATE_MAP, "");
+            if (json == null || json.isEmpty()) {
+                specialEventCertificateTemplateMap = Collections.emptyMap();
+            } else {
+                specialEventCertificateTemplateMap = mapper.readValue(
+                        json,
+                        new TypeReference<Map<String, String>>() {}
+                );
+            }
+            getCertificateForToday();
+        } catch (Exception e) {
+            log.error("exception while getting the specialEventCertificateTemplateMap" , e.getMessage());
+            specialEventCertificateTemplateMap = Collections.emptyMap();
+        }
     }
 
     @Override
@@ -216,12 +247,22 @@ public class CertificateGeneratorActor extends BaseActor {
                         if (MapUtils.isNotEmpty(v2CertificateRegistryMap)) {
                             qrMap = certificateGenerator.generateQrCodeFromAccessCode((String) v2CertificateRegistryMap.get(JsonKeys.ACCESS_CODE));
                         } else {
-                            qrMap = certificateGenerator.generateQrCode();
+                            String certificateAccessCodeV1 = issuedCertificateList.stream()
+                                    .filter(cert -> !cert.containsKey(JsonKeys.VERSION)) // keep only those with the key
+                                    .map(cert -> (String) cert.get(JsonKeys.ACCESS_CODE))
+                                    .filter(Objects::nonNull)
+                                    .findFirst()
+                                    .orElse(null);
+                            if (StringUtils.isNotBlank(certificateAccessCodeV1)) {
+                                qrMap = certificateGenerator.generateQrCodeFromAccessCode(certificateAccessCodeV1);
+                            } else {
+                                qrMap = certificateGenerator.generateQrCode();
+                            }
                         }
                         String encodedQrCode = encodeQrCode((File) qrMap.get(JsonKey.QR_CODE_FILE));
-                        String specialEventCertificate = null;
+                        String specialEventCertificateName = null;
                         if (CollectionUtils.isNotEmpty(issuedCertificateList)) {
-                            specialEventCertificate = issuedCertificateList.stream()
+                            specialEventCertificateName = issuedCertificateList.stream()
                                     .filter(cert -> cert.containsKey(JsonKeys.EVENT_ISSUE_NAME)) // keep only those with the key
                                     .map(cert -> (String) cert.get(JsonKeys.EVENT_ISSUE_NAME))
                                     .filter(Objects::nonNull)
@@ -229,21 +270,19 @@ public class CertificateGeneratorActor extends BaseActor {
                                     .orElse(null);
 
                         } else {
-                            specialEventCertificate = propertiesCache.getProperty(JsonKeys.SPECIAL_EVENT_CERTIFICATE_NAME);
-
+                            String userId = (String) request.getRequest().get(JsonKeys.USER_ID);
+                            Map<String,String> specialEventCertificateDetails = getCertificateTemplate(userId);
+                            if (MapUtils.isNotEmpty(specialEventCertificateDetails)) {
+                                specialEventCertificateName = specialEventCertificateDetails.get(JsonKeys.SPECIAL_EVENT_NAME);
+                            }
                         }
 
-                        if (StringUtils.isNotBlank(specialEventCertificate)) {
-                            String specialEventProperty = propertiesCache.getProperty(JsonKeys.SPECIAL_CERTIFICATE_EVENT_MAP);
-                            if (StringUtils.isNotBlank(specialEventProperty)) {
-                                Map<String, String> specialEventCertifcateMap = mapper.readValue(specialEventProperty, new TypeReference<>() {
-                                });
-                                if (MapUtils.isNotEmpty(specialEventCertifcateMap)) {
-                                    logger.info("The size for specialEvent Certificate is: " + specialEventCertifcateMap.size());
-                                    String svgTemplate = specialEventCertifcateMap.get(specialEventCertificate);
-                                    logger.info("The svg template is: " + svgTemplate);
-                                    ((Map) request.get(JsonKey.CERTIFICATE)).put(JsonKey.SVG_TEMPLATE, svgTemplate);
-                                }
+                        if (StringUtils.isNotBlank(specialEventCertificateName)) {
+                            if (MapUtils.isNotEmpty(specialEventCertificateTemplateMap)) {
+                                logger.info("The size for specialEvent Certificate is: " + specialEventCertificateTemplateMap.size());
+                                String svgTemplate = specialEventCertificateTemplateMap.get(specialEventCertificateName);
+                                logger.info("The svg template is: " + svgTemplate);
+                                ((Map) request.get(JsonKey.CERTIFICATE)).put(JsonKey.SVG_TEMPLATE, svgTemplate);
                             }
                         }
 
@@ -261,6 +300,9 @@ public class CertificateGeneratorActor extends BaseActor {
                             request.getRequest().put(JsonKeys.CERTIFICATE, certificateTemplate);
                             request.getRequest().put(JsonKeys.CERT_MODEL, certModel);
                             request.getRequest().put(JsonKeys.IS_EVENT, isEvent);
+                            if (StringUtils.isNotBlank(specialEventCertificateName)) {
+                                request.getRequest().put(JsonKeys.EVENT_ISSUE_NAME, specialEventCertificateName);
+                            }
                             request.getRequest().put(JsonKeys.USER_CERTICATE_LIST, issuedCertificateList);
                             request.getRequest().putAll(req.getRequest());
                             request.setOperation(JsonKeys.ADD_REGISTRY_REQUEST);
@@ -373,5 +415,126 @@ public class CertificateGeneratorActor extends BaseActor {
                 }
         }
         return null;
+    }
+
+    private static Map<String, String> getCertificateForToday() {
+        LocalDate today = LocalDate.now();
+        return todayCertificateCache.get(today, date -> {
+            String json = propertiesCache.getProperty(JsonKeys.SPECIAL_EVENT_DETAILS_MAP);
+            if (StringUtils.isBlank(json)) {
+                return Collections.emptyMap();
+            }
+            Map<String, Object> eventMap = null;
+            try {
+                eventMap = mapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+            } catch (JsonProcessingException e) {
+                log.error("exception while getting the certificateForToday" , e.getMessage());
+            }
+            for (Map.Entry<String, Object> entry : eventMap.entrySet()) {
+                String key = entry.getKey();
+                if (key.contains("#")) {
+                    String[] parts = key.split("#");
+                    LocalDate startDate = LocalDate.parse(parts[0]);
+                    LocalDate endDate = LocalDate.parse(parts[1]);
+
+                    if ((date.isEqual(startDate) || date.isAfter(startDate)) &&
+                            (date.isEqual(endDate) || date.isBefore(endDate))) {
+
+                        Object value = entry.getValue();
+                        if (value instanceof Map) {
+                            return (Map<String, String>) value;
+                        } else {
+                            log.error("getCertificateForToday Method: Not the proper type for value object object.");
+                        }
+                    }
+                }
+            }
+            return Collections.emptyMap();
+        });
+    }
+
+    private Map<String, String> getCertificateTemplate(String userId) {
+        Map<String, String> certifiateTemplateMap = new HashMap<>();
+        Map<String, String> certificateForToday = getCertificateForToday();
+        if (MapUtils.isNotEmpty(certificateForToday)) {
+            if (StringUtils.isNotBlank(certificateForToday.get(JsonKeys.L0_ORG_ID))) {
+                logger.info("The event is for the L0OrgId: " + certificateForToday.get(JsonKeys.L0_ORG_ID));
+                if (isUserValidForMdoSpecialEvent(userId, certificateForToday.get(JsonKeys.L0_ORG_ID))) {
+                    certifiateTemplateMap.put(JsonKeys.SPECIAL_EVENT_NAME, certificateForToday.get(JsonKeys.SPECIAL_EVENT_NAME));
+                    certifiateTemplateMap.put(JsonKeys.CERTIFICATE_TEMPLATE, specialEventCertificateTemplateMap.get(certificateForToday.get(JsonKeys.SPECIAL_EVENT_NAME)));
+                }
+            } else if (StringUtils.isNotBlank(certificateForToday.get(JsonKeys.SPECIAL_EVENT_NAME))) {
+                certifiateTemplateMap.put(JsonKeys.SPECIAL_EVENT_NAME, certificateForToday.get(JsonKeys.SPECIAL_EVENT_NAME));
+                certifiateTemplateMap.put(JsonKeys.CERTIFICATE_TEMPLATE, specialEventCertificateTemplateMap.get(certificateForToday.get(JsonKeys.SPECIAL_EVENT_NAME)));
+            }
+        }
+        return certifiateTemplateMap;
+    }
+
+    private boolean isUserValidForMdoSpecialEvent(String userId, String L0OrgId) {
+        try {
+            String userReadUrl = propertiesCache.getProperty("learner_basePath") + propertiesCache.getProperty("user_read_api") + "/" + userId + "?organisations,roles,locations,declarations,externalIds,rootOrgId";
+
+            Map<String, Object> result = getAPICall(userReadUrl);
+
+            if (MapUtils.isNotEmpty(result)) {
+                Map<String, Object> resultObject = (Map<String, Object>) result.get(JsonKeys.RESULT);
+                Map<String, Object> responseObject = (Map<String, Object>) resultObject.get(JsonKeys.RESPONSE);
+                if (MapUtils.isNotEmpty(responseObject)) {
+                    String userOrgId = (String)responseObject.get("rootOrgId");
+                    if (L0OrgId.equalsIgnoreCase(userOrgId)) {
+                        return true;
+                    } else {
+                        String ministryOrStateId = getMinistryOrStateId(userOrgId);
+                        if (StringUtils.isNotBlank(ministryOrStateId) && L0OrgId.equalsIgnoreCase(ministryOrStateId)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Issue while validating the isUserValid for Mdo Special Event.");
+        }
+        return false;
+    }
+
+    private String getMinistryOrStateId(String userOrgId) {
+        try {
+            String orgReadUrl = propertiesCache.getProperty("learner_basePath") + propertiesCache.getProperty("org_read_api");
+
+            Map<String, Object> result = getPostAPICall(orgReadUrl, userOrgId);
+
+            if (MapUtils.isNotEmpty(result)) {
+                Map<String, Object> resultObject = (Map<String, Object>) result.get(JsonKeys.RESULT);
+                Map<String, Object> responseObject = (Map<String, Object>) resultObject.get(JsonKeys.RESPONSE);
+                if (MapUtils.isNotEmpty(responseObject)) {
+                    Object ministryOrStateId = responseObject.get(JsonKeys.MINISTRY_OR_STATE_ID);
+                    if (ObjectUtils.isNotEmpty(ministryOrStateId)) {
+                        log.info("The ministry or state Id for which special Event occurring is : " + ministryOrStateId);
+                        return (String) ministryOrStateId;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Issue while validating the isUserValid for Mdo Special Event.");
+        }
+        return null;
+    }
+
+    public static Map<String, Object> getPostAPICall(
+            String url, String userOrgId) throws Exception {
+        Map<String, String> defaultHeader = new HashMap<>();
+        defaultHeader.put("Content-Type", "application/json");
+        Map<String, Object> requestData = new HashMap<>();
+        Map<String, String> organisationData = new HashMap<>();
+        organisationData.put(JsonKeys.ORGANISATION, userOrgId);
+        requestData.put(JsonKey.REQUEST, organisationData);
+        String response = HttpUtil.sendPostRequest(url, mapper.writeValueAsString(requestData), defaultHeader);
+        Map<String, Object> data = mapper.readValue(response, Map.class);
+        if (MapUtils.isNotEmpty(data)) {
+           return data;
+        } else {
+            throw new RuntimeException("Error from get API: " + url + ", with response: " + response);
+        }
     }
 }

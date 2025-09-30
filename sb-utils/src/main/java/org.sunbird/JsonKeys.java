@@ -108,7 +108,12 @@ public class JsonKeys {
     public static final String USER_CERTICATE_LIST = "user_certificate_list";
     public static final String X_AUTHENTICATED_USER_TOKEN_CAMEL_CASE = "X-Authenticated-User-Token";
     public static final String USER_ENROLMENTS_V2 = "user_enrolments_v2";
-    public static final String SPECIAL_EVENT_CERTIFICATE_NAME = "specialEventCertificateName";
     public static final String EVENT_ISSUE_NAME = "eventIssueName";
-    public static final String SPECIAL_CERTIFICATE_EVENT_MAP = "specialCertificateEventMap";
+    public static final String SPECIAL_CERTIFICATE_TEMPLATE_MAP = "specialCertificateTemplateMap";
+    public static final String SPECIAL_EVENT_DETAILS_MAP = "specialEventDetailsMap";
+    public static final String L0_ORG_ID = "L0OrgId";
+    public static final String SPECIAL_EVENT_NAME = "specialEventName";
+    public static final String CERTIFICATE_TEMPLATE = "certificateTemplate";
+    public static final String ORGANISATION = "organisationId";
+    public static final String MINISTRY_OR_STATE_ID = "ministryOrStateId";
 }
