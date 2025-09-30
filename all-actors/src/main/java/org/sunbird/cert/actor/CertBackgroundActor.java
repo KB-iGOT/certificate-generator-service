@@ -93,11 +93,6 @@ public class CertBackgroundActor extends BaseActor {
                 certificateMap.put(JsonKeys.TOKEN, accessCode);
                 certificateMap.put(JsonKeys.NAME, certificateTemplate.get(JsonKeys.NAME));
                 certificateMap.put(JsonKeys.VERSION, JsonKeys.VERSION_2);
-                String specialEventCertificateName = propertiesCache.getProperty(JsonKeys.SPECIAL_CERTIFICATE_TEMPLATE_MAP);
-                if (StringUtils.isNotBlank(specialEventCertificateName)) {
-                    logger.info("The Special Event Certificate is present and value is::: " + specialEventCertificateName);
-                    certificateMap.put(JsonKeys.EVENT_ISSUE_NAME, specialEventCertificateName);
-                }
                 issuedCertificateList.add(certificateMap);
                 updateUserEnrolmentRecord(userId, courseId, batchId, issuedCertificateList, isEvent);
             } else {

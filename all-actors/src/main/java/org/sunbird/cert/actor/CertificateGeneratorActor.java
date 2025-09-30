@@ -79,9 +79,10 @@ public class CertificateGeneratorActor extends BaseActor {
 
     static {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        log.info("CertificateGeneratorActor initialized.");
         try {
             String json = Platform.getString(JsonKeys.SPECIAL_CERTIFICATE_TEMPLATE_MAP, "");
-            if (json == null || json.isEmpty()) {
+            if (StringUtils.isBlank(json)) {
                 specialEventCertificateTemplateMap = Collections.emptyMap();
             } else {
                 specialEventCertificateTemplateMap = mapper.readValue(
@@ -249,7 +250,7 @@ public class CertificateGeneratorActor extends BaseActor {
                         } else {
                             String certificateAccessCodeV1 = issuedCertificateList.stream()
                                     .filter(cert -> !cert.containsKey(JsonKeys.VERSION)) // keep only those with the key
-                                    .map(cert -> (String) cert.get(JsonKeys.ACCESS_CODE))
+                                    .map(cert -> (String) cert.get(JsonKeys.TOKEN))
                                     .filter(Objects::nonNull)
                                     .findFirst()
                                     .orElse(null);
