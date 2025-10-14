@@ -7,3 +7,5 @@ GET  /health                                  @controllers.health.HealthControll
 GET  /:service/health                      @controllers.health.HealthController.getServiceHealth(service:String, request: play.mvc.Http.Request)
 GET  /liveness                                  @controllers.health.HealthController.getLiveness(request: play.mvc.Http.Request)
 POST /v1/certs/generate                    @controllers.certs.CertsGenerationController.generateCertificate(request: play.mvc.Http.Request)
+GET /v1/certs/legacy/generate/:uid                    @controllers.certs.CertsGenerationController.generateCertificatesLegacyApp(uid: String, request: play.mvc.Http.Request)
+POST /v1/admin/certs/generate                    @controllers.certs.CertsGenerationController.generateCertificatesByAdmin(request: play.mvc.Http.Request)

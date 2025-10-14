@@ -53,6 +53,7 @@ public class CertBackgroundActor extends BaseActor {
             CertificateExtension certificateExtension = (CertificateExtension) request.getRequest().get(JsonKeys.CERTIFICATE_EXTENSION);
             CertModel certModel = (CertModel) request.getRequest().get(JsonKeys.CERT_MODEL);
             String accessCode = (String) request.getRequest().get(JsonKeys.ACCESS_CODE);
+            Date userCompletedOn = (Date)request.getRequest().get(JsonKeys.COMPLETED_ON);
             List<Map<String, Object>> issuedCertificateList = (List<Map<String, Object>>) request.getRequest().get(JsonKeys.USER_CERTICATE_LIST);
             Map<String, Object> courseRelatedInfo = new HashMap<>();
             courseRelatedInfo.put(JsonKeys.COURSE_ID, courseId);
@@ -69,17 +70,18 @@ public class CertBackgroundActor extends BaseActor {
                             .map(cert -> {
                                 Map<String, String> values = new HashMap<>();
                                 values.put(JsonKeys.LAST_ISSUED_ON,
-                                        (String) cert.getOrDefault(JsonKeys.LAST_ISSUED_ON, formatter.format(new Date())));
+                                        (String) cert.getOrDefault(JsonKeys.LAST_ISSUED_ON, formatter.format(userCompletedOn)));
                                 values.put(JsonKeys.EVENT_ISSUE_NAME, (String) cert.get(JsonKeys.EVENT_ISSUE_NAME));
                                 return values;
                             })
                             .orElseGet(() -> {
                                 Map<String, String> values = new HashMap<>();
-                                values.put(JsonKeys.LAST_ISSUED_ON, formatter.format(new Date()));
+                                values.put(JsonKeys.LAST_ISSUED_ON, formatter.format(userCompletedOn));
                                 return values;
                             });
 
                     certificateMap.put(JsonKeys.LAST_ISSUED_ON, certValues.get(JsonKeys.LAST_ISSUED_ON));
+                    certificateMap.put(JsonKeys.DOWNLOADED_ON, formatter.format(new Date()));
                     Object eventIssueName = request.getRequest().get(JsonKeys.EVENT_ISSUE_NAME);
                     if (eventIssueName instanceof String && StringUtils.isNotBlank((String) eventIssueName)) {
                         logger.info("The Special Event Certificate is present and value is::: " + certValues.get(JsonKeys.EVENT_ISSUE_NAME) + " for old Certificates.");

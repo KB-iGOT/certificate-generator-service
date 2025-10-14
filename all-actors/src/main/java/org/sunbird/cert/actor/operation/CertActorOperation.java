@@ -6,7 +6,9 @@ package org.sunbird.cert.actor.operation;
  *
  */
 public enum CertActorOperation {
-	GENERATE_CERTIFICATE("generateCert");
+	GENERATE_CERTIFICATE("generateCert"),
+    GENERATE_CERTIFICATES_LEGACY_APP("generateCertLegacyApp"),
+    GENERATE_CERTIFICATE_ADMIN("generatedCertificateAdmin");
 
 	private String operation;
 
