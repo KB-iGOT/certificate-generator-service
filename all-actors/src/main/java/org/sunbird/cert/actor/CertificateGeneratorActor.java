@@ -103,6 +103,10 @@ public class CertificateGeneratorActor extends BaseActor {
         logger.info("onReceive method call start for operation {}", operation);
         if (CertActorOperation.GENERATE_CERTIFICATE.getOperation().equalsIgnoreCase(operation)) {
             generateCertificate(request);
+        } else if (CertActorOperation.GENERATE_CERTIFICATES_LEGACY_APP.getOperation().equalsIgnoreCase(operation)) {
+            generateCertificateLegacyApp(request);
+        } else if (CertActorOperation.GENERATE_CERTIFICATE_ADMIN.getOperation().equalsIgnoreCase(operation)) {
+            generateCertificateByAdmin(request);
         }
         logger.info("onReceive method call End");
     }
@@ -136,41 +140,46 @@ public class CertificateGeneratorActor extends BaseActor {
             String courseId = (String) request.getRequest().get(JsonKeys.COURSE_ID);
             String batchId = (String) request.getRequest().get(JsonKeys.BATCH_ID);
             String userId = (String) request.getRequest().get(JsonKeys.USER_ID);
-            List<String> userToken = scala.collection.JavaConverters.seqAsJavaList(
-                    (scala.collection.Seq<String>) request.getHeaders().get(JsonKeys.X_AUTHENTICATED_USER_TOKEN)
-            );
-
-            if (CollectionUtils.isEmpty(userToken)) {
-                userToken = scala.collection.JavaConverters.seqAsJavaList(
-                        (scala.collection.Seq<String>) request.getHeaders().get(JsonKeys.X_AUTHENTICATED_USER_TOKEN_CAMEL_CASE)
+            Boolean isAdmin = (Boolean) request.getRequest().get(JsonKeys.IS_ADMIN);
+            if (isAdmin == null) {
+                List<String> userToken = scala.collection.JavaConverters.seqAsJavaList(
+                        (scala.collection.Seq<String>) request.getHeaders().get(JsonKeys.X_AUTHENTICATED_USER_TOKEN)
                 );
-            }
 
-            if (CollectionUtils.isEmpty(userToken)) {
-                logger.error("generateCertificateV2: Exception occurred. User token is not valid. Headers: " + request.getHeaders());
-                throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "Token is not proper", ResponseCode.BAD_REQUEST.getCode());
-            }
-            String userIdFromToken = AccessTokenValidator.verifyUserToken(userToken.get(0), true);
-            logger.info("UserId from token:" + userIdFromToken);
-            if (StringUtils.isEmpty(userIdFromToken)) {
-                logger.error("generateCertificateV2:Exception Occurred while generating certificate. User token is not valid" + userId);
-                throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "Token is not proper", ResponseCode.BAD_REQUEST.getCode());
-            }
-            if (StringUtils.isNotEmpty(userIdFromToken) && !userId.equalsIgnoreCase(userIdFromToken)) {
-                logger.error("generateCertificateV2:Exception Occurred while generating certificate. User token is different from the request UserId" + userId);
-                throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "You are not authorized to get the certificate for other user", ResponseCode.BAD_REQUEST.getCode());
+                if (CollectionUtils.isEmpty(userToken)) {
+                    userToken = scala.collection.JavaConverters.seqAsJavaList(
+                            (scala.collection.Seq<String>) request.getHeaders().get(JsonKeys.X_AUTHENTICATED_USER_TOKEN_CAMEL_CASE)
+                    );
+                }
+
+                if (CollectionUtils.isEmpty(userToken)) {
+                    logger.error("generateCertificateV2: Exception occurred. User token is not valid. Headers: " + request.getHeaders());
+                    throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "Token is not proper", ResponseCode.BAD_REQUEST.getCode());
+                }
+                String userIdFromToken = AccessTokenValidator.verifyUserToken(userToken.get(0), true);
+                logger.info("UserId from token:" + userIdFromToken);
+                if (StringUtils.isEmpty(userIdFromToken)) {
+                    logger.error("generateCertificateV2:Exception Occurred while generating certificate. User token is not valid" + userId);
+                    throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "Token is not proper", ResponseCode.BAD_REQUEST.getCode());
+                }
+                if (StringUtils.isNotEmpty(userIdFromToken) && !userId.equalsIgnoreCase(userIdFromToken)) {
+                    logger.error("generateCertificateV2:Exception Occurred while generating certificate. User token is different from the request UserId" + userId);
+                    throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "You are not authorized to get the certificate for other user", ResponseCode.BAD_REQUEST.getCode());
+                }
             }
             Map<String, Object> contentInfo = issueCertificateContentHelper.getCourseInfo(courseId);
             boolean isUserEligibleForCertificate = true;
             boolean isEvent = false;
             Map<String, Object> certificateRegistryMap = new HashMap<>();
             List<Map<String, Object>> certificateList = new ArrayList<>();
+            Date userCompletedOn = null;
             if (MapUtils.isNotEmpty(contentInfo)) {
                 if (JsonKeys.EVENT.equalsIgnoreCase((String) contentInfo.get(JsonKeys.PRIMARY_CATEGORY))) {
                     isEvent = true;
                     Response userEventEnrolmentRecord = userEnrolmentHelper.getUserEventEnrollmentRecord(courseId, batchId, userId);
                     if (issueCertificateEventHelper.isUserEligibleForEventCertificate(userEventEnrolmentRecord)) {
                         certificateList = issueCertificateEventHelper.getUserCertificates(userEventEnrolmentRecord);
+                        userCompletedOn = issueCertificateEventHelper.getCompletedOnDate(userEventEnrolmentRecord);
                         if (CollectionUtils.isNotEmpty(certificateList)) {
                             certificateRegistryMap = getCertificateRegistryMap(certificateList);
                         }
@@ -181,6 +190,7 @@ public class CertificateGeneratorActor extends BaseActor {
                     Response userEnrolmentRecord = userEnrolmentHelper.getUserEnrollmentRecord(courseId, batchId, userId);
                     if (issueCertificateContentHelper.isUserEligibleForContentCertificate(userEnrolmentRecord)) {
                         certificateList = issueCertificateEventHelper.getUserCertificates(userEnrolmentRecord);
+                        userCompletedOn = issueCertificateEventHelper.getCompletedOnDate(userEnrolmentRecord);
                         if (CollectionUtils.isNotEmpty(certificateList)) {
                             certificateRegistryMap = getCertificateRegistryMap(certificateList);
                             logger.debug("The certificationList is: " + mapper.writeValueAsString(certificateList));
@@ -190,7 +200,7 @@ public class CertificateGeneratorActor extends BaseActor {
                     }
                 }
                 if (isUserEligibleForCertificate) {
-                    String encodedSvg = generatePrintURIAndUpdateRecord(courseId, batchId, request, isEvent, certificateRegistryMap, certificateList);
+                    String encodedSvg = generatePrintURIAndUpdateRecord(courseId, batchId, request, isEvent, certificateRegistryMap, certificateList, userCompletedOn);
                     if (StringUtils.isNotBlank(encodedSvg)) {
                         Response response = new Response();
                         response.getResult().put(JsonKeys.PRINT_URI, encodedSvg);
@@ -215,7 +225,7 @@ public class CertificateGeneratorActor extends BaseActor {
         logger.info("onReceive method call End");
     }
 
-    private String generatePrintURIAndUpdateRecord(String courseId, String batchId, Request request, boolean isEvent, Map<String, Object> v2CertificateRegistryMap, List<Map<String, Object>> issuedCertificateList) throws BaseException {
+    private String generatePrintURIAndUpdateRecord(String courseId, String batchId, Request request, boolean isEvent, Map<String, Object> v2CertificateRegistryMap, List<Map<String, Object>> issuedCertificateList, Date userCompletedOn) throws BaseException {
         try {
             Response templateResponse = null;
             if (isEvent) {
@@ -301,6 +311,7 @@ public class CertificateGeneratorActor extends BaseActor {
                             request.getRequest().put(JsonKeys.CERTIFICATE, certificateTemplate);
                             request.getRequest().put(JsonKeys.CERT_MODEL, certModel);
                             request.getRequest().put(JsonKeys.IS_EVENT, isEvent);
+                            request.getRequest().put(JsonKeys.COMPLETED_ON, userCompletedOn);
                             if (StringUtils.isNotBlank(specialEventCertificateName)) {
                                 request.getRequest().put(JsonKeys.EVENT_ISSUE_NAME, specialEventCertificateName);
                             }
@@ -537,5 +548,52 @@ public class CertificateGeneratorActor extends BaseActor {
         } else {
             throw new RuntimeException("Error from get API: " + url + ", with response: " + response);
         }
+    }
+
+    private void generateCertificateLegacyApp(Request request) throws BaseException {
+        try {
+            logger.info("generateCertificate request received== {}", request.getRequest());
+            String identifier = (String) request.getRequest().get(JsonKeys.UID);
+            if (StringUtils.isBlank(identifier)) {
+                throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, JsonKeys.UID_BAD_REQUEST_ERROR_MSG ,ResponseCode.BAD_REQUEST.getCode());
+            }
+            Map<String, Object> certificateRegistry = certRegistryHelper.getCertificateRegistryUsingIdentifierV1(identifier);
+            if (MapUtils.isEmpty(certificateRegistry)) {
+                throw new BaseException(IResponseMessage.ERROR_GENERATING_CERTIFICATE, JsonKeys.UID_BAD_REQUEST_ERROR_MSG ,ResponseCode.BAD_REQUEST.getCode());
+            }
+            Map<String, Object> userDetails = (Map<String, Object>) certificateRegistry.get(JsonKeys.RECIPIENT);
+            Map<String, Object> contentDetails = (Map<String, Object>) certificateRegistry.get(JsonKeys.RELATED);
+            if (MapUtils.isNotEmpty(userDetails) && MapUtils.isNotEmpty(contentDetails)) {
+                String userId = (String) userDetails.get(JsonKeys.ID);
+                String batchId = (String) contentDetails.get(JsonKeys.BATCH_ID);
+                String courseId = (String) contentDetails.get(JsonKeys.COURSE_ID);
+                request.getRequest().put(JsonKeys.COURSE_ID, courseId);
+                request.getRequest().put(JsonKeys.BATCH_ID, batchId);
+                request.getRequest().put(JsonKeys.USER_ID, userId);
+                generateCertificate(request);
+
+            } else {
+                logger.error("generateCertificateV2 Legacy App:Exception Occurred while generating certificate, facing issue to get the proper data.");
+                throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, JsonKeys.ISSUE_FETCHING_METADATA_ERROR_MSG, ResponseCode.SERVER_ERROR.getCode());
+            }
+
+
+        } catch (Exception ex) {
+            logger.error("generateCertificateV2 Legacy App:Exception Occurred while generating certificate. : {}", ex.getStackTrace());
+            throw new BaseException(IResponseMessage.INTERNAL_ERROR, ex.getMessage(), ResponseCode.SERVER_ERROR.getCode());
+        }
+        logger.info("onReceive method call End");
+    }
+
+    private void generateCertificateByAdmin(Request request) throws BaseException {
+        try {
+            logger.info("generateCertificateByAdmin request received== {}", request.getRequest());
+            request.getRequest().put(JsonKeys.IS_ADMIN, true);
+            generateCertificate(request);
+        } catch (Exception ex) {
+            logger.error("generateCertificateByAdmin:Exception Occurred while generating certificate. : {}", ex.getStackTrace());
+            throw new BaseException(IResponseMessage.INTERNAL_ERROR, ex.getMessage(), ResponseCode.SERVER_ERROR.getCode());
+        }
+        logger.info("onReceive method call End");
     }
 }

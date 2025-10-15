@@ -339,5 +339,18 @@ public class IssueCertificateEventHelper {
         }
         return null;
     }
+
+    public Date getCompletedOnDate(Response row) {
+        if (row != null) {
+            List<Map<String, Object>> mapList = (List<Map<String, Object>>) row.get(JsonKeys.RESPONSE);
+            if (CollectionUtils.isNotEmpty(mapList)) {
+                Map<String, Object> map = mapList.stream().filter(m -> Boolean.TRUE.equals(m.get(JsonKeys.ACTIVE))).findFirst().orElse(null);
+                if (MapUtils.isNotEmpty(map) && map.get(JsonKeys.COMPLETED_ON) != null) {
+                    return (Date)map.get(JsonKeys.COMPLETED_ON);
+                }
+            }
+        }
+        return null;
+    }
 }
 

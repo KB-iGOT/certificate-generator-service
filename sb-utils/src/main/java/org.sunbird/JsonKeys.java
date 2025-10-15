@@ -116,4 +116,9 @@ public class JsonKeys {
     public static final String CERTIFICATE_TEMPLATE = "certificateTemplate";
     public static final String ORGANISATION = "organisationId";
     public static final String MINISTRY_OR_STATE_ID = "ministryOrStateId";
+    public static final String DOWNLOADED_ON = "downloaded_on";
+    public static final String UID = "uid";
+    public static final String UID_BAD_REQUEST_ERROR_MSG = "Bad Request certificateId is not proper.";
+    public static final String ISSUE_FETCHING_METADATA_ERROR_MSG = "Issue while fetching the metadata for certificate.";
+    public static final String IS_ADMIN = "isAdmin";
 }

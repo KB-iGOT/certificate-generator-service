@@ -83,4 +83,20 @@ public class CertRegistryHelper {
         }
         return null;
     }
+
+    public Map<String, Object> getCertificateRegistryUsingIdentifierV1(String identifier) throws BaseException {
+        Map<String, Object> primaryKey = new HashMap<>();
+        primaryKey.put(JsonKeys.ID, identifier);
+        Response row = cassandraOperation.getRecordsByProperties(JsonKeys.SUNBIRD, JsonKeys.CERT_REGISTRY, primaryKey, null);
+        if (row != null) {
+            List<Map<String, Object>> mapList = (List<Map<String, Object>>) row.get(JsonKeys.RESPONSE);
+            if (CollectionUtils.isNotEmpty(mapList)) {
+                Map<String, Object> map = mapList.get(0);
+                if (MapUtils.isNotEmpty(map)) {
+                    return map;
+                }
+            }
+        }
+        return null;
+    }
 }
