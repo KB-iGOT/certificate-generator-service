@@ -4,6 +4,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.sunbird.cloud.storage.BaseStorageService;
+import org.sunbird.incredible.processor.JsonKey;
 import org.sunbird.incredible.processor.store.LocalStore;
 import org.sunbird.incredible.pojos.CertificateExtension;
 import org.slf4j.Logger;
@@ -123,7 +124,13 @@ public class SvgGenerator {
         if (svgTemplate.startsWith("http")) {
             try {
                 String uri = StringUtils.substringAfter(new URL(svgTemplate).getPath(), "/");
-                container = StringUtils.substringBefore(uri, "/");
+                String containerName = System.getenv(JsonKey.containerName);
+                if (StringUtils.isNotBlank(containerName)) {
+                    container = containerName;
+                } else {
+                    container = StringUtils.substringBefore(uri, "/");
+                }
+
                 relativePath = StringUtils.substringAfter(uri, "/");
             } catch (Exception e) {
                 throw new FileNotFoundException("Invalid URL: " + svgTemplate);
