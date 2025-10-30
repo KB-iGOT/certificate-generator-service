@@ -559,7 +559,10 @@ public class CertificateGeneratorActor extends BaseActor {
             }
             Map<String, Object> certificateRegistry = certRegistryHelper.getCertificateRegistryUsingIdentifierV1(identifier);
             if (MapUtils.isEmpty(certificateRegistry)) {
-                throw new BaseException(IResponseMessage.ERROR_GENERATING_CERTIFICATE, JsonKeys.UID_BAD_REQUEST_ERROR_MSG ,ResponseCode.BAD_REQUEST.getCode());
+                certificateRegistry = certRegistryHelper.getCertificateRegistryUsingIdentifier(identifier);
+                if (MapUtils.isEmpty(certificateRegistry)) {
+                    throw new BaseException(IResponseMessage.ERROR_GENERATING_CERTIFICATE, JsonKeys.UID_BAD_REQUEST_ERROR_MSG ,ResponseCode.BAD_REQUEST.getCode());
+                }
             }
             Map<String, Object> userDetails = (Map<String, Object>) certificateRegistry.get(JsonKeys.RECIPIENT);
             Map<String, Object> contentDetails = (Map<String, Object>) certificateRegistry.get(JsonKeys.RELATED);
