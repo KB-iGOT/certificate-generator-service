@@ -121,4 +121,6 @@ public class JsonKeys {
     public static final String UID_BAD_REQUEST_ERROR_MSG = "Bad Request certificateId is not proper.";
     public static final String ISSUE_FETCHING_METADATA_ERROR_MSG = "Issue while fetching the metadata for certificate.";
     public static final String IS_ADMIN = "isAdmin";
+    public static final String EVENT_ID_CAMELCASE = "eventId";
+    public static final String CONTENT_TYPE = "contentType";
 }

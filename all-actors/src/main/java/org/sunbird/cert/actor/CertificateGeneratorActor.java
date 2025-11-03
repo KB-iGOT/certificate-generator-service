@@ -174,7 +174,7 @@ public class CertificateGeneratorActor extends BaseActor {
             List<Map<String, Object>> certificateList = new ArrayList<>();
             Date userCompletedOn = null;
             if (MapUtils.isNotEmpty(contentInfo)) {
-                if (JsonKeys.EVENT.equalsIgnoreCase((String) contentInfo.get(JsonKeys.PRIMARY_CATEGORY))) {
+                if (JsonKeys.EVENT.equalsIgnoreCase((String) contentInfo.get(JsonKeys.CONTENT_TYPE))) {
                     isEvent = true;
                     Response userEventEnrolmentRecord = userEnrolmentHelper.getUserEventEnrollmentRecord(courseId, batchId, userId);
                     if (issueCertificateEventHelper.isUserEligibleForEventCertificate(userEventEnrolmentRecord)) {
@@ -564,12 +564,12 @@ public class CertificateGeneratorActor extends BaseActor {
                     throw new BaseException(IResponseMessage.ERROR_GENERATING_CERTIFICATE, JsonKeys.UID_BAD_REQUEST_ERROR_MSG ,ResponseCode.BAD_REQUEST.getCode());
                 }
             }
-            Map<String, Object> userDetails = (Map<String, Object>) certificateRegistry.get(JsonKeys.RECIPIENT);
-            Map<String, Object> contentDetails = (Map<String, Object>) certificateRegistry.get(JsonKeys.RELATED);
+            Map<String, Object> userDetails = mapper.readValue((String)certificateRegistry.get(JsonKeys.RECIPIENT), Map.class);
+            Map<String, Object> contentDetails = mapper.readValue((String)certificateRegistry.get(JsonKeys.RELATED), Map.class);
             if (MapUtils.isNotEmpty(userDetails) && MapUtils.isNotEmpty(contentDetails)) {
                 String userId = (String) userDetails.get(JsonKeys.ID);
                 String batchId = (String) contentDetails.get(JsonKeys.BATCH_ID);
-                String courseId = (String) contentDetails.get(JsonKeys.COURSE_ID);
+                String courseId = StringUtils.isNotEmpty((String) contentDetails.get(JsonKeys.COURSE_ID)) ?  (String) contentDetails.get(JsonKeys.COURSE_ID) : (String) contentDetails.get(JsonKeys.EVENT_ID_CAMELCASE);
                 request.getRequest().put(JsonKeys.COURSE_ID, courseId);
                 request.getRequest().put(JsonKeys.BATCH_ID, batchId);
                 request.getRequest().put(JsonKeys.USER_ID, userId);

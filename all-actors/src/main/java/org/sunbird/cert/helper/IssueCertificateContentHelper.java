@@ -355,6 +355,7 @@ public class IssueCertificateContentHelper {
                 List<String> parentCollections = (List<String>) response.getOrDefault("parentCollections", new ArrayList<>());
 
                 List<Object> orgData = (List<Object>) response.getOrDefault("organisation", Collections.emptyList());
+                String contentType = sanitizeString((String) response.getOrDefault("contentType", ""));
                 String providerName = extractProviderName(orgData);
 
                 Map<String, Object> courseInfoMap = new HashMap<>();
@@ -364,6 +365,7 @@ public class IssueCertificateContentHelper {
                 courseInfoMap.put("primaryCategory", primaryCategory);
                 courseInfoMap.put("coursePosterImage", posterImage);
                 courseInfoMap.put("providerName", providerName);
+                courseInfoMap.put("contentType", contentType);
                 return courseInfoMap;
             } else {
                 return new HashMap<>();
@@ -377,6 +379,7 @@ public class IssueCertificateContentHelper {
             String posterImage = sanitizeString((String) courseMetadata.getOrDefault("posterImage", ""));
 
             List<Object> orgData = (List<Object>) courseMetadata.getOrDefault("organisation", Collections.emptyList());
+            String contentType = sanitizeString((String) courseMetadata.getOrDefault("contentType", ""));
             String providerName = extractProviderName(orgData);
 
             Map<String, Object> courseInfoMap = new HashMap<>();
@@ -386,6 +389,7 @@ public class IssueCertificateContentHelper {
             courseInfoMap.put("primaryCategory", primaryCategory);
             courseInfoMap.put("coursePosterImage", posterImage);
             courseInfoMap.put("providerName", providerName);
+            courseInfoMap.put("contentType", contentType);
 
             return courseInfoMap;
         }
