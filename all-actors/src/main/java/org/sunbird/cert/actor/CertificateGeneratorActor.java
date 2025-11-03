@@ -211,7 +211,7 @@ public class CertificateGeneratorActor extends BaseActor {
                     }
                 } else {
                     logger.error("generateCertificateV2:Exception Occurred while generating certificate. user is not eligible for certificate");
-                    throw new BaseException(IResponseMessage.INTERNAL_ERROR, "user is not eligible for certificate", ResponseCode.SERVER_ERROR.getCode());
+                    throw new BaseException(IResponseMessage.BAD_REQUEST, "user is not eligible for certificate", ResponseCode.BAD_REQUEST.getCode());
                 }
             } else {
                 logger.error("generateCertificateV2:Exception Occurred while generating certificate. Issue while fetching the content");
