@@ -21,10 +21,7 @@ import org.sunbird.*;
 import org.sunbird.auth.AccessTokenValidator;
 import org.sunbird.cache.platform.Platform;
 import org.sunbird.cert.actor.operation.CertActorOperation;
-import org.sunbird.cert.helper.CertRegistryHelper;
-import org.sunbird.cert.helper.IssueCertificateContentHelper;
-import org.sunbird.cert.helper.IssueCertificateEventHelper;
-import org.sunbird.cert.helper.UserEnrolmentHelper;
+import org.sunbird.cert.helper.*;
 import org.sunbird.cloud.storage.BaseStorageService;
 import org.sunbird.cloud.storage.factory.StorageConfig;
 import org.sunbird.cloud.storage.factory.StorageServiceFactory;
@@ -72,6 +69,7 @@ public class CertificateGeneratorActor extends BaseActor {
     private static Map<String, String> specialEventCertificateTemplateMap;
     private static final Cache<LocalDate, Map<String, String>> todayCertificateCache = Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(eventCacheTTL)).build();
     private static final Logger log = LoggerFactory.getLogger(CertificateGenerator.class);
+    private static final IssueCertificateExternalContentHelper issueCertificateExternalContentHelper = IssueCertificateExternalContentHelper.getInstance();
 
     @Inject
     @Named("certificate_background_actor")
@@ -167,14 +165,32 @@ public class CertificateGeneratorActor extends BaseActor {
                     throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "You are not authorized to get the certificate for other user", ResponseCode.BAD_REQUEST.getCode());
                 }
             }
-            Map<String, Object> contentInfo = issueCertificateContentHelper.getCourseInfo(courseId);
             boolean isUserEligibleForCertificate = true;
             boolean isEvent = false;
             Map<String, Object> certificateRegistryMap = new HashMap<>();
             List<Map<String, Object>> certificateList = new ArrayList<>();
             Date userCompletedOn = null;
+            Map<String, Object> contentInfo;
+            boolean isExternalCourse = false;
+            if (courseId.contains(JsonKey.EXT_PREFIX)) {
+                contentInfo = issueCertificateExternalContentHelper.getExternalCourseInfo(courseId);
+                isExternalCourse = true;
+            } else {
+                contentInfo = issueCertificateContentHelper.getCourseInfo(courseId);
+            }
             if (MapUtils.isNotEmpty(contentInfo)) {
-                if (JsonKeys.EVENT.equalsIgnoreCase((String) contentInfo.get(JsonKeys.CONTENT_TYPE))) {
+                if (isExternalCourse) {
+                    Response userExternalContentEnrolmentRecord = userEnrolmentHelper.getUserEnrollmentRecordForExternalContent(courseId, userId);
+                    if (issueCertificateExternalContentHelper.isUserEligibleForExternalContentCertificate(userExternalContentEnrolmentRecord)) {
+                        certificateList = issueCertificateExternalContentHelper.getUserCertificates(userExternalContentEnrolmentRecord);
+                        userCompletedOn = issueCertificateExternalContentHelper.getCompletedOnDate(userExternalContentEnrolmentRecord);
+                        if (CollectionUtils.isNotEmpty(certificateList)) {
+                            certificateRegistryMap = getCertificateRegistryMap(certificateList);
+                        }
+                    } else {
+                        isUserEligibleForCertificate = false;
+                    }
+                } else if (JsonKeys.EVENT.equalsIgnoreCase((String) contentInfo.get(JsonKeys.CONTENT_TYPE))) {
                     isEvent = true;
                     Response userEventEnrolmentRecord = userEnrolmentHelper.getUserEventEnrollmentRecord(courseId, batchId, userId);
                     if (issueCertificateEventHelper.isUserEligibleForEventCertificate(userEventEnrolmentRecord)) {
@@ -200,7 +216,7 @@ public class CertificateGeneratorActor extends BaseActor {
                     }
                 }
                 if (isUserEligibleForCertificate) {
-                    String encodedSvg = generatePrintURIAndUpdateRecord(courseId, batchId, request, isEvent, certificateRegistryMap, certificateList, userCompletedOn);
+                    String encodedSvg = generatePrintURIAndUpdateRecord(courseId, batchId, request, isEvent, certificateRegistryMap, certificateList, userCompletedOn, isExternalCourse);
                     if (StringUtils.isNotBlank(encodedSvg)) {
                         Response response = new Response();
                         response.getResult().put(JsonKeys.PRINT_URI, encodedSvg);
@@ -225,7 +241,7 @@ public class CertificateGeneratorActor extends BaseActor {
         logger.info("onReceive method call End");
     }
 
-    private String generatePrintURIAndUpdateRecord(String courseId, String batchId, Request request, boolean isEvent, Map<String, Object> v2CertificateRegistryMap, List<Map<String, Object>> issuedCertificateList, Date userCompletedOn) throws BaseException {
+    private String generatePrintURIAndUpdateRecord(String courseId, String batchId, Request request, boolean isEvent, Map<String, Object> v2CertificateRegistryMap, List<Map<String, Object>> issuedCertificateList, Date userCompletedOn, Boolean isExternalCourse) throws BaseException {
         try {
             Response templateResponse = null;
             if (isEvent) {
@@ -233,8 +249,14 @@ public class CertificateGeneratorActor extends BaseActor {
             } else {
                 templateResponse = issueCertificateContentHelper.fetchContentTemplate(courseId, batchId);
             }
-            if (templateResponse != null) {
-                Map<String, Object> certificateTemplate = getCertificateMetaData(request, templateResponse.getResult(), isEvent);
+            if (templateResponse != null || isExternalCourse) {
+                Map<String, Object> certificateTemplate ;
+                if (isExternalCourse) {
+                    certificateTemplate = getCertificateMetaDataForExternalContent(request);
+                } else {
+                    certificateTemplate  = getCertificateMetaData(request, templateResponse.getResult(), isEvent);
+                }
+
                 request.put(JsonKeys.CERTIFICATE, certificateTemplate);
                 Map<String, String> properties = populatePropertiesMap(request);
                 CertMapper certMapper = new CertMapper(properties);
@@ -288,7 +310,7 @@ public class CertificateGeneratorActor extends BaseActor {
                             }
                         }
 
-                        if (StringUtils.isNotBlank(specialEventCertificateName)) {
+                        if (StringUtils.isNotBlank(specialEventCertificateName) && !isExternalCourse) {
                             if (MapUtils.isNotEmpty(specialEventCertificateTemplateMap)) {
                                 logger.info("The size for specialEvent Certificate is: " + specialEventCertificateTemplateMap.size());
                                 String svgTemplate = specialEventCertificateTemplateMap.get(specialEventCertificateName);
@@ -598,5 +620,9 @@ public class CertificateGeneratorActor extends BaseActor {
             throw new BaseException(IResponseMessage.INTERNAL_ERROR, ex.getMessage(), ResponseCode.SERVER_ERROR.getCode());
         }
         logger.info("onReceive method call End");
+    }
+
+    public Map<String, Object> getCertificateMetaDataForExternalContent(Request request) {
+        return issueCertificateExternalContentHelper.generateCertificateMapForExternalContent(request.getRequest());
     }
 }

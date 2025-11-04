@@ -146,4 +146,5 @@ public interface JsonKey {
     String USER_ID = "userId";
     String COURSE_ID = "courseId";
     String BATCH_ID = "batchId";
+    String EXT_PREFIX = "ext_";
 }

@@ -33,7 +33,18 @@ public class CertValidator {
     public void validateGenerateCertRequest(Request request) throws BaseException {
 
         Map<String, Object> certReq = request.getRequest();
-        checkMandatoryParamsPresent(certReq, JsonKey.REQUEST, Arrays.asList(JsonKey.USER_ID, JsonKey.COURSE_ID, JsonKey.BATCH_ID));
+        boolean isExternalContent = false;
+        if (MapUtils.isNotEmpty(certReq)) {
+            String courseId = (String) certReq.get(JsonKey.COURSE_ID);
+            if (StringUtils.isNotBlank(courseId) && courseId.contains(JsonKey.EXT_PREFIX)) {
+                isExternalContent = true;
+            }
+        }
+        if (isExternalContent) {
+            checkMandatoryParamsPresent(certReq, JsonKey.REQUEST, Arrays.asList(JsonKey.USER_ID, JsonKey.COURSE_ID));
+        } else {
+            checkMandatoryParamsPresent(certReq, JsonKey.REQUEST, Arrays.asList(JsonKey.USER_ID, JsonKey.COURSE_ID, JsonKey.BATCH_ID));
+        }
     }
 
     private void checkMandatoryParamsPresent(

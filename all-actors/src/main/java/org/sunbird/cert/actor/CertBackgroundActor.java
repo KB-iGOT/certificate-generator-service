@@ -103,8 +103,6 @@ public class CertBackgroundActor extends BaseActor {
         } catch (Exception ex) {
             logger.error("Issue while adding the registry for request for userId: " + userId + " courseId: " + courseId + " batchId: " + batchId , ex);
         }
-
-
     }
 
     public Response updateUserEnrolmentRecord(String userId, String courseId, String batchId, List<Map<String, Object>> issuedCertificates, boolean isEvent) throws BaseException {
@@ -112,6 +110,8 @@ public class CertBackgroundActor extends BaseActor {
         attributeMap.put(JsonKeys.ISSUED_CERTIFICATES, issuedCertificates);
         if (isEvent) {
             userEnrolmentHelper.updateUserEventEnrollmentRecord(courseId, batchId, userId, attributeMap);
+        } else if (courseId.contains(JsonKey.EXT_PREFIX)){
+            userEnrolmentHelper.updateExternalEnrollmentRecord(courseId, userId, attributeMap);
         } else {
             userEnrolmentHelper.updateUserEnrollmentRecord(courseId, batchId, userId, attributeMap);
         }

@@ -43,7 +43,7 @@ public class IssueCertificateEventHelper {
 
     private IssueCertificateEventHelper() {}
 
-    public static Map<String, Object> generateCertificateMap(Map<String, Object> requestMap, Map<String, Object> template) {
+    public Map<String, Object> generateCertificateMap(Map<String, Object> requestMap, Map<String, Object> template) {
 
         try {
             logger.info("issueCertificate i/p event =>" + requestMap);

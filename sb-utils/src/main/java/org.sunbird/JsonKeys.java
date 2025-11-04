@@ -123,4 +123,5 @@ public class JsonKeys {
     public static final String IS_ADMIN = "isAdmin";
     public static final String EVENT_ID_CAMELCASE = "eventId";
     public static final String CONTENT_TYPE = "contentType";
+    public static final String TABLE_USER_EXTERNAL_ENROLMENTS = "user_external_enrolments";
 }
