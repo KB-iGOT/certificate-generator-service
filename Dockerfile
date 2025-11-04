@@ -1,5 +1,5 @@
 #FROM sunbird/openjdk-java11-alpine:latest
-FROM openjdk:17-slim
+FROM openjdk:17.0.1-jdk-slim
 MAINTAINER "S M Y ALTAMASH <smy.altamash@gmail.com>"
 RUN apt update \
     && apt install -y unzip curl fontconfig \
