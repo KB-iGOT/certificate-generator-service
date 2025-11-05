@@ -640,8 +640,11 @@ public class CertificateGeneratorActor extends BaseActor {
         File[] tempFiles = tmpDir.listFiles((dir, name) -> name.startsWith("+~JF") && name.endsWith(".tmp"));
         if (tempFiles != null) {
             for (File file : tempFiles) {
-                if (!file.delete()) {
-                    logger.warn("Failed to delete temp file: {}", file.getAbsolutePath());
+                try {
+                    if (!file.delete()) {
+                        logger.warn("Could not delete temp file (maybe in use): {}", file.getAbsolutePath());
+                    }
+                } catch (Exception ex) {
                 }
             }
         }
