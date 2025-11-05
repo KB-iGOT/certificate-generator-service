@@ -642,7 +642,7 @@ public class CertificateGeneratorActor extends BaseActor {
             for (File file : tempFiles) {
                 try {
                     if (!file.delete()) {
-                        logger.warn("Could not delete temp file (maybe in use): {}", file.getAbsolutePath());
+                        logger.info("Could not delete temp file (maybe in use): {}", file.getAbsolutePath());
                     }
                 } catch (Exception ex) {
                 }
