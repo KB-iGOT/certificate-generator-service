@@ -295,7 +295,7 @@ public class CertificateGeneratorActor extends BaseActor {
                                 qrMap = certificateGenerator.generateQrCode();
                             }
                         }
-                        String encodedQrCode = encodeQrCode((File) qrMap.get(JsonKey.QR_CODE_FILE));
+                        String encodedQrCode = encodeQrCodeBytes((byte[]) qrMap.get(JsonKey.QR_CODE_FILE));
                         String specialEventCertificateName = null;
                         if (CollectionUtils.isNotEmpty(issuedCertificateList)) {
                             specialEventCertificateName = issuedCertificateList.stream()
@@ -369,6 +369,10 @@ public class CertificateGeneratorActor extends BaseActor {
     private String encodeQrCode(File file) throws IOException {
         byte[] fileContent = FileUtils.readFileToByteArray(file);
         file.delete();
+        return Base64.getEncoder().encodeToString(fileContent);
+    }
+
+    private String encodeQrCodeBytes(byte[] fileContent) throws IOException {
         return Base64.getEncoder().encodeToString(fileContent);
     }
 

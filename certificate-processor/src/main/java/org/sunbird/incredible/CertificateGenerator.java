@@ -100,11 +100,11 @@ public class CertificateGenerator {
         qrCodeGenerationModel.setData(properties.get(JsonKey.BASE_PATH).concat("/") + "v2/" + getUUID(certificateExtension));
         logger.info("QrCodeModel: " + qrCodeGenerationModel.getData());
         QRCodeImageGenerator qrCodeImageGenerator = new QRCodeImageGenerator();
-        File qrCodeFile = qrCodeImageGenerator.createQRImages(qrCodeGenerationModel);
+        byte[] qrCodeFile = qrCodeImageGenerator.createQRImagesV2(qrCodeGenerationModel);
 
         qrMap.put(JsonKey.QR_CODE_FILE,qrCodeFile);
         qrMap.put(JsonKey.ACCESS_CODE,accessCode);
-        logger.info("Qrcode {} is created for the certificate", qrCodeFile.getName());
+        logger.info("Qrcode {} is created for the certificate");
         return qrMap;
     }
 
@@ -118,11 +118,11 @@ public class CertificateGenerator {
         qrCodeGenerationModel.setData(properties.get(JsonKey.BASE_PATH).concat("/") + "v2/" + getUUID(certificateExtension));
         logger.info("QrCodeModel Second Method: " + qrCodeGenerationModel.getData());
         QRCodeImageGenerator qrCodeImageGenerator = new QRCodeImageGenerator();
-        File qrCodeFile = qrCodeImageGenerator.createQRImages(qrCodeGenerationModel);
+        byte[] qrCodeFile = qrCodeImageGenerator.createQRImagesV2(qrCodeGenerationModel);
 
         qrMap.put(JsonKey.QR_CODE_FILE,qrCodeFile);
         qrMap.put(JsonKey.ACCESS_CODE,accessCode);
-        logger.info("Qrcode {} is created for the certificate", qrCodeFile.getName());
+        logger.info("Qrcode {} is created for the certificate");
         return qrMap;
     }
 }
