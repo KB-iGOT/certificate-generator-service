@@ -595,6 +595,7 @@ public class CertificateGeneratorActor extends BaseActor {
                 request.getRequest().put(JsonKeys.COURSE_ID, courseId);
                 request.getRequest().put(JsonKeys.BATCH_ID, batchId);
                 request.getRequest().put(JsonKeys.USER_ID, userId);
+                request.getRequest().put(JsonKeys.IS_ADMIN, true);
                 generateCertificate(request);
 
             } else {
