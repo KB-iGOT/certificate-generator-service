@@ -244,11 +244,14 @@ public class CertificateGeneratorActor extends BaseActor {
     private String generatePrintURIAndUpdateRecord(String courseId, String batchId, Request request, boolean isEvent, Map<String, Object> v2CertificateRegistryMap, List<Map<String, Object>> issuedCertificateList, Date userCompletedOn, Boolean isExternalCourse) throws BaseException {
         try {
             Response templateResponse = null;
-            if (isEvent) {
-                templateResponse = issueCertificateEventHelper.fetchEventTemplate(courseId, batchId);
-            } else {
-                templateResponse = issueCertificateContentHelper.fetchContentTemplate(courseId, batchId);
+            if (!isExternalCourse) {
+                if (isEvent) {
+                    templateResponse = issueCertificateEventHelper.fetchEventTemplate(courseId, batchId);
+                } else {
+                    templateResponse = issueCertificateContentHelper.fetchContentTemplate(courseId, batchId);
+                }
             }
+
             if (templateResponse != null || isExternalCourse) {
                 Map<String, Object> certificateTemplate ;
                 if (isExternalCourse) {
