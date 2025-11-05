@@ -71,6 +71,45 @@ public class QRCodeImageGenerator {
 
     }
 
+    public byte[] createQRImagesV2(QRCodeGenerationModel qrGenRequest)
+            throws WriterException, IOException, NotFoundException, FontFormatException {
+
+        String data = qrGenRequest.getData();
+        String text = qrGenRequest.getText();
+        String errorCorrectionLevel = qrGenRequest.getErrorCorrectionLevel();
+        int pixelsPerBlock = qrGenRequest.getPixelsPerBlock();
+        int qrMargin = qrGenRequest.getQrCodeMargin();
+        String fontName = qrGenRequest.getTextFontName();
+        int fontSize = qrGenRequest.getTextFontSize();
+        double tracking = qrGenRequest.getTextCharacterSpacing();
+        String imageFormat = qrGenRequest.getFileFormat();
+        String colorModel = qrGenRequest.getColorModel();
+        int borderSize = qrGenRequest.getImageBorderSize();
+        int qrMarginBottom = qrGenRequest.getQrCodeMarginBottom();
+        int imageMargin = qrGenRequest.getImageMargin();
+
+        // Generate the base QR image
+        BufferedImage qrImage = generateBaseImage(data, errorCorrectionLevel, pixelsPerBlock, qrMargin, colorModel);
+
+        // Overlay text if present
+        if (StringUtils.isNotBlank(text)) {
+            BufferedImage textImage = getTextImage(text, fontName, fontSize, tracking, colorModel);
+            qrImage = addTextToBaseImage(qrImage, textImage, colorModel, qrMargin, pixelsPerBlock, qrMarginBottom, imageMargin);
+        }
+
+        // Draw border if specified
+        if (borderSize > 0) {
+            drawBorder(qrImage, borderSize, imageMargin);
+        }
+
+        // Write to ByteArrayOutputStream instead of disk
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            ImageIO.write(qrImage, imageFormat, baos);
+            baos.flush();
+            return baos.toByteArray(); // return raw bytes
+        }
+    }
+
     private static BufferedImage addTextToBaseImage(BufferedImage qrImage, BufferedImage textImage, String colorModel, int qrMargin, int pixelsPerBlock, int qrMarginBottom, int imageMargin) throws NotFoundException {
         BufferedImageLuminanceSource qrSource = new BufferedImageLuminanceSource(qrImage);
         HybridBinarizer qrBinarizer = new HybridBinarizer(qrSource);
