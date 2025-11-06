@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 public class IssueCertificateExternalContentHelper {
 
-    private static final Logger logger = LoggerFactory.getLogger(IssueCertificateEventHelper.class);
+    private static final Logger logger = LoggerFactory.getLogger(IssueCertificateExternalContentHelper.class);
     private static final CassandraOperation cassandraOperation = ServiceFactory.getInstance();
     private static final RedisCacheUtil contentCache = new RedisCacheUtil();
     private static ObjectMapper mapper = new ObjectMapper();
@@ -71,7 +71,7 @@ public class IssueCertificateExternalContentHelper {
                 return null;
             }
         } catch (Exception e) {
-            logger.error("Issue while validating the user Enrollment.");
+            logger.error("Issue while validating the user Enrollment.", e);
         }
         return null;
     }
