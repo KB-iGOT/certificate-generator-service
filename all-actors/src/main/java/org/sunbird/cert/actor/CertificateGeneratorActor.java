@@ -352,7 +352,6 @@ public class CertificateGeneratorActor extends BaseActor {
                     } finally {
                         certStore.close();
                         try {
-                            cleanImageIOTempFiles();
                             certStoreFactory.cleanUp(uuid, directory);
                         } catch (Exception ex) {
                             logger.error("Exception occurred during resource clean");
@@ -633,20 +632,5 @@ public class CertificateGeneratorActor extends BaseActor {
 
     public Map<String, Object> getCertificateMetaDataForExternalContent(Request request) {
         return issueCertificateExternalContentHelper.generateCertificateMapForExternalContent(request.getRequest());
-    }
-
-    private void cleanImageIOTempFiles() {
-        File tmpDir = new File(System.getProperty("java.io.tmpdir"));
-        File[] tempFiles = tmpDir.listFiles((dir, name) -> name.startsWith("+~JF") && name.endsWith(".tmp"));
-        if (tempFiles != null) {
-            for (File file : tempFiles) {
-                try {
-                    if (!file.delete()) {
-                        logger.info("Could not delete temp file (maybe in use): {}", file.getAbsolutePath());
-                    }
-                } catch (Exception ex) {
-                }
-            }
-        }
     }
 }
