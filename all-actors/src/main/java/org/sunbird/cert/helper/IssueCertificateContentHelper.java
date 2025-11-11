@@ -125,7 +125,15 @@ public class IssueCertificateContentHelper {
 
                     Date issuedOn = (Date) map.get(JsonKeys.COMPLETED_ON);
 
+                    Optional<String> courseCompletionLanguage = issuedCertificates.stream()
+                            .filter(cert -> cert.containsKey(JsonKeys.COURSE_COMPLETION_LANGUAGE))
+                            .map(cert -> cert.get(JsonKeys.COURSE_COMPLETION_LANGUAGE))
+                            .findFirst();
                     Map<String, Object> enrolledUserMap = new HashMap<>();
+                    if (courseCompletionLanguage.isPresent()) {
+                        logger.info("Course Completion Language: " + courseCompletionLanguage.get());
+                        enrolledUserMap.put(JsonKeys.COURSE_COMPLETION_LANGUAGE, courseCompletionLanguage.get());
+                    }
                     enrolledUserMap.put(JsonKeys.USER, userId);
                     enrolledUserMap.put(JsonKeys.OLD_ID, oldId);
                     enrolledUserMap.put(JsonKeys.ISSUED_ON, issuedOn);
@@ -293,6 +301,29 @@ public class IssueCertificateContentHelper {
         recipientName = recipientName.trim();
 
         Map<String, Object> courseInfo = getCourseInfo((String) requestMap.get(JsonKeys.COURSE_ID));
+        String mutiLingualCourseId = null;
+        if (StringUtils.isNotBlank((String) enrolledUser.get(JsonKeys.COURSE_COMPLETION_LANGUAGE))) {
+            Object languageMapV1Obj = courseInfo.get("languageMapV1");
+            if (languageMapV1Obj instanceof Map<?, ?> languageMapV1) {
+                String languageCode = (String) enrolledUser.get(JsonKeys.COURSE_COMPLETION_LANGUAGE);
+                Object metaDataObj = languageMapV1.get(languageCode);
+                if (metaDataObj instanceof Map<?, ?> metaDataMap) {
+                    Map<String, Object> metaDataInfo = metaDataMap.entrySet().stream()
+                            .filter(e -> e.getKey() instanceof String)
+                            .collect(Collectors.toMap(
+                                    e -> (String) e.getKey(),
+                                    Map.Entry::getValue
+                            ));
+
+                    if (MapUtils.isNotEmpty(metaDataInfo)) {
+                        mutiLingualCourseId = (String)metaDataInfo.get(JsonKeys.ID);
+                        if (StringUtils.isNotBlank(mutiLingualCourseId) && !((String)courseInfo.get(JsonKeys.COURSE_ID)).equalsIgnoreCase(mutiLingualCourseId)) {
+                            courseInfo = getCourseInfo(mutiLingualCourseId);
+                        }
+                    }
+                }
+            }
+        }
         String courseName = (String) courseInfo.getOrDefault("courseName", "");
 
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
@@ -342,7 +373,7 @@ public class IssueCertificateContentHelper {
 
         String courseMetadataString = contentCache.get(courseId, null, 0);
         if (StringUtils.isBlank(courseMetadataString)) {
-            String url = PropertiesCache.getInstance().getProperty("content_basePath") + PropertiesCache.getInstance().getProperty("content_read_api") + "/" + courseId + "?fields=name,parentCollections,primaryCategory,posterImage,organisation";
+            String url = PropertiesCache.getInstance().getProperty("content_basePath") + PropertiesCache.getInstance().getProperty("content_read_api") + "/" + courseId + "?fields=name,parentCollections,primaryCategory,posterImage,organisation,languageMapV1";
 
             Map<String, Object> responseObject = getAPICall(url);
             Map<String, Object> resultObject = (Map<String, Object>) responseObject.get(JsonKeys.RESULT);
@@ -356,6 +387,7 @@ public class IssueCertificateContentHelper {
 
                 List<Object> orgData = (List<Object>) response.getOrDefault("organisation", Collections.emptyList());
                 String contentType = sanitizeString((String) response.getOrDefault("contentType", ""));
+                Map<String, Object> languageMapV1 = (Map<String, Object>) response.getOrDefault("languageMapV1", new HashMap<>());
                 String providerName = extractProviderName(orgData);
 
                 Map<String, Object> courseInfoMap = new HashMap<>();
@@ -366,6 +398,9 @@ public class IssueCertificateContentHelper {
                 courseInfoMap.put("coursePosterImage", posterImage);
                 courseInfoMap.put("providerName", providerName);
                 courseInfoMap.put("contentType", contentType);
+                if (MapUtils.isNotEmpty(languageMapV1)) {
+                    courseInfoMap.put("languageMapV1", languageMapV1);
+                }
                 return courseInfoMap;
             } else {
                 return new HashMap<>();
@@ -380,6 +415,7 @@ public class IssueCertificateContentHelper {
 
             List<Object> orgData = (List<Object>) courseMetadata.getOrDefault("organisation", Collections.emptyList());
             String contentType = sanitizeString((String) courseMetadata.getOrDefault("contentType", ""));
+            Map<String, Object> languageMapV1 = (Map<String, Object>) courseMetadata.getOrDefault("languageMapV1", new HashMap<>());
             String providerName = extractProviderName(orgData);
 
             Map<String, Object> courseInfoMap = new HashMap<>();
@@ -390,6 +426,9 @@ public class IssueCertificateContentHelper {
             courseInfoMap.put("coursePosterImage", posterImage);
             courseInfoMap.put("providerName", providerName);
             courseInfoMap.put("contentType", contentType);
+            if (MapUtils.isNotEmpty(languageMapV1)) {
+                courseInfoMap.put("languageMapV1", languageMapV1);
+            }
 
             return courseInfoMap;
         }
