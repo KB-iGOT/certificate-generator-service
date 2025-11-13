@@ -373,7 +373,7 @@ public class IssueCertificateContentHelper {
 
         String courseMetadataString = contentCache.get(courseId, null, 0);
         if (StringUtils.isBlank(courseMetadataString)) {
-            String url = PropertiesCache.getInstance().getProperty("content_basePath") + PropertiesCache.getInstance().getProperty("content_read_api") + "/" + courseId + "?fields=name,parentCollections,primaryCategory,posterImage,organisation,languageMapV1";
+            String url = PropertiesCache.getInstance().getProperty("content_basePath") + PropertiesCache.getInstance().getProperty("content_read_api") + "/" + courseId + "?fields=name,parentCollections,primaryCategory,posterImage,organisation,contentType,languageMapV1";
 
             Map<String, Object> responseObject = getAPICall(url);
             Map<String, Object> resultObject = (Map<String, Object>) responseObject.get(JsonKeys.RESULT);
