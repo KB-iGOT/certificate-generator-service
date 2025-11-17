@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sunbird.cache.platform.Platform;
 import scala.concurrent.ExecutionContextExecutor;
 
 import java.io.IOException;
@@ -31,12 +32,11 @@ public class TempFileCleaner {
 
     @Inject
     public TempFileCleaner(ActorSystem actorSystem,
-                           ExecutionContextExecutor executor,
-                           Config config) {
-        String tmpDir = config.hasPath("tempcleaner.dir") ? config.getString("tempcleaner.dir") : "/tmp";
-        this.expiryMinutes = config.hasPath("tempcleaner.expiryMinutes") ? config.getLong("tempcleaner.expiryMinutes") : 5L;
-        long intervalMinutes = config.hasPath("tempcleaner.intervalMinutes") ? config.getLong("tempcleaner.intervalMinutes") : 2L;
-        this.filePattern = config.hasPath("tempcleaner.pattern") ? config.getString("tempcleaner.pattern") : "^\\+~JF.*\\.tmp$";
+                           ExecutionContextExecutor executor) {
+        String tmpDir = Platform.getString("tempcleaner.dir", "/tmp");
+        this.expiryMinutes = Platform.getLong("tempcleaner.expiryMinutes", 5L);
+        long intervalMinutes = Platform.getLong("tempcleaner.intervalMinutes", 2L);
+        this.filePattern = Platform.getString("tempcleaner.pattern", "^\\+~JF.*\\.tmp$");
 
         this.dir = Paths.get(tmpDir);
 
