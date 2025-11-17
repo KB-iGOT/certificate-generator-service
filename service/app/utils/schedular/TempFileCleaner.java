@@ -34,8 +34,8 @@ public class TempFileCleaner {
                            ExecutionContextExecutor executor,
                            Config config) {
         String tmpDir = config.hasPath("tempcleaner.dir") ? config.getString("tempcleaner.dir") : "/tmp";
-        this.expiryMinutes = config.hasPath("tempcleaner.expiryMinutes") ? config.getLong("tempcleaner.expiryMinutes") : 10L;
-        long intervalMinutes = config.hasPath("tempcleaner.intervalMinutes") ? config.getLong("tempcleaner.intervalMinutes") : 5L;
+        this.expiryMinutes = config.hasPath("tempcleaner.expiryMinutes") ? config.getLong("tempcleaner.expiryMinutes") : 5L;
+        long intervalMinutes = config.hasPath("tempcleaner.intervalMinutes") ? config.getLong("tempcleaner.intervalMinutes") : 2L;
         this.filePattern = config.hasPath("tempcleaner.pattern") ? config.getString("tempcleaner.pattern") : "^\\+~JF.*\\.tmp$";
 
         this.dir = Paths.get(tmpDir);
@@ -76,7 +76,7 @@ public class TempFileCleaner {
                             if (lastModified.isBefore(cutoff)) {
                                 boolean deleted = tryDeleteWithLock(p);
                                 if (deleted) {
-                                    log.debug("TempFileCleaner deleted:");
+                                    log.info("TempFileCleaner deleted:");
                                 } else {
                                     log.debug("TempFileCleaner skipped (in-use/failed)");
                                 }
