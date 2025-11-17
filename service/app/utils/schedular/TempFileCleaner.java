@@ -33,10 +33,10 @@ public class TempFileCleaner {
     @Inject
     public TempFileCleaner(ActorSystem actorSystem,
                            ExecutionContextExecutor executor) {
-        String tmpDir = Platform.getString("tempcleaner.dir", "/tmp");
-        this.expiryMinutes = Platform.getLong("tempcleaner.expiryMinutes", 5L);
-        long intervalMinutes = Platform.getLong("tempcleaner.intervalMinutes", 2L);
-        this.filePattern = Platform.getString("tempcleaner.pattern", "^\\+~JF.*\\.tmp$");
+        String tmpDir = Platform.getString("tempcleaner_dir", "/tmp");
+        this.expiryMinutes = Platform.getLong("tempcleaner_expiryMinutes", 2L);
+        long intervalMinutes = Platform.getLong("tempcleaner_intervalMinutes", 1L);
+        this.filePattern = Platform.getString("tempcleaner_pattern", "^\\+~JF.*\\.tmp$");
 
         this.dir = Paths.get(tmpDir);
 
