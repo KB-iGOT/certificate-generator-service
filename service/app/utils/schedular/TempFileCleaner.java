@@ -3,9 +3,9 @@ package utils.schedular;
 import akka.actor.ActorSystem;
 import akka.actor.Cancellable;
 import com.typesafe.config.Config;
-import jakarta.annotation.PreDestroy;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
+import javax.annotation.PreDestroy;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.ExecutionContextExecutor;
@@ -33,7 +33,6 @@ public class TempFileCleaner {
     public TempFileCleaner(ActorSystem actorSystem,
                            ExecutionContextExecutor executor,
                            Config config) {
-        // read values from application.conf (with sensible defaults)
         String tmpDir = config.hasPath("tempcleaner.dir") ? config.getString("tempcleaner.dir") : "/tmp";
         this.expiryMinutes = config.hasPath("tempcleaner.expiryMinutes") ? config.getLong("tempcleaner.expiryMinutes") : 10L;
         long intervalMinutes = config.hasPath("tempcleaner.intervalMinutes") ? config.getLong("tempcleaner.intervalMinutes") : 5L;
@@ -48,8 +47,6 @@ public class TempFileCleaner {
             try {
                 clean();
             } catch (Exception e) {
-                // log and keep scheduler alive
-                System.err.println("TempFileCleaner: error during clean: " + e.getMessage());
                 e.printStackTrace();
             }
         };
@@ -57,7 +54,7 @@ public class TempFileCleaner {
         this.cancellable = actorSystem.scheduler()
                 .scheduleAtFixedRate(initialDelay, interval, task, executor);
 
-        System.out.println("TempFileCleaner scheduled: dir=" + tmpDir + ", expiryMinutes=" + expiryMinutes +
+        log.info("TempFileCleaner scheduled: dir=" + tmpDir + ", expiryMinutes=" + expiryMinutes +
                 ", pattern=" + filePattern + ", intervalMinutes=" + intervalMinutes);
     }
 
@@ -79,17 +76,17 @@ public class TempFileCleaner {
                             if (lastModified.isBefore(cutoff)) {
                                 boolean deleted = tryDeleteWithLock(p);
                                 if (deleted) {
-                                    System.out.println("TempFileCleaner deleted: " + p);
+                                    log.info("TempFileCleaner deleted: " + p);
                                 } else {
-                                    System.out.println("TempFileCleaner skipped (in-use/failed): " + p);
+                                    log.info("TempFileCleaner skipped (in-use/failed): " + p);
                                 }
                             }
                         } catch (IOException ex) {
-                            System.err.println("TempFileCleaner: cannot inspect file " + p + " : " + ex.getMessage());
+                            log.error("TempFileCleaner: cannot inspect file " + p + " : " + ex.getMessage());
                         }
                     });
         } catch (IOException e) {
-            System.err.println("TempFileCleaner: failed to list files in " + dir + " : " + e.getMessage());
+            log.error("TempFileCleaner: failed to list files in " + dir + " : " + e.getMessage());
         }
     }
 
