@@ -3,6 +3,7 @@ package utils.module;
 import com.google.inject.AbstractModule;
 
 import utils.ApplicationStart;
+import utils.schedular.TempFileCleaner;
 
 /**
  * This class is responsible for creating instance of 
@@ -15,7 +16,7 @@ public class StartModule extends AbstractModule {
 	protected void configure() {
 		bind(SignalHandler.class).asEagerSingleton();
 		bind(ApplicationStart.class).asEagerSingleton();
-
+        bind(TempFileCleaner.class).asEagerSingleton();
 	}
 
 }
