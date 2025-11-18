@@ -76,7 +76,7 @@ public class TempFileCleaner {
                             if (lastModified.isBefore(cutoff)) {
                                 boolean deleted = tryDeleteWithLock(p);
                                 if (deleted) {
-                                    log.info("TempFileCleaner deleted:");
+                                    log.debug("TempFileCleaner deleted:");
                                 } else {
                                     log.debug("TempFileCleaner skipped (in-use/failed)");
                                 }
