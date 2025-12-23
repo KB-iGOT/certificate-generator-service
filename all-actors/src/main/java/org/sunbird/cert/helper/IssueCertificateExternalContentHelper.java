@@ -167,6 +167,7 @@ public class IssueCertificateExternalContentHelper {
                 eData.put("courseName", courseName);
                 eData.put("courseNameExtended", "");
             }
+            logger.info("The edata is updated : " + eData.get("courseName") + " : testing" +eData.get("courseNameExtended"));
             eData.put("basePath", PropertiesCache.getInstance().getProperty("cert_domain_url") + "/certs");
             eData.put("name", certName);
             eData.put("providerName", courseInfo.getOrDefault("providerName", ""));
