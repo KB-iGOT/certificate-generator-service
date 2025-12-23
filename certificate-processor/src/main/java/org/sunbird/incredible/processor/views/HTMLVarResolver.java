@@ -1,6 +1,7 @@
 package org.sunbird.incredible.processor.views;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.WordUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.sunbird.incredible.processor.JsonKey;
 import org.sunbird.incredible.pojos.CertificateExtension;
@@ -24,6 +25,11 @@ public class HTMLVarResolver {
     private CertificateExtension certificateExtension;
 
     private static Logger logger = LoggerFactory.getLogger(HTMLVarResolver.class);
+    private static final int externalCourseNameMaximumLength =
+            Integer.parseInt(
+                    System.getenv().getOrDefault("EXTERNAL_COURSE_MAX_LENGTH", "100")
+            );
+
 
     public HTMLVarResolver(CertificateExtension certificateExtension) {
         this.certificateExtension = certificateExtension;
@@ -140,6 +146,17 @@ public class HTMLVarResolver {
             metaData.put(JsonKey.SIGNATORY_1_DESIGNATION, urlEncode(getSignatory1Designation()));
             metaData.put(JsonKey.EXPIRY_DATE, urlEncode(getExpiryDate()));
             metaData.put(JsonKey.PROVIDER_NAME, urlEncode(getProviderName()));
+            String courseName = getCourseName();
+            if (org.apache.commons.lang3.StringUtils.isNotBlank(courseName) && courseName.length() > externalCourseNameMaximumLength) {
+                String wrappedCourseName = WordUtils.wrap(courseName, externalCourseNameMaximumLength, "\n", false);
+                String[] lines = wrappedCourseName.split("\n", 2);
+                String courseNameLine = lines[0].trim();
+                String courseNameExtended = lines.length > 1 ? lines[1].trim() : "";
+                metaData.put(JsonKey.COURSE_NAME, urlEncode(courseNameLine));
+                metaData.put(JsonKey.COURSE_NAME_EXTENDED, urlEncode(courseNameExtended));
+            } else {
+                metaData.put(JsonKey.COURSE_NAME_EXTENDED, " ");
+            }
         } catch (UnsupportedEncodingException e) {
             logger.info("getCertMetaData: exception occurred while url encoding {}", e.getMessage());
         }
