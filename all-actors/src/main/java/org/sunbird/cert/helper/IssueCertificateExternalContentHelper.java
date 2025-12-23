@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.WordUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import org.sunbird.BaseException;
 import org.sunbird.HttpUtil;
 import org.sunbird.JsonKeys;
 import org.sunbird.PropertiesCache;
+import org.sunbird.cache.platform.Platform;
 import org.sunbird.cache.util.RedisCacheUtil;
 import org.sunbird.cassandra.CassandraOperation;
 import org.sunbird.helper.ServiceFactory;
@@ -28,6 +30,7 @@ public class IssueCertificateExternalContentHelper {
     private static final CassandraOperation cassandraOperation = ServiceFactory.getInstance();
     private static final RedisCacheUtil contentCache = new RedisCacheUtil();
     private static ObjectMapper mapper = new ObjectMapper();
+    private static final int extnernalCourseNameMaximumLength = Platform.getInteger("external_course_max_length", 100);
 
     static {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -124,7 +127,7 @@ public class IssueCertificateExternalContentHelper {
     private static Map<String, Object> generateCertificateForExternalContent(Map<String, Object> requestMap, Map<String, Object> userDetails, Map<String, Object> enrolledUser) throws UnirestException, IOException {
         String firstName = (String) userDetails.getOrDefault("firstName", "");
         String lastName = (String) userDetails.getOrDefault("lastName", "");
-        String recipientName = StringUtils.isNotBlank(lastName) ? firstName + " " + lastName : firstName;;
+        String recipientName = StringUtils.isNotBlank(lastName) ? firstName + " " + lastName : firstName;
 
         recipientName = recipientName.trim();
 
@@ -153,7 +156,17 @@ public class IssueCertificateExternalContentHelper {
             eData.put("orgId", userDetails.getOrDefault("rootOrgId", ""));
             eData.put("issuer", mapper.readValue((String)template.getOrDefault(JsonKeys.ISSUER, "{}"), Map.class));
             eData.put("signatoryList", mapper.readValue((String)template.getOrDefault(template.get(JsonKeys.SIGNATORY_LIST), "[]"), List.class));
-            eData.put("courseName", courseName);
+            if (StringUtils.isNotBlank(courseName) && courseName.length() > extnernalCourseNameMaximumLength) {
+                String wrappedCourseName = WordUtils.wrap(courseName, extnernalCourseNameMaximumLength, "\n", false);
+                String[] lines = wrappedCourseName.split("\n", 2);
+                String courseNameLine = lines[0].trim();
+                String courseNameExtended = lines.length > 1 ? lines[1].trim() : "";
+                eData.put("courseName", courseNameLine);
+                eData.put("courseNameExtended", courseNameExtended);
+            } else {
+                eData.put("courseName", courseName);
+                eData.put("courseNameExtended", "");
+            }
             eData.put("basePath", PropertiesCache.getInstance().getProperty("cert_domain_url") + "/certs");
             eData.put("name", certName);
             eData.put("providerName", courseInfo.getOrDefault("providerName", ""));
