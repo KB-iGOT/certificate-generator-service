@@ -1,5 +1,9 @@
 package org.sunbird.cert.helper;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.sunbird.BaseException;
 import org.sunbird.JsonKeys;
 import org.sunbird.cassandra.CassandraOperation;
@@ -8,6 +12,8 @@ import org.sunbird.response.Response;
 
 import java.sql.Timestamp;
 import java.util.*;
+
+import static org.sunbird.HttpUtil.logger;
 
 public class UserEnrolmentHelper {
 
@@ -122,5 +128,80 @@ public class UserEnrolmentHelper {
 
         return normalized;
     }
+
+    public List<Map<String, Object>> getUserMilestoneAchievements(Response row) throws BaseException {
+
+        if (row != null) {
+            List<Map<String, Object>> records =
+                    (List<Map<String, Object>>) row.get(JsonKeys.RESPONSE);
+
+            if (CollectionUtils.isNotEmpty(records)) {
+                Map<String, Object> record = records.get(0);
+
+                List<Map<String, Object>> issuedAchievements =
+                        (List<Map<String, Object>>) record.get("issued_achievements");
+
+                if (CollectionUtils.isNotEmpty(issuedAchievements)) {
+                    return issuedAchievements;
+                }
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    public Timestamp getCompletionTimeIfPassed(String userId, String assessmentId) {
+
+        try {
+            Response response = cassandraOperation.getRecordsByProperties(
+                    JsonKeys.SUNBIRD,
+                    JsonKeys.USER_ASSESSMENT_DATA_V2,
+                    Map.of(
+                            JsonKeys.USER_ID_KEY, userId,
+                            JsonKeys.ASSESSMENT_ID, assessmentId
+                    )
+            );
+
+            List<Map<String, Object>> records =
+                    (List<Map<String, Object>>) response.get(JsonKeys.RESPONSE);
+
+            if (CollectionUtils.isEmpty(records)) {
+                return null;
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+
+            for (Map<String, Object> record : records) {
+
+                String submitResponse =
+                        (String) record.get("submitassessmentresponse");
+
+                Date endDate =
+                        (Date) record.get("endtime");
+
+                if (submitResponse == null || endDate == null) {
+                    continue;
+                }
+
+                JsonNode root = mapper.readTree(submitResponse);
+                boolean passed = root.path("pass").asBoolean(false);
+
+                if (passed) {
+                    return new Timestamp(endDate.getTime());
+                }
+            }
+
+            return null;
+
+        } catch (Exception e) {
+            logger.error(
+                    "Failed to derive completion time for userId={}, assessmentId={}",
+                    userId, assessmentId, e
+            );
+            return null;
+        }
+    }
+
+
+
 
 }

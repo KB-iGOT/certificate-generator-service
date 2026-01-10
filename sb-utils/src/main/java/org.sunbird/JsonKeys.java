@@ -134,7 +134,7 @@ public class JsonKeys {
     public static final String LANG_CONTENT_STATUS = "lang_contentstatus";
     public static final String LANGUAGE = "language";
     public static final String MILESTONES_V1 = "milestones_v1";
-    public static final String MILESTONEACHIEVEMENT_REGISTRY_TABLE = "milestoneachievement_registry";
+    public static final String MILESTONEACHIEVEMENT_REGISTRY_TABLE = "milestone_achievement_registry";
     public static final String USER_MILESTONE_ACHIEVEMENTS_TABLE = "user_milestone_achievements";
     public static final String USER_ID_KEY = "userid";
     public static final String BATCH_ID_KEY = "batchid";
@@ -150,4 +150,6 @@ public class JsonKeys {
     public static final String CONTENT_TYPE = "contentType";
     public static final String TABLE_USER_EXTERNAL_ENROLMENTS = "user_external_enrolments";
     public static final String COURSE_COMPLETION_LANGUAGE = "courseCompletionLanguage";
+    public static final String USER_ASSESSMENT_DATA_V2 = "user_assessment_data_v2";
+    public static final String ASSESSMENT_ID = "assessmentid";
 }

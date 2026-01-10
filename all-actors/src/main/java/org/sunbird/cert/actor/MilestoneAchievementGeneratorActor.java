@@ -23,7 +23,6 @@ import org.sunbird.cache.platform.Platform;
 import org.sunbird.cert.actor.operation.MilestoneAchievementActorOperation;
 import org.sunbird.cert.helper.CertRegistryHelper;
 import org.sunbird.cert.helper.IssueMilestoneAchievementContentHelper;
-import org.sunbird.cert.helper.IssueMilestoneAchievementEventHelper;
 import org.sunbird.cert.helper.UserEnrolmentHelper;
 import org.sunbird.cloud.storage.BaseStorageService;
 import org.sunbird.cloud.storage.factory.StorageConfig;
@@ -51,7 +50,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
 
-import static org.sunbird.cert.helper.IssueMilestoneAchievementEventHelper.getAPICall;
+import static org.sunbird.cert.helper.IssueCertificateExternalContentHelper.getAPICall;
 
 /**
  * This actor is responsible for milestone achievement generation.
@@ -64,7 +63,6 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
     private BaseStorageService storageService = null;
     String directory = "conf/";
     private static final IssueMilestoneAchievementContentHelper issueMilestoneAchievementContentHelper = IssueMilestoneAchievementContentHelper.getInstance();
-    private static final IssueMilestoneAchievementEventHelper issueMilestoneAchievementEventHelper = IssueMilestoneAchievementEventHelper.getInstance();
     private static final CertRegistryHelper certRegistryHelper = CertRegistryHelper.getInstance();
     private static final UserEnrolmentHelper userEnrolmentHelper = UserEnrolmentHelper.getInstance();
     private static final PropertiesCache propertiesCache = PropertiesCache.getInstance();
@@ -143,43 +141,24 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
             Boolean isAdmin = (Boolean) request.getRequest().get(JsonKeys.IS_ADMIN);
             String incomingMilestoneId = (String) request.getRequest().get(JsonKeys.MILESTONE_ID);
             if (isAdmin == null) {
-                List<String> userToken = scala.collection.JavaConverters.seqAsJavaList(
-                        (scala.collection.Seq<String>) request.getHeaders().get(JsonKeys.X_AUTHENTICATED_USER_TOKEN)
-                );
-
-                if (CollectionUtils.isEmpty(userToken)) {
-                    userToken = scala.collection.JavaConverters.seqAsJavaList(
-                            (scala.collection.Seq<String>) request.getHeaders().get(JsonKeys.X_AUTHENTICATED_USER_TOKEN_CAMEL_CASE)
-                    );
-                }
-
-                if (CollectionUtils.isEmpty(userToken)) {
-                    logger.error("generateMilestoneAchievementV2: Exception occurred. User token is not valid. Headers: " + request.getHeaders());
-                    throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "Token is not proper", ResponseCode.BAD_REQUEST.getCode());
-                }
-                String userIdFromToken = AccessTokenValidator.verifyUserToken(userToken.get(0), true);
-                logger.info("UserId from token:" + userIdFromToken);
-                if (StringUtils.isEmpty(userIdFromToken)) {
-                    logger.error("generateMilestoneAchievementV2:Exception Occurred while generating milestone achievement. User token is not valid" + userId);
-                    throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "Token is not proper", ResponseCode.BAD_REQUEST.getCode());
-                }
-                if (StringUtils.isNotEmpty(userIdFromToken) && !userId.equalsIgnoreCase(userIdFromToken)) {
-                    logger.error("generateMilestoneAchievementV2:Exception Occurred while generating milestone achievement. User token is different from the request UserId" + userId);
-                    throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "You are not authorized to get the milestone achievement for other user", ResponseCode.BAD_REQUEST.getCode());
-                }
+                validateUserToken(request, userId);
             }
             Map<String, Object> contentInfo = issueMilestoneAchievementContentHelper.getCourseInfo(courseId);
             boolean isUserEligibleForMilestoneAchievement = true;
-            boolean isEvent = false;
             Map<String, Object> milestoneAchievementRegistryMap = new HashMap<>();
             List<Map<String, Object>> milestoneAchievementList = new ArrayList<>();
             Date userCompletedOn = null;
-            if (MapUtils.isNotEmpty(contentInfo)) {
+            if (MapUtils.isEmpty(contentInfo)) {
+                logger.error("generateMilestoneAchievementV2:Exception Occurred while generating milestone achievement. Issue while fetching the content");
+                throw new BaseException(IResponseMessage.INTERNAL_ERROR, "Issue while fetching the content", ResponseCode.SERVER_ERROR.getCode());
+            } else {
                 org.sunbird.response.Response lpEnrollmentRecord = userEnrolmentHelper.getUserEnrollmentRecord(courseId, batchId, userId);
                 Response userMilestoneAchievementsRecord = userEnrolmentHelper.getUserMilestoneAchievements(courseId, batchId, userId, incomingMilestoneId);
                 if (issueMilestoneAchievementContentHelper.isUserEligibleForContentMilestoneAchievement(lpEnrollmentRecord, userId, contentInfo, incomingMilestoneId)) {
-                    milestoneAchievementList = issueMilestoneAchievementEventHelper.getUserMilestoneAchievements(userMilestoneAchievementsRecord);
-                    userCompletedOn = issueMilestoneAchievementEventHelper.getCompletedOnDate(userMilestoneAchievementsRecord);
+                    milestoneAchievementList = userEnrolmentHelper.getUserMilestoneAchievements(userMilestoneAchievementsRecord);
+                    userCompletedOn = userEnrolmentHelper.getCompletionTimeIfPassed(userId, getAssessmentIdFromMilestone((List<Map<String, Object>>) contentInfo.getOrDefault("milestones_v1", Collections.emptyList()), incomingMilestoneId));
+                    if (userCompletedOn == null)
+                        isUserEligibleForMilestoneAchievement = false;
                     if (CollectionUtils.isNotEmpty(milestoneAchievementList)) {
                         milestoneAchievementRegistryMap = getMilestoneAchievementRegistryMap(milestoneAchievementList);
                         logger.debug("The milestoneAchievementList is: " + mapper.writeValueAsString(milestoneAchievementList));
@@ -188,7 +167,7 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
                     isUserEligibleForMilestoneAchievement = false;
                 }
                 if (isUserEligibleForMilestoneAchievement) {
-                    String encodedSvg = generatePrintURIAndUpdateRecord(courseId, batchId, request, isEvent, milestoneAchievementRegistryMap, milestoneAchievementList, userCompletedOn);
+                    String encodedSvg = generatePrintURIAndUpdateRecord(courseId, batchId, request, milestoneAchievementRegistryMap, milestoneAchievementList, userCompletedOn);
                     if (StringUtils.isNotBlank(encodedSvg)) {
                         Response response = new Response();
                         response.getResult().put(JsonKeys.PRINT_URI, encodedSvg);
@@ -201,9 +180,6 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
                     logger.error("generateMilestoneAchievementV2:Exception Occurred while generating milestone achievement. user is not eligible for milestone achievement");
                     throw new BaseException(IResponseMessage.INTERNAL_ERROR, "user is not eligible for milestone achievement", ResponseCode.SERVER_ERROR.getCode());
                 }
-            } else {
-                logger.error("generateMilestoneAchievementV2:Exception Occurred while generating milestone achievement. Issue while fetching the content");
-                throw new BaseException(IResponseMessage.INTERNAL_ERROR, "Issue while fetching the content", ResponseCode.SERVER_ERROR.getCode());
             }
 
         } catch (Exception ex) {
@@ -213,16 +189,13 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
         logger.info("onReceive method call End");
     }
 
-    private String generatePrintURIAndUpdateRecord(String courseId, String batchId, Request request, boolean isEvent, Map<String, Object> v2MilestoneAchievementRegistryMap, List<Map<String, Object>> issuedMilestoneAchievementList, Date userCompletedOn) throws BaseException {
+    private String generatePrintURIAndUpdateRecord(String courseId, String batchId, Request request, Map<String, Object> v2MilestoneAchievementRegistryMap, List<Map<String, Object>> issuedMilestoneAchievementList, Date userCompletedOn) throws BaseException {
         try {
             Response templateResponse = null;
-            if (isEvent) {
-                templateResponse = issueMilestoneAchievementEventHelper.fetchEventTemplate(courseId, batchId);
-            } else {
-                templateResponse = issueMilestoneAchievementContentHelper.fetchContentTemplate();
-            }
+            templateResponse = issueMilestoneAchievementContentHelper.fetchContentTemplate();
+
             if (templateResponse != null) {
-                Map<String, Object> milestoneAchievementTemplate = getMilestoneAchievementMetaData(request, templateResponse.getResult(), isEvent);
+                Map<String, Object> milestoneAchievementTemplate = getMilestoneAchievementMetaData(request, templateResponse.getResult());
                 request.put(JsonKeys.MILESTONE_ACHIEVEMENT, milestoneAchievementTemplate);
                 Map<String, String> properties = populatePropertiesMap(request);
                 CertMapper certMapper = new CertMapper(properties);
@@ -258,7 +231,7 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
                                 qrMap = certificateGenerator.generateQrCode();
                             }
                         }
-                        String encodedQrCode = encodeQrCode((File) qrMap.get(JsonKey.QR_CODE_FILE));
+                        String encodedQrCode = encodeQrCodeBytes((byte[]) qrMap.get(JsonKey.QR_CODE_FILE));
                         String specialEventMilestoneAchievementName = null;
                         if (CollectionUtils.isNotEmpty(issuedMilestoneAchievementList)) {
                             specialEventMilestoneAchievementName = issuedMilestoneAchievementList.stream()
@@ -298,7 +271,6 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
                             request.getRequest().put(JsonKeys.ACCESS_CODE, qrMap.get(JsonKeys.ACCESS_CODE));
                             request.getRequest().put(JsonKeys.MILESTONE_ACHIEVEMENT, milestoneAchievementTemplate);
                             request.getRequest().put(JsonKeys.CERT_MODEL, certModel);
-                            request.getRequest().put(JsonKeys.IS_EVENT, isEvent);
                             request.getRequest().put(JsonKeys.COMPLETED_ON, userCompletedOn);
                             if (StringUtils.isNotBlank(specialEventMilestoneAchievementName)) {
                                 request.getRequest().put(JsonKeys.EVENT_ISSUE_NAME, specialEventMilestoneAchievementName);
@@ -329,9 +301,7 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
         return null;
     }
 
-    private String encodeQrCode(File file) throws IOException {
-        byte[] fileContent = FileUtils.readFileToByteArray(file);
-        file.delete();
+    private String encodeQrCodeBytes(byte[] fileContent) throws IOException {
         return Base64.getEncoder().encodeToString(fileContent);
     }
 
@@ -377,27 +347,11 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
         }
     }
 
-    private void cleanup(String path, String fileName) {
-        try {
-            File directory = new File(path);
-            File[] files = directory.listFiles();
-            for (File file : files) {
-                if (file.getName().startsWith(fileName)) file.delete();
-            }
-            logger.info("MilestoneAchievementGeneratorActor: cleanUp completed");
-        } catch (Exception ex) {
-            logger.error(ex.getMessage(), ex);
-        }
-    }
-
-    public Map<String, Object> getMilestoneAchievementMetaData(Request request, Map<String, Object> template, boolean isEvent) throws JsonProcessingException {
+    public Map<String, Object> getMilestoneAchievementMetaData(Request request, Map<String, Object> template) throws JsonProcessingException {
         List<Map<String, Object>> templateResponse = (List<Map<String, Object>>) template.get(JsonKey.RESPONSE);
         String valueJson = (String) templateResponse.get(0).get("value");
         Map<String, Object> templateResponseKey =
                 mapper.readValue(valueJson, new TypeReference<Map<String, Object>>() {});
-        if (isEvent) {
-            return issueMilestoneAchievementEventHelper.generateMilestoneAchievementMap(request.getRequest(), templateResponseKey);
-        }
         return issueMilestoneAchievementContentHelper.generateMilestoneAchievementMap(request.getRequest(), templateResponseKey);
     }
 
@@ -535,5 +489,53 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
             throw new RuntimeException("Error from get API: " + url + ", with response: " + response);
         }
     }
+
+    private String getAssessmentIdFromMilestone(
+            List<Map<String, Object>> milestonesList, String incomingMilestoneId) {
+
+        if (CollectionUtils.isEmpty(milestonesList)) {
+            return null;
+        }
+
+        Map<String, Object> milestone = milestonesList.stream()
+                .filter(m -> incomingMilestoneId.equalsIgnoreCase((String) m.get("id")))
+                .findFirst()
+                .orElse(null);
+        return Optional.ofNullable(
+                        (Map<String, Object>) milestone.get("assessmentDetail"))
+                .map(ad -> ad.get("identifier"))
+                .map(Object::toString)
+                .orElse(null);
+
+
+    }
+
+    private void validateUserToken(Request request, String userId) throws BaseException {
+        List<String> userToken = scala.collection.JavaConverters.seqAsJavaList(
+                (scala.collection.Seq<String>) request.getHeaders().get(JsonKeys.X_AUTHENTICATED_USER_TOKEN)
+        );
+
+        if (CollectionUtils.isEmpty(userToken)) {
+            userToken = scala.collection.JavaConverters.seqAsJavaList(
+                    (scala.collection.Seq<String>) request.getHeaders().get(JsonKeys.X_AUTHENTICATED_USER_TOKEN_CAMEL_CASE)
+            );
+        }
+
+        if (CollectionUtils.isEmpty(userToken)) {
+            logger.error("generateMilestoneAchievementV2: Exception occurred. User token is not valid. Headers: " + request.getHeaders());
+            throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "Token is not proper", ResponseCode.BAD_REQUEST.getCode());
+        }
+        String userIdFromToken = AccessTokenValidator.verifyUserToken(userToken.get(0), true);
+        logger.info("UserId from token:" + userIdFromToken);
+        if (StringUtils.isEmpty(userIdFromToken)) {
+            logger.error("generateMilestoneAchievementV2:Exception Occurred while generating milestone achievement. User token is not valid" + userId);
+            throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "Token is not proper", ResponseCode.BAD_REQUEST.getCode());
+        }
+        if (StringUtils.isNotEmpty(userIdFromToken) && !userId.equalsIgnoreCase(userIdFromToken)) {
+            logger.error("generateMilestoneAchievementV2:Exception Occurred while generating milestone achievement. User token is different from the request UserId" + userId);
+            throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "You are not authorized to get the milestone achievement for other user", ResponseCode.BAD_REQUEST.getCode());
+        }
+    }
+
 }
 
