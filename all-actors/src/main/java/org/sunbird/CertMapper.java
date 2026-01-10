@@ -116,4 +116,34 @@ public class CertMapper {
         }
         return validatedPublicKeys;
     }
+
+    public List<CertModel> toMilestoneAchievementList(Map<String, Object> request) {
+        Map<String, Object> json = (Map<String, Object>) request.get(JsonKeys.MILESTONE_ACHIEVEMENT);
+        List<Map<String, Object>> dataList = (List<Map<String, Object>>) json.get(JsonKey.DATA);
+        Map<String, Object> issuerData = (Map<String, Object>) json.get(JsonKey.ISSUER);
+        Issuer issuer = getIssuer(issuerData);
+        List<String> publicKeys = validatePublicKeys((List<String>) issuerData.get(JsonKey.PUBLIC_KEY),
+                (Map<String, Object>) json.get(JsonKey.KEYS));
+        issuer.setPublicKey(publicKeys.toArray(new String[0]));
+        SignatoryExtension[] signatoryArr = getSignatoryArray((List<Map<String, Object>>) json.get(JsonKey.SIGNATORY_LIST));
+        Criteria criteria = getCriteria((Map<String, Object>) json.get(JsonKey.CRITERIA));
+        List<CertModel> certList = dataList.stream().map(data -> getCertModel(data)).collect(Collectors.toList());
+        certList.stream().forEach(cert -> {
+            cert.setIssuer(issuer);
+            cert.setSignatoryList(signatoryArr);
+            cert.setCourseName((String) json.get(JsonKey.COURSE_NAME));
+            cert.setCertificateDescription((String) json.get(JsonKey.DESCRIPTION));
+            cert.setCertificateLogo((String) json.get(JsonKey.LOGO));
+            cert.setCriteria(criteria);
+            String issuedDate = (String) json.get(JsonKey.ISSUE_DATE);
+            if (StringUtils.isBlank(issuedDate)) {
+                cert.setIssuedDate(getCurrentDate());
+            } else {
+                cert.setIssuedDate((String) json.get(JsonKey.ISSUE_DATE));
+            }
+            cert.setCertificateName((String) json.get(JsonKey.CERTIFICATE_NAME));
+            cert.setProviderName((String) json.get("providerName"));
+        });
+        return certList;
+    }
 }

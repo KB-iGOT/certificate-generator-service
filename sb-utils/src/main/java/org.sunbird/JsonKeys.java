@@ -121,6 +121,31 @@ public class JsonKeys {
     public static final String UID_BAD_REQUEST_ERROR_MSG = "Bad Request certificateId is not proper.";
     public static final String ISSUE_FETCHING_METADATA_ERROR_MSG = "Issue while fetching the metadata for certificate.";
     public static final String IS_ADMIN = "isAdmin";
+
+    // Milestone Achievement related constants
+    public static final String MILESTONE_ACHIEVEMENT = "milestoneAchievement";
+    public static final String MILESTONE_ACHIEVEMENT_EXTENSION = "milestoneAchievementExtension";
+    public static final String USER_MILESTONE_ACHIEVEMENT_LIST = "user_milestone_achievement_list";
+    public static final String ADD_MILESTONE_ACHIEVEMENT_REGISTRY_REQUEST = "add_milestone_achievement_registry_req";
+    public static final String ISSUED_MILESTONE_ACHIEVEMENTS = "issued_achievements";
+    public static final String SPECIAL_MILESTONE_ACHIEVEMENT_TEMPLATE_MAP = "specialMilestoneAchievementTemplateMap";
+    public static final String MILESTONE_ACHIEVEMENT_TEMPLATE = "milestoneAchievementTemplate";
+    public static final String MILESTONE_ID = "milestoneId";
+    public static final String LANG_CONTENT_STATUS = "lang_contentstatus";
+    public static final String LANGUAGE = "language";
+    public static final String MILESTONES_V1 = "milestones_v1";
+    public static final String MILESTONEACHIEVEMENT_REGISTRY_TABLE = "milestoneachievement_registry";
+    public static final String USER_MILESTONE_ACHIEVEMENTS_TABLE = "user_milestone_achievements";
+    public static final String USER_ID_KEY = "userid";
+    public static final String BATCH_ID_KEY = "batchid";
+    public static final String COURSE_ID_KEY = "courseid";
+    public static final String CONTEXT_ID_KEY = "contextid";
+    public static final String CREATED_AT = "createdat";
+    public static final String UPDATED_AT = "updatedat";
+    public static final String DATA="data";
+    public static final String MILESTONE_COMPLETION = "milestone-completion";
+    public static final String ACCESS_CODE_KEY = "accesscode";
+    public static final String MILESTONE_ACHIEVEMENT_TEMPLATE_ID  = "milestone_achievement_template_id";
     public static final String EVENT_ID_CAMELCASE = "eventId";
     public static final String CONTENT_TYPE = "contentType";
     public static final String TABLE_USER_EXTERNAL_ENROLMENTS = "user_external_enrolments";
