@@ -69,10 +69,10 @@ public class MilestoneAchievementBackgroundActor extends BaseActor {
             courseRelatedInfo.put(JsonKeys.TYPE, milestoneAchievementTemplate.get(JsonKeys.NAME));
             Map<String,Object> milestoneAchievementRegistryResponse = addMilestoneAchievementToRegistry(uuid, certificateExtension, certModel, courseRelatedInfo, accessCode);
             if (MapUtils.isNotEmpty(milestoneAchievementRegistryResponse)) {
-                Map<String, Object> milestoneAchievementMap = new HashMap<>();
-                milestoneAchievementMap.put(JsonKeys.IDENTIFIER, uuid);
+                Map<String, Object> milestoneAchievementLookup = new HashMap<>();
+                milestoneAchievementLookup.put(JsonKeys.IDENTIFIER, uuid);
                 if (CollectionUtils.isEmpty(issuedMilestoneAchievementList)) {
-                    milestoneAchievementMap.put(JsonKeys.LAST_ISSUED_ON, formatter.format(userCompletedOn));
+                    milestoneAchievementLookup.put(JsonKeys.LAST_ISSUED_ON, formatter.format(userCompletedOn));
                 } else {
                     Map<String, String> milestoneAchievementValues = issuedMilestoneAchievementList.stream()
                             .filter(milestoneAchievement -> !milestoneAchievement.containsKey(JsonKeys.VERSION))
@@ -88,14 +88,14 @@ public class MilestoneAchievementBackgroundActor extends BaseActor {
                                 values.put(JsonKeys.LAST_ISSUED_ON, formatter.format(userCompletedOn));
                                 return values;
                             });
-                    milestoneAchievementMap.put(JsonKeys.LAST_ISSUED_ON, milestoneAchievementValues.get(JsonKeys.LAST_ISSUED_ON));
-                    milestoneAchievementMap.put(JsonKeys.DOWNLOADED_ON, formatter.format(new Date()));
+                    milestoneAchievementLookup.put(JsonKeys.LAST_ISSUED_ON, milestoneAchievementValues.get(JsonKeys.LAST_ISSUED_ON));
+                    milestoneAchievementLookup.put(JsonKeys.DOWNLOADED_ON, formatter.format(new Date()));
                 }
-                milestoneAchievementMap.put(JsonKeys.TOKEN, accessCode);
-                milestoneAchievementMap.put(JsonKeys.NAME, milestoneAchievementTemplate.get(JsonKeys.NAME));
-                milestoneAchievementMap.put(JsonKeys.VERSION, JsonKeys.VERSION_2);
-                issuedMilestoneAchievementList.add(milestoneAchievementMap);
-                insertUserMilestoneAchievementRecord(userId, courseId, batchId, milestoneId, issuedMilestoneAchievementList, userCompletedOn);
+                milestoneAchievementLookup.put(JsonKeys.TOKEN, accessCode);
+                milestoneAchievementLookup.put(JsonKeys.NAME, milestoneAchievementTemplate.get(JsonKeys.NAME));
+                milestoneAchievementLookup.put(JsonKeys.VERSION, JsonKeys.VERSION_2);
+                issuedMilestoneAchievementList.add(milestoneAchievementLookup);
+                saveUserMilestoneAchievementLookup(userId, courseId, batchId, milestoneId, issuedMilestoneAchievementList, userCompletedOn);
             } else {
                 logger.error("Issue while adding the registry for request for userId: " + userId + " courseId: " + courseId + " batchId: " + batchId);
             }
@@ -106,7 +106,7 @@ public class MilestoneAchievementBackgroundActor extends BaseActor {
 
     }
 
-    public Response insertUserMilestoneAchievementRecord(String userId, String courseId, String batchId, String milestoneId, List<Map<String, Object>> issuedMilestoneAchievements, Date userCompletedOn) throws BaseException {
+    public Response saveUserMilestoneAchievementLookup(String userId, String courseId, String batchId, String milestoneId, List<Map<String, Object>> issuedMilestoneAchievements, Date userCompletedOn) throws BaseException {
         Map<String, Object> attributeMap = new HashMap<>();
         attributeMap.put(JsonKeys.ISSUED_MILESTONE_ACHIEVEMENTS, issuedMilestoneAchievements);
         return userEnrolmentHelper.insertUserMilestoneAchievements(courseId, batchId, userId, milestoneId, userCompletedOn ,attributeMap);
@@ -133,7 +133,7 @@ public class MilestoneAchievementBackgroundActor extends BaseActor {
                             accessCode
                     );
 
-            Response response = persistMilestoneDirectly(certificate);
+            Response response = createMilestoneAchievement(certificate);
 
             return response.getResult();
 
@@ -144,7 +144,7 @@ public class MilestoneAchievementBackgroundActor extends BaseActor {
         return null;
     }
 
-    public Response persistMilestoneDirectly(CertificateV2 certificate) throws BaseException {
+    public Response createMilestoneAchievement(CertificateV2 certificate) throws BaseException {
 
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> certMap =
