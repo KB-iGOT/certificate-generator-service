@@ -529,7 +529,7 @@ public class IssueMilestoneAchievementContentHelper {
 
         List<String> mandatoryCourseIds = courses.stream()
                 .filter(c -> Boolean.TRUE.equals(c.get("isMandatory")))
-                .map(c -> String.valueOf(c.get("courseId")))
+                .map(c -> String.valueOf(c.get(JsonKeys.IDENTIFIER)))
                 .collect(Collectors.toList());
 
         if (mandatoryCourseIds.isEmpty()) {
