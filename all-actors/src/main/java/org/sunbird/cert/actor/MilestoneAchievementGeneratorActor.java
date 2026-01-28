@@ -167,7 +167,7 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
                     isUserEligibleForMilestoneAchievement = false;
                 }
                 if (isUserEligibleForMilestoneAchievement) {
-                    String encodedSvg = generatePrintURIAndUpdateRecord(courseId, batchId, request, milestoneAchievementRegistryMap, milestoneAchievementList, userCompletedOn);
+                    String encodedSvg = generatePrintURIAndUpdateRecord(request, milestoneAchievementRegistryMap, milestoneAchievementList, userCompletedOn, contentInfo);
                     if (StringUtils.isNotBlank(encodedSvg)) {
                         Response response = new Response();
                         response.getResult().put(JsonKeys.PRINT_URI, encodedSvg);
@@ -189,10 +189,10 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
         logger.info("onReceive method call End");
     }
 
-    private String generatePrintURIAndUpdateRecord(String courseId, String batchId, Request request, Map<String, Object> v2MilestoneAchievementRegistryMap, List<Map<String, Object>> issuedMilestoneAchievementList, Date userCompletedOn) throws BaseException {
+    private String generatePrintURIAndUpdateRecord(Request request, Map<String, Object> v2MilestoneAchievementRegistryMap, List<Map<String, Object>> issuedMilestoneAchievementList, Date userCompletedOn, Map<String, Object> contentInfo) throws BaseException {
         try {
             Response templateResponse = null;
-            templateResponse = issueMilestoneAchievementContentHelper.fetchContentTemplate();
+            templateResponse = issueMilestoneAchievementContentHelper.fetchContentTemplate(contentInfo, (String) request.getRequest().get(JsonKeys.MILESTONE_ID));
 
             if (templateResponse != null) {
                 Map<String, Object> milestoneAchievementTemplate = getMilestoneAchievementMetaData(request, templateResponse.getResult());
