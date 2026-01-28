@@ -349,7 +349,7 @@ public class IssueCertificateContentHelper {
         eData.put("courseName", courseName);
         eData.put("basePath", propertiesCache.getProperty("cert_domain_url") + "/certs");
         eData.put("name", certName);
-        eData.put("providerName", courseInfo.getOrDefault("providerName", ""));
+        eData.put("providerName", courseInfo.getOrDefault("sourceName", ""));
         eData.put("tag", requestMap.get(JsonKeys.BATCH_ID));
         eData.put("primaryCategory", courseInfo.getOrDefault("primaryCategory", ""));
         eData.put("parentCollections", parentCollections);
