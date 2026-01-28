@@ -145,11 +145,12 @@ public class JsonKeys {
     public static final String DATA="data";
     public static final String MILESTONE_COMPLETION = "milestone-completion";
     public static final String ACCESS_CODE_KEY = "accesscode";
-    public static final String MILESTONE_ACHIEVEMENT_TEMPLATE_ID  = "milestone_achievement_template_id";
     public static final String EVENT_ID_CAMELCASE = "eventId";
     public static final String CONTENT_TYPE = "contentType";
     public static final String TABLE_USER_EXTERNAL_ENROLMENTS = "user_external_enrolments";
     public static final String COURSE_COMPLETION_LANGUAGE = "courseCompletionLanguage";
     public static final String USER_ASSESSMENT_DATA_V2 = "user_assessment_data_v2";
     public static final String ASSESSMENT_ID = "assessmentid";
+    public static final String INTERMEDIATE_MILESTONE_ACHIEVEMENT_TEMPLATE_ID = "intermediate_milestone_achievement_template_id";
+    public static final String FINAL_MILESTONE_ACHIEVEMENT_TEMPLATE_ID = "final_milestone_achievement_template_id";
 }

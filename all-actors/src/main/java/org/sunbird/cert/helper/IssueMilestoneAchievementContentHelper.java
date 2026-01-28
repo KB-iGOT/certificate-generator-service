@@ -618,21 +618,52 @@ public class IssueMilestoneAchievementContentHelper {
         return statusByLang.getOrDefault(assessmentId, 0) == 2;
     }
 
-
-
-    public Response fetchContentTemplate() throws BaseException {
-        Map<String, Object> primaryKey = new HashMap<>();
-        java.lang.String milestoneAchievementTemplateId = propertiesCache.getProperty(JsonKeys.MILESTONE_ACHIEVEMENT_TEMPLATE_ID);
-        primaryKey.put(JsonKeys.ID, milestoneAchievementTemplateId);
-        return cassandraOperation.getRecordsByProperties(JsonKeys.SUNBIRD, JsonKeys.TABLE_SYSTEM_SETTINGS, primaryKey, null);
-    }
-
     public Response getUserEnrollmentRecord(String courseId, String batchId, String userId) throws BaseException {
         Map<String, Object> primaryKey = new HashMap<>();
         primaryKey.put(JsonKeys.USER_ID, userId);
         primaryKey.put(JsonKeys.COURSE_ID, courseId);
         primaryKey.put(JsonKeys.BATCH_ID, batchId);
         return cassandraOperation.getRecordsByProperties(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.USER_ENROLMENTS_V2, primaryKey);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Response fetchContentTemplate(
+            Map<String, Object> contentInfo,
+            String incomingMilestoneId
+    ) throws Exception {
+
+        List<Map<String, Object>> milestones =
+                (List<Map<String, Object>>) contentInfo.get(JsonKeys.MILESTONES_V1);
+
+        if (CollectionUtils.isEmpty(milestones)) {
+            throw new Exception("Milestones not found in contentInfo");
+        }
+
+        Map<String, Object> lastMilestone =
+                milestones.get(milestones.size() - 1);
+
+        String lastMilestoneId =
+                (String) lastMilestone.get(JsonKeys.ID);
+
+        boolean isFinalMilestone =
+                incomingMilestoneId != null
+                        && incomingMilestoneId.equalsIgnoreCase(lastMilestoneId);
+
+        String templateId = isFinalMilestone
+                ? propertiesCache.getProperty(
+                JsonKeys.FINAL_MILESTONE_ACHIEVEMENT_TEMPLATE_ID)
+                : propertiesCache.getProperty(
+                JsonKeys.INTERMEDIATE_MILESTONE_ACHIEVEMENT_TEMPLATE_ID);
+
+        Map<String, Object> primaryKey = new HashMap<>();
+        primaryKey.put(JsonKeys.ID, templateId);
+
+        return cassandraOperation.getRecordsByProperties(
+                JsonKeys.SUNBIRD,
+                JsonKeys.TABLE_SYSTEM_SETTINGS,
+                primaryKey,
+                null
+        );
     }
 }
 
