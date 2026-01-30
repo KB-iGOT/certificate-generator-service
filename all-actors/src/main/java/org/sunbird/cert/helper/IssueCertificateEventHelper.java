@@ -239,7 +239,7 @@ public class IssueCertificateEventHelper {
         String courseMetadataString = contentCache.get(courseId, null, 0);
         if (StringUtils.isBlank(courseMetadataString)) {
             String url = PropertiesCache.getInstance().getProperty("content_basePath") + PropertiesCache.getInstance().getProperty("content_read_api") + "/" + courseId
-                    + "?fields=name,parentCollections,primaryCategory,posterImage,organisation";
+                    + "?fields=name,parentCollections,primaryCategory,posterImage,organisation,sourceName";
 
             Map<String, Object> responseObject = getAPICall(url);
             Map<String, Object> resultObject = (Map<String,Object>)responseObject.get(JsonKeys.RESULT);
@@ -248,20 +248,15 @@ public class IssueCertificateEventHelper {
                 String courseName = sanitizeString((String) response.getOrDefault("name", ""));
                 String primaryCategory = sanitizeString((String) response.getOrDefault("primaryCategory", ""));
                 String posterImage = sanitizeString((String) response.getOrDefault("posterImage",""));
-
                 List<String> parentCollections = (List<String>) response.getOrDefault("parentCollections", new ArrayList<>());
-
-                List<Object> orgData = (List<Object>) response.getOrDefault("organisation", Collections.emptyList());
-                String providerName = extractProviderName(orgData);
-
+                String sourceName = sanitizeString((String) response.getOrDefault("sourceName", ""));
                 Map<String, Object> courseInfoMap = new HashMap<>();
                 courseInfoMap.put("courseId", courseId);
                 courseInfoMap.put("courseName", courseName);
                 courseInfoMap.put("parentCollections", parentCollections);
                 courseInfoMap.put("primaryCategory", primaryCategory);
                 courseInfoMap.put("coursePosterImage", posterImage);
-                courseInfoMap.put("providerName", providerName);
-
+                courseInfoMap.put("providerName", sourceName);
                 return courseInfoMap;
             } else {
                 logger.error("Not able to find the content info for :" + courseId);
@@ -273,9 +268,7 @@ public class IssueCertificateEventHelper {
             String primaryCategory = sanitizeString((String) courseMetadata.getOrDefault("primaryCategory", ""));
             List<String> parentCollections = (List<String>) courseMetadata.getOrDefault("parentCollections", new ArrayList<>());
             String posterImage = sanitizeString((String) courseMetadata.getOrDefault("posterImage", ""));
-
-            List<Object> orgData = (List<Object>) courseMetadata.getOrDefault("organisation", Collections.emptyList());
-            String providerName = extractProviderName(orgData);
+            String sourceName = sanitizeString((String) courseMetadata.getOrDefault("sourceName", ""));
 
             Map<String, Object> courseInfoMap = new HashMap<>();
             courseInfoMap.put("courseId", courseId);
@@ -283,7 +276,7 @@ public class IssueCertificateEventHelper {
             courseInfoMap.put("parentCollections", parentCollections);
             courseInfoMap.put("primaryCategory", primaryCategory);
             courseInfoMap.put("coursePosterImage", posterImage);
-            courseInfoMap.put("providerName", providerName);
+            courseInfoMap.put("providerName", sourceName);
 
             return courseInfoMap;
         }
@@ -296,14 +289,6 @@ public class IssueCertificateEventHelper {
                         .mapToObj(c -> String.valueOf((char) c))
                         .collect(Collectors.joining()))
                 .orElse("");
-    }
-
-    private static String extractProviderName(List<Object> orgData) {
-        if (!orgData.isEmpty()) {
-            String pm = orgData.get(0).toString();
-            return pm;
-        }
-        return "";
     }
 
     public Response fetchEventTemplate(String eventId, String batchId) throws BaseException {
