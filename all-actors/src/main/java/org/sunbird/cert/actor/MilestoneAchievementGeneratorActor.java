@@ -59,7 +59,7 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
     private static CertsConstant certVar = new CertsConstant();
     private static ObjectMapper mapper = new ObjectMapper();
     private BaseStorageService storageService = null;
-    String directory = "/home/anilkumarkammalapalli/workspace/certificate-generator-service/certificate-processor/src/main/resources/conf/";
+    String directory = "conf/";
     private static final IssueMilestoneAchievementContentHelper issueMilestoneAchievementContentHelper = IssueMilestoneAchievementContentHelper.getInstance();
     private static final CertRegistryHelper certRegistryHelper = CertRegistryHelper.getInstance();
     private static final UserEnrolmentHelper userEnrolmentHelper = UserEnrolmentHelper.getInstance();
