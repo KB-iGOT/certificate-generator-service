@@ -56,7 +56,7 @@ public class SvgGenerator {
             logger.info("svg data is not cached , read svf file");
             //svgContent = readSvgContent(file.getAbsolutePath());
             String encodedSvg = "data:image/svg+xml," + encodeData(svgContent);
-            encodedSvg = encodedSvg.replaceAll("\n", "").replaceAll("\t", "");
+            encodedSvg = encodedSvg.replaceAll("\n", "").replaceAll("\t", "").replaceAll("'(?=[a-zA-Z-]+=)", "' ");
             cachedSvgTemplates.put(this.svgTemplate, encodedSvg);
         }
         logger.info("svg template is cached {}", cachedSvgTemplates.containsKey(this.svgTemplate));
