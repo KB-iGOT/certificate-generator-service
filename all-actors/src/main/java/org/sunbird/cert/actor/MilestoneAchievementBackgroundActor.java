@@ -67,6 +67,7 @@ public class MilestoneAchievementBackgroundActor extends BaseActor {
             courseRelatedInfo.put(JsonKeys.COURSE_ID, courseId);
             courseRelatedInfo.put(JsonKeys.BATCH_ID, batchId);
             courseRelatedInfo.put(JsonKeys.TYPE, milestoneAchievementTemplate.get(JsonKeys.NAME));
+            courseRelatedInfo.put(JsonKeys.MILESTONE_ID, milestoneId);
             Map<String,Object> milestoneAchievementRegistryResponse = addMilestoneAchievementToRegistry(uuid, certificateExtension, certModel, courseRelatedInfo, accessCode);
             if (MapUtils.isNotEmpty(milestoneAchievementRegistryResponse)) {
                 Map<String, Object> milestoneAchievementLookup = new HashMap<>();
