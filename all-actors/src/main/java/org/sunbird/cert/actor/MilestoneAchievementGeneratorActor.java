@@ -167,9 +167,12 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
                     isUserEligibleForMilestoneAchievement = false;
                 }
                 if (isUserEligibleForMilestoneAchievement) {
-                    String encodedSvg = generatePrintURIAndUpdateRecord(request, milestoneAchievementRegistryMap, milestoneAchievementList, userCompletedOn, contentInfo);
-                    if (StringUtils.isNotBlank(encodedSvg)) {
+                    Map<String, Object> resultMap = generatePrintURIAndUpdateRecord(request, milestoneAchievementRegistryMap, milestoneAchievementList, userCompletedOn, contentInfo);
+                    if (MapUtils.isNotEmpty(resultMap)) {
                         Response response = new Response();
+                        java.lang.String encodedSvg = (String) resultMap.get(JsonKeys.PRINT_URI);
+                        String uuid = (String) resultMap.get(JsonKey.UUID);
+                        response.getResult().put(JsonKeys.IDENTIFIER, uuid);
                         response.getResult().put(JsonKeys.PRINT_URI, encodedSvg);
                         sender().tell(response, getSelf());
                     } else {
@@ -189,8 +192,9 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
         logger.info("onReceive method call End");
     }
 
-    private String generatePrintURIAndUpdateRecord(Request request, Map<String, Object> v2MilestoneAchievementRegistryMap, List<Map<String, Object>> issuedMilestoneAchievementList, Date userCompletedOn, Map<String, Object> contentInfo) throws BaseException {
+    private Map<String, Object> generatePrintURIAndUpdateRecord(Request request, Map<String, Object> v2MilestoneAchievementRegistryMap, List<Map<String, Object>> issuedMilestoneAchievementList, Date userCompletedOn, Map<String, Object> contentInfo) throws BaseException {
         try {
+            Map<String, Object> result = new HashMap<>();
             Response templateResponse = null;
             templateResponse = issueMilestoneAchievementContentHelper.fetchContentTemplate(contentInfo, (String) request.getRequest().get(JsonKeys.MILESTONE_ID));
 
@@ -280,7 +284,9 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
                             request.setOperation(JsonKeys.ADD_MILESTONE_ACHIEVEMENT_REGISTRY_REQUEST);
                             milestoneAchievementBackgroundActorRef.tell(request, ActorRef.noSender());
                         }
-                        return encodedSvg;
+                        result.put(JsonKeys.PRINT_URI, encodedSvg);
+                        result.put(JsonKey.UUID, uuid);
+                        return result;
                     } catch (Exception ex) {
                         logger.error("generateMilestoneAchievementV2:Exception Occurred while generating milestone achievement. : {}", ex.getStackTrace());
                         throw new BaseException(IResponseMessage.INTERNAL_ERROR, ex.getMessage(), ResponseCode.SERVER_ERROR.getCode());
