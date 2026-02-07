@@ -7,10 +7,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -23,12 +21,14 @@ import org.sunbird.cache.platform.Platform;
 import org.sunbird.cert.actor.operation.MilestoneAchievementActorOperation;
 import org.sunbird.cert.helper.CertRegistryHelper;
 import org.sunbird.cert.helper.IssueMilestoneAchievementContentHelper;
+import org.sunbird.cert.helper.Recipient;
 import org.sunbird.cert.helper.UserEnrolmentHelper;
 import org.sunbird.cloud.storage.BaseStorageService;
 import org.sunbird.cloud.storage.factory.StorageConfig;
 import org.sunbird.cloud.storage.factory.StorageServiceFactory;
 import org.sunbird.incredible.CertificateGenerator;
 import org.sunbird.incredible.pojos.CertificateExtension;
+import org.sunbird.incredible.pojos.ob.BadgeClass;
 import org.sunbird.incredible.processor.CertModel;
 import org.sunbird.incredible.processor.JsonKey;
 import org.sunbird.incredible.processor.store.CertStoreFactory;
@@ -44,12 +44,10 @@ import scala.Option;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
-
 import static org.sunbird.cert.helper.IssueCertificateExternalContentHelper.getAPICall;
 
 /**
@@ -101,6 +99,8 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
         logger.info("onReceive method call start for operation {}", operation);
         if (MilestoneAchievementActorOperation.GENERATE_MILESTONE_ACHIEVEMENT.getOperation().equalsIgnoreCase(operation)) {
             generateMilestoneAchievement(request);
+        } else if (MilestoneAchievementActorOperation.MILESTONE_ACHIEVEMENT_DOWNLOAD.getOperation().equals(operation)) {
+            handlePublicMilestoneDownload(request);
         } else {
             logger.error("MilestoneAchievementGeneratorActor:onReceive: Invalid operation request: {}", operation);
             throw new BaseException(IResponseMessage.INVALID_OPERATION_NAME, "Invalid operation request: " + operation, ResponseCode.CLIENT_ERROR.getCode());
@@ -167,9 +167,12 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
                     isUserEligibleForMilestoneAchievement = false;
                 }
                 if (isUserEligibleForMilestoneAchievement) {
-                    String encodedSvg = generatePrintURIAndUpdateRecord(request, milestoneAchievementRegistryMap, milestoneAchievementList, userCompletedOn, contentInfo);
-                    if (StringUtils.isNotBlank(encodedSvg)) {
+                    Map<String, Object> resultMap = generatePrintURIAndUpdateRecord(request, milestoneAchievementRegistryMap, milestoneAchievementList, userCompletedOn, contentInfo);
+                    if (MapUtils.isNotEmpty(resultMap)) {
                         Response response = new Response();
+                        java.lang.String encodedSvg = (String) resultMap.get(JsonKeys.PRINT_URI);
+                        String uuid = (String) resultMap.get(JsonKey.UUID);
+                        response.getResult().put(JsonKeys.IDENTIFIER, uuid);
                         response.getResult().put(JsonKeys.PRINT_URI, encodedSvg);
                         sender().tell(response, getSelf());
                     } else {
@@ -189,8 +192,9 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
         logger.info("onReceive method call End");
     }
 
-    private String generatePrintURIAndUpdateRecord(Request request, Map<String, Object> v2MilestoneAchievementRegistryMap, List<Map<String, Object>> issuedMilestoneAchievementList, Date userCompletedOn, Map<String, Object> contentInfo) throws BaseException {
+    private Map<String, Object> generatePrintURIAndUpdateRecord(Request request, Map<String, Object> v2MilestoneAchievementRegistryMap, List<Map<String, Object>> issuedMilestoneAchievementList, Date userCompletedOn, Map<String, Object> contentInfo) throws BaseException {
         try {
+            Map<String, Object> result = new HashMap<>();
             Response templateResponse = null;
             templateResponse = issueMilestoneAchievementContentHelper.fetchContentTemplate(contentInfo, (String) request.getRequest().get(JsonKeys.MILESTONE_ID));
 
@@ -280,7 +284,9 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
                             request.setOperation(JsonKeys.ADD_MILESTONE_ACHIEVEMENT_REGISTRY_REQUEST);
                             milestoneAchievementBackgroundActorRef.tell(request, ActorRef.noSender());
                         }
-                        return encodedSvg;
+                        result.put(JsonKeys.PRINT_URI, encodedSvg);
+                        result.put(JsonKey.UUID, uuid);
+                        return result;
                     } catch (Exception ex) {
                         logger.error("generateMilestoneAchievementV2:Exception Occurred while generating milestone achievement. : {}", ex.getStackTrace());
                         throw new BaseException(IResponseMessage.INTERNAL_ERROR, ex.getMessage(), ResponseCode.SERVER_ERROR.getCode());
@@ -535,6 +541,177 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
             logger.error("generateMilestoneAchievementV2:Exception Occurred while generating milestone achievement. User token is different from the request UserId" + userId);
             throw new BaseException(IResponseMessage.INVALID_REQUESTED_DATA, "You are not authorized to get the milestone achievement for other user", ResponseCode.BAD_REQUEST.getCode());
         }
+    }
+
+    private void handlePublicMilestoneDownload(Request request) {
+
+        Response response = new Response();
+
+        try {
+
+            Map<String, Object> req = request.getRequest();
+            String uuid = (String) req.get(JsonKey.UUID);
+
+            if (StringUtils.isBlank(uuid)) {
+                sendFailure(response, IResponseMessage.MANDATORY_PARAMETER_MISSING,
+                        "uuid is required");
+                return;
+            }
+
+            Map<String, Object> milestoneRecord =
+                    certRegistryHelper.getMilestoneAchievementRegistryUsingIdentifier(uuid);
+
+            if (MapUtils.isEmpty(milestoneRecord)) {
+                sendFailure(response, IResponseMessage.INVALID_REQUESTED_DATA,
+                        "Milestone record not found for uuid: " + uuid);
+                return;
+            }
+
+            Map<String, Object> related;
+            try {
+                String relatedJson = (String) milestoneRecord.get(JsonKey.RELATED);
+                related = mapper.readValue(
+                        relatedJson,
+                        new TypeReference<Map<String, Object>>() {});
+            } catch (Exception e) {
+                sendFailure(response, IResponseMessage.INVALID_REQUESTED_DATA,
+                        "Unable to parse related context");
+                return;
+            }
+
+            String courseId = (String) related.get(JsonKey.COURSE_ID);
+            String milestoneId = (String) related.get(JsonKeys.MILESTONE_ID);
+
+            if (StringUtils.isBlank(courseId) || StringUtils.isBlank(milestoneId)) {
+                sendFailure(response, IResponseMessage.INVALID_REQUESTED_DATA,
+                        "courseId or milestoneId missing in related context");
+                return;
+            }
+
+            Map<String, Object> contentInfo =
+                    issueMilestoneAchievementContentHelper.getCourseInfo(courseId);
+
+            if (MapUtils.isEmpty(contentInfo)) {
+                sendFailure(response, IResponseMessage.INVALID_REQUESTED_DATA,
+                        "Course content not found for courseId: " + courseId);
+                return;
+            }
+
+            Response templateResponse =
+                    issueMilestoneAchievementContentHelper.fetchContentTemplate(contentInfo, milestoneId);
+
+            if (templateResponse == null || templateResponse.getResult() == null) {
+                sendFailure(response, IResponseMessage.INVALID_REQUESTED_DATA,
+                        "Template not found for milestoneId: " + milestoneId);
+                return;
+            }
+            enrichRequestForTemplate(request, milestoneRecord, related);
+
+            Map<String, Object> requestMap = buildRequestFromRegistry(milestoneRecord);
+
+            Map<String, Object> milestoneAchievementTemplate =
+                    getMilestoneAchievementMetaData(request, templateResponse.getResult());
+
+            request.put(JsonKeys.MILESTONE_ACHIEVEMENT, milestoneAchievementTemplate);
+            requestMap.put(JsonKeys.MILESTONE_ACHIEVEMENT, milestoneAchievementTemplate);
+
+            Map<String, String> properties = populatePropertiesMap(request);
+
+            CertMapper certMapper = new CertMapper(properties);
+            List<CertModel> certModelList =
+                    certMapper.toMilestoneAchievementList(requestMap);
+
+            CertificateGenerator certificateGenerator =
+                    new CertificateGenerator(properties, directory);
+
+            CertModel certModel = certModelList.get(0);
+
+            CertificateExtension certificateExtension =
+                    certificateGenerator.getCertificateExtension(certModel, uuid);
+
+            String accessCode = (String) milestoneRecord.get(JsonKeys.ACCESS_CODE);
+
+            Map<String, Object> qrMap =
+                    certificateGenerator.generateQrCodeFromAccessCode(accessCode);
+
+            String encodedQrCode =
+                    Base64.getEncoder().encodeToString(
+                            (byte[]) qrMap.get(JsonKey.QR_CODE_FILE)
+                    );
+
+            SvgGenerator svgGenerator = new SvgGenerator(
+                    (String) milestoneAchievementTemplate.get(JsonKey.SVG_TEMPLATE),
+                    directory
+            );
+
+            String encodedSvg =
+                    svgGenerator.generate(certificateExtension, encodedQrCode, getStorageService());
+
+            response.put(JsonKey.RESPONSE, JsonKey.SUCCESS);
+            response.put(JsonKeys.PRINT_URI, encodedSvg);
+
+            sender().tell(response, self());
+
+        } catch (Exception e) {
+            logger.error("PublicMilestoneDownload | Unexpected error", e);
+            sendFailure(response, IResponseMessage.INTERNAL_ERROR,
+                    "Error while generating milestone certificate");
+        }
+    }
+
+
+    private void sendFailure(Response response, String errorMessage, String logMessage) {
+        logger.error(logMessage);
+        response.put(JsonKey.RESPONSE, JsonKey.FAILED);
+        response.put(JsonKey.ERROR, errorMessage);
+        sender().tell(response, self());
+    }
+
+    private Map<String, Object> buildRequestFromRegistry(Map<String, Object> milestoneRecord) throws Exception {
+
+        Map<String, Object> requestMap = new HashMap<>();
+
+        String certJson = (String) milestoneRecord.get(JsonKey.DATA);
+
+        Map<String, Object> certData = mapper.readValue(
+                certJson,
+                new TypeReference<Map<String, Object>>() {}
+        );
+
+        requestMap.putAll(certData);
+        requestMap.put(JsonKeys.UUID, milestoneRecord.get(JsonKeys.ID));
+        requestMap.put(JsonKeys.ACCESS_CODE, milestoneRecord.get("accesscode"));
+
+        return requestMap;
+    }
+
+
+    private void enrichRequestForTemplate(
+            Request request,
+            Map<String, Object> milestoneRecord,
+            Map<String, Object> related
+    ) throws Exception {
+
+        String courseId = (String) related.get(JsonKey.COURSE_ID);
+        String batchId  = (String) related.get(JsonKeys.BATCH_ID);
+        String milestoneId = (String) related.get(JsonKeys.MILESTONE_ID);
+
+        String certJson = (String) milestoneRecord.get(JsonKey.DATA);
+
+        Map<String, Object> certData = mapper.readValue(
+                certJson,
+                new TypeReference<Map<String, Object>>() {}
+        );
+
+        Map<String, Object> recipient =
+                (Map<String, Object>) certData.get(JsonKeys.RECIPIENT);
+
+        String userId = (String) recipient.get(JsonKeys.IDENTITY);
+
+        request.getRequest().put(JsonKeys.COURSE_ID, courseId);
+        request.getRequest().put(JsonKeys.BATCH_ID, batchId);
+        request.getRequest().put(JsonKeys.USER_ID, userId);
+        request.getRequest().put(JsonKeys.MILESTONE_ID, milestoneId);
     }
 
 }

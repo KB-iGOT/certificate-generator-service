@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
 import akka.actor.ActorRef;
-import org.sunbird.JsonKeys;
 import org.sunbird.incredible.processor.JsonKey;
 import org.sunbird.cert.actor.operation.MilestoneAchievementActorOperation;
 
@@ -48,6 +47,24 @@ public class MilestoneAchievementsGenerationController extends BaseController {
                 },
                 MilestoneAchievementActorOperation.GENERATE_MILESTONE_ACHIEVEMENT.getOperation());
         return response;
+    }
+
+    public CompletionStage<Result> download(String uid, Http.Request httpRequest) {
+
+        return handleRequest(
+                milestoneAchievementGenerateActorRef,
+                httpRequest,
+                request -> {
+                    Request req = (Request) request;
+                    Map<String, Object> context = new HashMap<>();
+                    context.put(JsonKey.VERSION, JsonKey.VERSION_1);
+                    req.getRequest().put(JsonKey.UUID, uid);
+                    req.setContext(context);
+                    return null;
+                },
+                MilestoneAchievementActorOperation
+                        .MILESTONE_ACHIEVEMENT_DOWNLOAD.getOperation()
+        );
     }
 }
 

@@ -148,4 +148,7 @@ public interface JsonKey {
     String BATCH_ID = "batchId";
     String EXT_PREFIX = "ext_";
     String COURSE_NAME_EXTENDED = "courseNameExtended";
+    String FAILED = "failed";
+    String ERROR="error";
+    String RELATED="related";
 }

@@ -6,7 +6,8 @@ package org.sunbird.cert.actor.operation;
  *
  */
 public enum MilestoneAchievementActorOperation {
-	GENERATE_MILESTONE_ACHIEVEMENT("generateMilestoneAchievement");
+	GENERATE_MILESTONE_ACHIEVEMENT("generateMilestoneAchievement"),
+	MILESTONE_ACHIEVEMENT_DOWNLOAD("milestoneAchievementDownload");
 
 	private String operation;
 
