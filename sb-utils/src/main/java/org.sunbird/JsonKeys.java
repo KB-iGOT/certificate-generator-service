@@ -153,4 +153,7 @@ public class JsonKeys {
     public static final String ASSESSMENT_ID = "assessmentid";
     public static final String INTERMEDIATE_MILESTONE_ACHIEVEMENT_TEMPLATE_ID = "intermediate_milestone_achievement_template_id";
     public static final String FINAL_MILESTONE_ACHIEVEMENT_TEMPLATE_ID = "final_milestone_achievement_template_id";
+    public static final String CATEGORY = "category";
+    public static final String USER_EXTERNAL_TRAINING_ENROLMENTS = "user_external_training_enrolments";
+    public static final String EXTERNAL_TRAINING = "externalTraining";
 }

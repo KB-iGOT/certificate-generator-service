@@ -201,7 +201,20 @@ public class UserEnrolmentHelper {
         }
     }
 
+    public Response getUserExternalEventEnrollmentRecord(String courseId, String batchId, String userId) throws BaseException {
+        Map<String, Object> primaryKey = new HashMap<>();
+        primaryKey.put(JsonKeys.USER_ID, userId);
+        primaryKey.put(JsonKeys.CONTEXT_ID, courseId);
+        primaryKey.put(JsonKeys.BATCH_ID, batchId);
+        return cassandraOperation.getRecordsByProperties(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.TABLE_USER_EXTERNAL_ENROLMENTS, primaryKey);
+    }
 
-
+    public Response updateUserExternalTrainingEnrollmentRecord(String courseId, String batchId, String userId, Map<String, Object> attributeMap) throws BaseException {
+        Map<String, Object> primaryKey = new HashMap<>();
+        primaryKey.put(JsonKeys.USER_ID, userId);
+        primaryKey.put(JsonKeys.CONTEXT_ID, courseId);
+        primaryKey.put(JsonKeys.BATCH_ID, batchId);
+        return cassandraOperation.updateRecord(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.TABLE_USER_EXTERNAL_ENROLMENTS, attributeMap, primaryKey);
+    }
 
 }
