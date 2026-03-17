@@ -450,10 +450,10 @@ public class CertificateGeneratorActor extends BaseActor {
 
         // Get the value associated with that key
         Map<String, Object> value = (Map<String, Object>) templateResponseKey.get(onlyKey);
-        if (isEvent) {
-            return issueCertificateEventHelper.generateCertificateMap(request.getRequest(), value);
-        } else if (isEvent && JsonKeys.EXTERNAL_TRAINING.equalsIgnoreCase(eventCategory)) {
+        if (isEvent && JsonKeys.EXTERNAL_TRAINING.equalsIgnoreCase(eventCategory)) {
             return issueCertificateExternalTrainingHelper.generateCertificateMap(request.getRequest(), value);
+        } else if (isEvent) {
+            return issueCertificateEventHelper.generateCertificateMap(request.getRequest(), value);
         }
         return issueCertificateContentHelper.generateCertificateMap(request.getRequest(), value);
     }
