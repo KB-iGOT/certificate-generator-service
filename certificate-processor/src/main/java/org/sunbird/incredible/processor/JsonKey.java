@@ -150,4 +150,7 @@ public interface JsonKey {
     String COURSE_NAME_EXTENDED = "courseNameExtended";
     String badgeName = "badgeName";
     String badgeImage = "badgeImage";
+    String BADGETITLE = "badgeTitle";
+    String BADGETEMPLATE = "badgeTemplate";
+    String BADGE = "badge";
 }

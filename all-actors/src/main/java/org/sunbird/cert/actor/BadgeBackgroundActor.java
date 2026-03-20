@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.sunbird.BaseActor;
 import org.sunbird.JsonKeys;
 import org.sunbird.cert.helper.UserEnrolmentHelper;
+import org.sunbird.incredible.processor.JsonKey;
 import org.sunbird.request.Request;
 
 import java.sql.Timestamp;
@@ -21,7 +22,7 @@ public class BadgeBackgroundActor extends BaseActor {
     @Override
     public void onReceive(Request request) {
 
-        if ("ADD_BADGE_REGISTRY".equalsIgnoreCase(request.getOperation())) {
+        if (JsonKeys.ADD_BADGE_REGISTRY.equalsIgnoreCase(request.getOperation())) {
             save(request);
         } else {
             unhandled(request);
@@ -33,26 +34,26 @@ public class BadgeBackgroundActor extends BaseActor {
         try {
             Map<String, Object> req = request.getRequest();
 
-            Map<String, Object> db = new HashMap<>();
+            Map<String, Object> badgeData = new HashMap<>();
 
             String uuid = UUID.randomUUID().toString();
 
-            db.put(JsonKeys.ID, uuid);
-            db.put(JsonKeys.CREATED_AT, new Timestamp(System.currentTimeMillis()));
-            db.put(JsonKeys.CREATED_BY, req.get(JsonKeys.USER_ID));
-            db.put(JsonKeys.IS_REVOKED, false);
-            db.put(JsonKeys.REASON, "badge-issued");
+            badgeData.put(JsonKeys.ID, uuid);
+            badgeData.put(JsonKeys.CREATED_AT, new Timestamp(System.currentTimeMillis()));
+            badgeData.put(JsonKeys.CREATED_BY, req.get(JsonKeys.USER_ID));
+            badgeData.put(JsonKeys.IS_REVOKED, false);
+            badgeData.put(JsonKeys.REASON, JsonKeys.BADGE_ISSUED);
 
-            db.put(JsonKeys.DATA, objectMapper.writeValueAsString(req.get("badge")));
+            badgeData.put(JsonKeys.DATA, objectMapper.writeValueAsString(req.get(JsonKey.BADGE)));
 
             Map<String, Object> related = new HashMap<>();
             related.put(JsonKeys.COURSE_ID, req.get(JsonKeys.COURSE_ID));
             related.put(JsonKeys.BATCH_ID, req.get(JsonKeys.BATCH_ID));
             related.put(JsonKeys.FIELD_BADGE_ID, req.get(JsonKeys.FIELD_BADGE_ID));
 
-            db.put(JsonKeys.RELATED, objectMapper.writeValueAsString(related));
+            badgeData.put(JsonKeys.RELATED, objectMapper.writeValueAsString(related));
 
-            userEnrolmentHelper.insertMilestoneAchievementRegistry(db);
+            userEnrolmentHelper.insertMilestoneAchievementRegistry(badgeData);
 
         } catch (Exception e) {
             LOGGER.error("Badge save failed", e);

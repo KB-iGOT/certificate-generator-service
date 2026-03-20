@@ -66,7 +66,7 @@ public class BadgeGeneratorActor extends BaseActor {
             return;
         }
 
-        throw new BaseException("INVALID_OPERATION", "Unsupported operation", 400);
+        throw new BaseException(JsonKeys.INVALID_OPERATION, JsonKeys.UNSUPPORTED_OPERATION, 400);
     }
 
     private void handleRequest(Request request) throws Exception {
@@ -76,15 +76,14 @@ public class BadgeGeneratorActor extends BaseActor {
         String userId = get(req, JsonKeys.USER_ID);
         String courseId = get(req, JsonKeys.COURSE_ID);
         String batchId = get(req, JsonKeys.BATCH_ID);
-        String badgeId = get(req, "badgeId");
+        String badgeId = get(req, JsonKeys.BADGE_ID);
 
         validate(userId, courseId, batchId, badgeId);
 
         if (!isEligible(userId, courseId, batchId, badgeId)) {
-            throw new BaseException("NOT_ELIGIBLE", "User not completed course", 400);
+            throw new BaseException(JsonKeys.NOT_ELIGIBLE, JsonKeys.USER_NOT_ELIGIBLE, 400);
         }
 
-        // ✅ FETCH CONTENT (MISSING IN YOUR CODE)
         Map<String, Object> contentInfo =
                 issueCertificateContentHelper.getCourseInfo(courseId);
 
@@ -111,14 +110,14 @@ public class BadgeGeneratorActor extends BaseActor {
             String badgeId) {
 
         List<Map<String, Object>> badgeList =
-                (List<Map<String, Object>>) content.get("badgeDetails_v1");
+                (List<Map<String, Object>>) content.get(JsonKeys.BADGE_DETAILS_V1);
 
         if (CollectionUtils.isEmpty(badgeList)) {
             throw new RuntimeException("No badgeDetailsV1 found in content");
         }
 
         return badgeList.stream()
-                .filter(b -> badgeId.equalsIgnoreCase((String) b.get("badgeId")))
+                .filter(b -> badgeId.equalsIgnoreCase((String) b.get(JsonKeys.BADGE_ID)))
                 .findFirst()
                 .orElseThrow(() ->
                         new RuntimeException("Badge not found for id: " + badgeId));
@@ -128,10 +127,10 @@ public class BadgeGeneratorActor extends BaseActor {
 
         Map<String, Object> badge = new HashMap<>();
 
-        badge.put("name", badgeData.get("badgeTitle"));
-        badge.put("image", badgeData.get("badgeTemplate"));
+        badge.put(JsonKey.NAME, badgeData.get(JsonKey.BADGETITLE));
+        badge.put(JsonKey.SIGNATORY_IMAGE, badgeData.get(JsonKey.BADGETEMPLATE));
 
-        request.getRequest().put("badge", badge);
+        request.getRequest().put(JsonKey.BADGE, badge);
     }
 
     private boolean isEligible(String userId, String courseId, String batchId, String badgeId) throws BaseException {
@@ -191,7 +190,7 @@ public class BadgeGeneratorActor extends BaseActor {
             }
 
             if (StringUtils.isBlank(svgTemplate)) {
-                throw new BaseException("TEMPLATE_NOT_FOUND",
+                throw new BaseException(JsonKeys.TEMPLATE_NOT_FOUND,
                         "Badge template not found for id: " + badgeTemplateId,
                         ResponseCode.CLIENT_ERROR.getCode());
             }
@@ -252,11 +251,11 @@ public class BadgeGeneratorActor extends BaseActor {
 
                     request.getRequest().put(JsonKeys.MILESTONE_ACHIEVEMENT_EXTENSION, certificateExtension);
                     request.getRequest().put(JsonKeys.UUID, uuid);
-                    request.getRequest().put("printUri", encodedSvg);
+                    request.getRequest().put(JsonKeys.PRINT_URI, encodedSvg);
                     request.getRequest().put(JsonKeys.CERT_MODEL, certModel);
 
                     bgRequest.setRequest(request.getRequest());
-                    bgRequest.setOperation("ADD_BADGE_REGISTRY");
+                    bgRequest.setOperation(JsonKeys.ADD_BADGE_REGISTRY);
 
                     badgeBackgroundActorRef.tell(bgRequest, ActorRef.noSender());
 

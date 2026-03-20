@@ -163,6 +163,15 @@ public class JsonKeys {
     public static final String BADGE_CERT_TEMPLATE = "badgeCertTemplate";
     public static final String VALUE = "value";
     public static final String PREVIEW_URL = "previewUrl";
-    public static final String IS_BADGE            = "isBadge";
+    public static final String IS_BADGE  = "isBadge";
+    public static final String BADGE_ID = "badgeId";
+    public static final String NOT_ELIGIBLE   = "NOT_ELIGIBLE";
+    public static final String USER_NOT_ELIGIBLE  = "User not completed course";
+    public static final String BADGE_DETAILS_V1  = "badgeDetails_v1";
+    public static final String ADD_BADGE_REGISTRY  = "ADD_BADGE_REGISTRY";
+    public static final String TEMPLATE_NOT_FOUND  = "TEMPLATE_NOT_FOUND";
+    public static final String INVALID_OPERATION = "INVALID_OPERATION";
+    public static final String UNSUPPORTED_OPERATION  = "Unsupported operation";
+    public static final String BADGE_ISSUED = "badge-issued";
 
 }
