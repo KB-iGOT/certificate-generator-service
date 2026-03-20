@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -47,6 +48,10 @@ public class SvgGenerator {
     public String generate(CertificateExtension certificateExtension, String encodedQrCode, BaseStorageService storageService) throws IOException {
         String svgFileName = getSvgFileName();
         String svgContent = "";
+        if(StringUtils.isNotBlank(certificateExtension.getBadgeImage()) && certificateExtension.getBadgeImage().startsWith("http")){
+            String base64= convertImageUrlToBase64(certificateExtension.getBadgeImage());
+            certificateExtension.setBadgeImage(base64);
+        }
         File file = new File(directory + svgFileName);
         if (!file.exists()) {
             logger.info("{} file does not exits , downloading", svgFileName);
@@ -154,5 +159,20 @@ public class SvgGenerator {
         }
 
         return svgString.toString();
+    }
+
+    private String convertImageUrlToBase64(String imageUrl) throws IOException {
+        URL url = new URL(imageUrl);
+        InputStream in = url.openStream();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        byte[] buffer = new byte[1024];
+        int n;
+        while ((n = in.read(buffer)) != -1) {
+            out.write(buffer, 0, n);
+        }
+
+        byte[] imageBytes = out.toByteArray();
+        return Base64.getEncoder().encodeToString(imageBytes);
     }
 }

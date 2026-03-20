@@ -38,6 +38,9 @@ public class CertificateExtension extends Assertion {
 
     private String providerName;
 
+    private String badgeName;
+    private String badgeImage;
+
 
 
     public CertificateExtension(String ctx) {
@@ -92,5 +95,21 @@ public class CertificateExtension extends Assertion {
 
     public void setProviderName(String providerName) {
         this.providerName = providerName;
+    }
+
+    public String getBadgeName() {
+        return badgeName;
+    }
+
+    public void setBadgeName(String badgeName) {
+        this.badgeName = badgeName;
+    }
+
+    public String getBadgeImage() {
+        return badgeImage;
+    }
+
+    public void setBadgeImage(String badgeImage) {
+        this.badgeImage = badgeImage;
     }
 }

@@ -373,7 +373,7 @@ public class IssueCertificateContentHelper {
 
         String courseMetadataString = contentCache.get(courseId, null, 0);
         if (StringUtils.isBlank(courseMetadataString)) {
-            String url = PropertiesCache.getInstance().getProperty("content_basePath") + PropertiesCache.getInstance().getProperty("content_read_api") + "/" + courseId + "?fields=name,parentCollections,primaryCategory,posterImage,organisation,contentType,languageMapV1,category";
+            String url = PropertiesCache.getInstance().getProperty("content_basePath") + PropertiesCache.getInstance().getProperty("content_read_api") + "/" + courseId + "?fields=name,parentCollections,primaryCategory,posterImage,organisation,contentType,languageMapV1,category,badgeDetails_v1";
 
             Map<String, Object> responseObject = getAPICall(url);
             Map<String, Object> resultObject = (Map<String, Object>) responseObject.get(JsonKeys.RESULT);
@@ -389,6 +389,7 @@ public class IssueCertificateContentHelper {
                 List<Object> orgData = (List<Object>) response.getOrDefault("organisation", Collections.emptyList());
                 String contentType = sanitizeString((String) response.getOrDefault("contentType", ""));
                 Map<String, Object> languageMapV1 = (Map<String, Object>) response.getOrDefault("languageMapV1", new HashMap<>());
+                List<Map<String, Object>> badgeMapV1 = (List<Map<String, Object>>) response.getOrDefault("badgeDetails_v1", new HashMap<>());
                 String providerName = extractProviderName(orgData);
 
                 Map<String, Object> courseInfoMap = new HashMap<>();
@@ -403,6 +404,9 @@ public class IssueCertificateContentHelper {
 
                 if (MapUtils.isNotEmpty(languageMapV1)) {
                     courseInfoMap.put("languageMapV1", languageMapV1);
+                }
+                if (CollectionUtils.isNotEmpty(badgeMapV1)) {
+                    courseInfoMap.put("badgeDetails_v1", badgeMapV1);
                 }
                 return courseInfoMap;
             } else {
@@ -420,6 +424,7 @@ public class IssueCertificateContentHelper {
             String contentType = sanitizeString((String) courseMetadata.getOrDefault("contentType", ""));
             Map<String, Object> languageMapV1 = (Map<String, Object>) courseMetadata.getOrDefault("languageMapV1", new HashMap<>());
             String category = sanitizeString((String) courseMetadata.getOrDefault("category", ""));
+            List<Map<String, Object>> badgeMapV1 = (List<Map<String, Object>>) courseMetadata.getOrDefault("badgeDetails_v1", new HashMap<>());
             String providerName = extractProviderName(orgData);
 
             Map<String, Object> courseInfoMap = new HashMap<>();
@@ -433,6 +438,9 @@ public class IssueCertificateContentHelper {
             courseInfoMap.put("category", category);
             if (MapUtils.isNotEmpty(languageMapV1)) {
                 courseInfoMap.put("languageMapV1", languageMapV1);
+            }
+            if (CollectionUtils.isNotEmpty(badgeMapV1)) {
+                courseInfoMap.put("badgeDetails_v1", badgeMapV1);
             }
 
             return courseInfoMap;

@@ -43,6 +43,8 @@ public class CertModel {
      * Mandatory
      */
     private Criteria criteria;
+    private String badgeName;
+    private String badgeImage;
 
     private static ObjectMapper mapper = new ObjectMapper();
 
@@ -187,6 +189,22 @@ public class CertModel {
 
     public void setProviderName(String providerName) {
         this.providerName = providerName;
+    }
+
+    public void setBadgeName(String badgeName) {
+        this.badgeName = badgeName;
+    }
+
+    public void setBadgeImage(String badgeImage) {
+        this.badgeImage = badgeImage;
+    }
+
+    public String getBadgeName() {
+        return badgeName;
+    }
+
+    public String getBadgeImage() {
+        return badgeImage;
     }
 
     @Override

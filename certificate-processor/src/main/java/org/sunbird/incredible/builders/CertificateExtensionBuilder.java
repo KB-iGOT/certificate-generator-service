@@ -90,6 +90,16 @@ public class CertificateExtensionBuilder implements IBuilder<CertificateExtensio
         return this;
     }
 
+    public CertificateExtensionBuilder setBadgeName(String badgeName) {
+        certificateExtension.setBadgeName(badgeName);
+        return this;
+    }
+
+    public CertificateExtensionBuilder setBadgeImage(String badgeImage) {
+        certificateExtension.setBadgeImage(badgeImage);
+        return this;
+    }
+
 
     @Override
     public CertificateExtension build() {

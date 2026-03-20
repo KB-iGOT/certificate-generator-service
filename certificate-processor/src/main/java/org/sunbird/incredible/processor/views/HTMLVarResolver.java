@@ -146,6 +146,8 @@ public class HTMLVarResolver {
             metaData.put(JsonKey.SIGNATORY_1_DESIGNATION, urlEncode(getSignatory1Designation()));
             metaData.put(JsonKey.EXPIRY_DATE, urlEncode(getExpiryDate()));
             metaData.put(JsonKey.PROVIDER_NAME, urlEncode(getProviderName()));
+            metaData.put(JsonKey.badgeImage, getBadgeImage());
+            metaData.put(JsonKey.badgeName, getBadgeName());
             String courseName = getCourseName();
             if (org.apache.commons.lang3.StringUtils.isNotBlank(courseName) && courseName.length() > externalCourseNameMaximumLength) {
                 String wrappedCourseName = WordUtils.wrap(courseName, externalCourseNameMaximumLength, "\n", false);
@@ -166,6 +168,14 @@ public class HTMLVarResolver {
     private String urlEncode(String data) throws UnsupportedEncodingException {
         // URLEncoder.encode replace space with "+", but it should %20
         return StringUtils.isNotEmpty(data) ? URLEncoder.encode(data, "UTF-8").replace("+", "%20") : data;
+    }
+
+    public String getBadgeImage() {
+        return certificateExtension.getBadgeImage();
+    }
+
+    public String getBadgeName() {
+        return certificateExtension.getBadgeName();
     }
 
 }
