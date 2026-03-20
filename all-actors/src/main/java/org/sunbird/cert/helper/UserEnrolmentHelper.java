@@ -217,4 +217,10 @@ public class UserEnrolmentHelper {
         return cassandraOperation.updateRecord(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.USER_EXTERNAL_TRAINING_ENROLMENTS, attributeMap, primaryKey);
     }
 
+    public Response fetchTemplate(String id) throws BaseException {
+        Map<String, Object> primaryKey = new HashMap<>();
+        primaryKey.put(JsonKeys.ID, id);
+        return cassandraOperation.getRecordsByProperties(JsonKeys.SUNBIRD, JsonKeys.TABLE_SYSTEM_SETTINGS, primaryKey);
+    }
+
 }

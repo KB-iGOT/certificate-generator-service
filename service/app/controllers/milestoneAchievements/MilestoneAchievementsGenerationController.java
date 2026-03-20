@@ -30,6 +30,11 @@ public class MilestoneAchievementsGenerationController extends BaseController {
     @Named("milestone-achievement-generator_actor")
     private ActorRef milestoneAchievementGenerateActorRef;
 
+
+    @Inject
+    @Named("badge_generator_actor")
+    private ActorRef badgeGenerateActorRef;
+
     /**
      * This method will accept request for milestone achievement generation.
      * it will do request validation and processing of request.
@@ -47,6 +52,20 @@ public class MilestoneAchievementsGenerationController extends BaseController {
                     return null;
                 },
                 MilestoneAchievementActorOperation.GENERATE_MILESTONE_ACHIEVEMENT.getOperation());
+        return response;
+    }
+
+    public CompletionStage<Result> generateBadge(Http.Request httpRequest) {
+        CompletionStage<Result> response = handleRequest(badgeGenerateActorRef, httpRequest,
+                request -> {
+                    Request req = (Request) request;
+                    Map<String, Object> context = new HashMap<>();
+                    context.put(JsonKey.VERSION, JsonKey.VERSION_1);
+                    req.setContext(context);
+                    new MilestoneAchievementValidator().validateGenerateMilestoneAchievementRequest(req);
+                    return null;
+                },
+                "GENERATE_BADGE");
         return response;
     }
 }

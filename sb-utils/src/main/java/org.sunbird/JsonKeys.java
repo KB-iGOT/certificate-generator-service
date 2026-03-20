@@ -156,4 +156,13 @@ public class JsonKeys {
     public static final String CATEGORY = "category";
     public static final String USER_EXTERNAL_TRAINING_ENROLMENTS = "user_external_training_enrolments";
     public static final String EXTERNAL_TRAINING = "externalTraining";
+    public static final String FIELD_BADGE_ID = "badgeId";
+    public static final String ISSUED_BADGES = "issued_badges";
+    public static final String CREATED_BY = "createdby";
+    public static final String IS_REVOKED  = "isrevoked";
+    public static final String BADGE_CERT_TEMPLATE = "badgeCertTemplate";
+    public static final String VALUE = "value";
+    public static final String PREVIEW_URL = "previewUrl";
+    public static final String IS_BADGE            = "isBadge";
+
 }

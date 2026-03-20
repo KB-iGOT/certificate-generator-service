@@ -99,6 +99,8 @@ public class CertificateFactory {
                 .setIssuedOn(certModel.getIssuedDate()).setExpires(certModel.getExpiry())
                 .setValidFrom(certModel.getValidFrom()).setVerification(signedVerification).setSignatory(certModel.getSignatoryList()).setProviderName(certModel.getProviderName());
 
+        certificateExtensionBuilder.setBadgeName(certModel.getBadgeName()).setBadgeImage(certModel.getBadgeImage());
+
         if (StringUtils.isEmpty(properties.get(JsonKey.KEY_ID))) {
             signedVerification.setType(new String[]{JsonKey.HOSTED});
             logger.info("CertificateExtension:createCertificate: if keyID is empty then verification type is HOSTED");
