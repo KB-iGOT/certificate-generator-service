@@ -153,4 +153,25 @@ public class JsonKeys {
     public static final String ASSESSMENT_ID = "assessmentid";
     public static final String INTERMEDIATE_MILESTONE_ACHIEVEMENT_TEMPLATE_ID = "intermediate_milestone_achievement_template_id";
     public static final String FINAL_MILESTONE_ACHIEVEMENT_TEMPLATE_ID = "final_milestone_achievement_template_id";
+    public static final String CATEGORY = "category";
+    public static final String USER_EXTERNAL_TRAINING_ENROLMENTS = "user_external_training_enrolments";
+    public static final String EXTERNAL_TRAINING = "externalTraining";
+    public static final String FIELD_BADGE_ID = "badgeId";
+    public static final String ISSUED_BADGES = "issued_badges";
+    public static final String CREATED_BY = "createdby";
+    public static final String IS_REVOKED  = "isrevoked";
+    public static final String BADGE_CERT_TEMPLATE = "badgeCertTemplate";
+    public static final String VALUE = "value";
+    public static final String PREVIEW_URL = "previewUrl";
+    public static final String IS_BADGE  = "isBadge";
+    public static final String BADGE_ID = "badgeId";
+    public static final String NOT_ELIGIBLE   = "NOT_ELIGIBLE";
+    public static final String USER_NOT_ELIGIBLE  = "User not completed course";
+    public static final String BADGE_DETAILS_V1  = "badgeDetails_v1";
+    public static final String ADD_BADGE_REGISTRY  = "ADD_BADGE_REGISTRY";
+    public static final String TEMPLATE_NOT_FOUND  = "TEMPLATE_NOT_FOUND";
+    public static final String INVALID_OPERATION = "INVALID_OPERATION";
+    public static final String UNSUPPORTED_OPERATION  = "Unsupported operation";
+    public static final String BADGE_ISSUED = "badge-issued";
+
 }

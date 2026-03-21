@@ -22,8 +22,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class IssueCertificateEventHelper {
-    private static final Logger logger = LoggerFactory.getLogger(IssueCertificateEventHelper.class);
+public class IssueCertificateExternalTrainingHelper {
+    private static final Logger logger = LoggerFactory.getLogger(IssueCertificateExternalTrainingHelper.class);
     private static final CassandraOperation cassandraOperation = ServiceFactory.getInstance();
     private static final RedisCacheUtil contentCache = new RedisCacheUtil();
     private static ObjectMapper mapper = new ObjectMapper();
@@ -32,21 +32,21 @@ public class IssueCertificateEventHelper {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
-    private static IssueCertificateEventHelper instance = null;
+    private static IssueCertificateExternalTrainingHelper instance = null;
 
-    public static synchronized IssueCertificateEventHelper getInstance() {
+    public static synchronized IssueCertificateExternalTrainingHelper getInstance() {
         if (instance == null) {
-            instance = new IssueCertificateEventHelper();
+            instance = new IssueCertificateExternalTrainingHelper();
         }
         return instance;
     }
 
-    private IssueCertificateEventHelper() {}
+    private IssueCertificateExternalTrainingHelper() {}
 
     public Map<String, Object> generateCertificateMap(Map<String, Object> requestMap, Map<String, Object> template) {
 
         try {
-            logger.info("issueCertificate i/p event =>" + requestMap);
+            logger.info("issueCertificate i/p externalTraining =>" + requestMap);
 
             String courseId = (String) requestMap.get(JsonKeys.COURSE_ID);
             String userId = (String) requestMap.get(JsonKeys.USER_ID);
@@ -88,7 +88,7 @@ public class IssueCertificateEventHelper {
                 return null;
             }
         } catch (Exception e) {
-            logger.error("Issue while validating the user Enrollment.", e);
+            logger.error("Issue while validating the user Enrollment for external Training.", e);
         }
         return null;
     }
@@ -114,10 +114,9 @@ public class IssueCertificateEventHelper {
             String userId = (String) requestMap.get(JsonKeys.USER_ID);
             String batchId = (String) requestMap.get(JsonKeys.BATCH_ID);
             primaryKey.put(JsonKeys.USER_ID, userId);
-            primaryKey.put(JsonKeys.CONTENT_ID, courseId);
             primaryKey.put(JsonKeys.CONTEXT_ID, courseId);
             primaryKey.put(JsonKeys.BATCH_ID, batchId);
-            Response row = cassandraOperation.getRecordsByProperties(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.USER_ENTITY_ENROLMENTS, primaryKey);
+            Response row = cassandraOperation.getRecordsByProperties(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.USER_EXTERNAL_TRAINING_ENROLMENTS, primaryKey);
             if (row != null) {
                 List<Map<String, Object>> mapList = (List<Map<String, Object>>) row.get("response");
                 if (CollectionUtils.isNotEmpty(mapList)) {

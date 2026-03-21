@@ -148,4 +148,9 @@ public interface JsonKey {
     String BATCH_ID = "batchId";
     String EXT_PREFIX = "ext_";
     String COURSE_NAME_EXTENDED = "courseNameExtended";
+    String badgeName = "badgeName";
+    String badgeImage = "badgeImage";
+    String BADGETITLE = "badgeTitle";
+    String BADGETEMPLATE = "badgeTemplate";
+    String BADGE = "badge";
 }

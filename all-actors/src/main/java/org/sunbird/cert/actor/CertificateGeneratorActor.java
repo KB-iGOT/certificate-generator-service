@@ -70,6 +70,7 @@ public class CertificateGeneratorActor extends BaseActor {
     private static final Cache<LocalDate, Map<String, String>> todayCertificateCache = Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(eventCacheTTL)).build();
     private static final Logger log = LoggerFactory.getLogger(CertificateGenerator.class);
     private static final IssueCertificateExternalContentHelper issueCertificateExternalContentHelper = IssueCertificateExternalContentHelper.getInstance();
+    private static final IssueCertificateExternalTrainingHelper issueCertificateExternalTrainingHelper = IssueCertificateExternalTrainingHelper.getInstance();
 
     @Inject
     @Named("certificate_background_actor")
@@ -178,6 +179,7 @@ public class CertificateGeneratorActor extends BaseActor {
             } else {
                 contentInfo = issueCertificateContentHelper.getCourseInfo(courseId);
             }
+            String eventCategory = (String) contentInfo.get(JsonKeys.CATEGORY);
             if (MapUtils.isNotEmpty(contentInfo)) {
                 if (isExternalCourse) {
                     Response userExternalContentEnrolmentRecord = userEnrolmentHelper.getUserEnrollmentRecordForExternalContent(courseId, userId);
@@ -192,7 +194,15 @@ public class CertificateGeneratorActor extends BaseActor {
                     }
                 } else if (JsonKeys.EVENT.equalsIgnoreCase((String) contentInfo.get(JsonKeys.CONTENT_TYPE))) {
                     isEvent = true;
-                    Response userEventEnrolmentRecord = userEnrolmentHelper.getUserEventEnrollmentRecord(courseId, batchId, userId);
+                    Response userEventEnrolmentRecord;
+                    if (JsonKeys.EXTERNAL_TRAINING.equalsIgnoreCase(eventCategory)) {
+                        logger.info("User is enrolled for External Training category");
+                        userEventEnrolmentRecord =
+                                userEnrolmentHelper.getUserExternalEventEnrollmentRecord(courseId, batchId, userId);
+                    } else {
+                        userEventEnrolmentRecord =
+                                userEnrolmentHelper.getUserEventEnrollmentRecord(courseId, batchId, userId);
+                    }
                     if (issueCertificateEventHelper.isUserEligibleForEventCertificate(userEventEnrolmentRecord)) {
                         certificateList = issueCertificateEventHelper.getUserCertificates(userEventEnrolmentRecord);
                         userCompletedOn = issueCertificateEventHelper.getCompletedOnDate(userEventEnrolmentRecord);
@@ -216,7 +226,7 @@ public class CertificateGeneratorActor extends BaseActor {
                     }
                 }
                 if (isUserEligibleForCertificate) {
-                    String encodedSvg = generatePrintURIAndUpdateRecord(courseId, batchId, request, isEvent, certificateRegistryMap, certificateList, userCompletedOn, isExternalCourse);
+                    String encodedSvg = generatePrintURIAndUpdateRecord(courseId, batchId, request, isEvent, certificateRegistryMap, certificateList, userCompletedOn, isExternalCourse, eventCategory);
                     if (StringUtils.isNotBlank(encodedSvg)) {
                         Response response = new Response();
                         response.getResult().put(JsonKeys.PRINT_URI, encodedSvg);
@@ -241,7 +251,7 @@ public class CertificateGeneratorActor extends BaseActor {
         logger.info("onReceive method call End");
     }
 
-    private String generatePrintURIAndUpdateRecord(String courseId, String batchId, Request request, boolean isEvent, Map<String, Object> v2CertificateRegistryMap, List<Map<String, Object>> issuedCertificateList, Date userCompletedOn, Boolean isExternalCourse) throws BaseException {
+    private String generatePrintURIAndUpdateRecord(String courseId, String batchId, Request request, boolean isEvent, Map<String, Object> v2CertificateRegistryMap, List<Map<String, Object>> issuedCertificateList, Date userCompletedOn, Boolean isExternalCourse, String eventCategory) throws BaseException {
         try {
             Response templateResponse = null;
             if (!isExternalCourse) {
@@ -257,7 +267,7 @@ public class CertificateGeneratorActor extends BaseActor {
                 if (isExternalCourse) {
                     certificateTemplate = getCertificateMetaDataForExternalContent(request);
                 } else {
-                    certificateTemplate  = getCertificateMetaData(request, templateResponse.getResult(), isEvent);
+                    certificateTemplate  = getCertificateMetaData(request, templateResponse.getResult(), isEvent, eventCategory);
                 }
 
                 request.put(JsonKeys.CERTIFICATE, certificateTemplate);
@@ -336,7 +346,9 @@ public class CertificateGeneratorActor extends BaseActor {
                             request.getRequest().put(JsonKeys.CERTIFICATE, certificateTemplate);
                             request.getRequest().put(JsonKeys.CERT_MODEL, certModel);
                             request.getRequest().put(JsonKeys.IS_EVENT, isEvent);
+                            request.getRequest().put(JsonKeys.CATEGORY, eventCategory);
                             request.getRequest().put(JsonKeys.COMPLETED_ON, userCompletedOn);
+                        
                             if (StringUtils.isNotBlank(specialEventCertificateName)) {
                                 request.getRequest().put(JsonKeys.EVENT_ISSUE_NAME, specialEventCertificateName);
                             }
@@ -431,14 +443,16 @@ public class CertificateGeneratorActor extends BaseActor {
         }
     }
 
-    public Map<String, Object> getCertificateMetaData(Request request, Map<String, Object> template, boolean isEvent) {
+    public Map<String, Object> getCertificateMetaData(Request request, Map<String, Object> template, boolean isEvent, String eventCategory) {
         List<Map<String, Object>> templateResponse = (List<Map<String, Object>>) template.get(JsonKey.RESPONSE);
         Map<String, Object> templateResponseKey = (Map<String, Object>) templateResponse.get(0).get(JsonKeys.CERT_TEMPLATES);
         String onlyKey = templateResponseKey.keySet().iterator().next();
 
         // Get the value associated with that key
         Map<String, Object> value = (Map<String, Object>) templateResponseKey.get(onlyKey);
-        if (isEvent) {
+        if (isEvent && JsonKeys.EXTERNAL_TRAINING.equalsIgnoreCase(eventCategory)) {
+            return issueCertificateExternalTrainingHelper.generateCertificateMap(request.getRequest(), value);
+        } else if (isEvent) {
             return issueCertificateEventHelper.generateCertificateMap(request.getRequest(), value);
         }
         return issueCertificateContentHelper.generateCertificateMap(request.getRequest(), value);

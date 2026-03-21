@@ -50,6 +50,7 @@ public class CertBackgroundActor extends BaseActor {
             Map<String, Object> certificateTemplate = (Map<String,Object>) request.getRequest().get(JsonKeys.CERTIFICATE);
             String uuid = (String) request.getRequest().get(JsonKeys.UUID);
             boolean isEvent = (boolean) request.getRequest().get(JsonKeys.IS_EVENT);
+            String eventCategpory = (String) request.getRequest().get(JsonKeys.CATEGORY);
             CertificateExtension certificateExtension = (CertificateExtension) request.getRequest().get(JsonKeys.CERTIFICATE_EXTENSION);
             CertModel certModel = (CertModel) request.getRequest().get(JsonKeys.CERT_MODEL);
             String accessCode = (String) request.getRequest().get(JsonKeys.ACCESS_CODE);
@@ -96,7 +97,7 @@ public class CertBackgroundActor extends BaseActor {
                 certificateMap.put(JsonKeys.NAME, certificateTemplate.get(JsonKeys.NAME));
                 certificateMap.put(JsonKeys.VERSION, JsonKeys.VERSION_2);
                 issuedCertificateList.add(certificateMap);
-                updateUserEnrolmentRecord(userId, courseId, batchId, issuedCertificateList, isEvent);
+                updateUserEnrolmentRecord(userId, courseId, batchId, issuedCertificateList, isEvent, eventCategpory);
             } else {
                 logger.error("Issue while adding the registry for request for userId: " + userId + " courseId: " + courseId + " batchId: " + batchId);
             }
@@ -105,13 +106,15 @@ public class CertBackgroundActor extends BaseActor {
         }
     }
 
-    public Response updateUserEnrolmentRecord(String userId, String courseId, String batchId, List<Map<String, Object>> issuedCertificates, boolean isEvent) throws BaseException {
+    public Response updateUserEnrolmentRecord(String userId, String courseId, String batchId, List<Map<String, Object>> issuedCertificates, boolean isEvent, String eventCategpory) throws BaseException {
         Map<String, Object> attributeMap = new HashMap<>();
         attributeMap.put(JsonKeys.ISSUED_CERTIFICATES, issuedCertificates);
         if (isEvent) {
             userEnrolmentHelper.updateUserEventEnrollmentRecord(courseId, batchId, userId, attributeMap);
         } else if (courseId.contains(JsonKey.EXT_PREFIX)){
             userEnrolmentHelper.updateExternalEnrollmentRecord(courseId, userId, attributeMap);
+        }  else if (isEvent && JsonKeys.EXTERNAL_TRAINING.equalsIgnoreCase(eventCategpory)) {
+            userEnrolmentHelper.updateUserExternalTrainingEnrollmentRecord(courseId, batchId, userId, attributeMap); 
         } else {
             userEnrolmentHelper.updateUserEnrollmentRecord(courseId, batchId, userId, attributeMap);
         }

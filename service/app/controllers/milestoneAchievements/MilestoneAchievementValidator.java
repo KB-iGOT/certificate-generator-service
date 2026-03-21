@@ -4,6 +4,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.UrlValidator;
+import org.sunbird.JsonKeys;
 import org.sunbird.incredible.processor.JsonKey;
 import org.sunbird.BaseException;
 import org.sunbird.message.IResponseMessage;
@@ -34,6 +35,12 @@ public class MilestoneAchievementValidator {
 
         Map<String, Object> milestoneAchievementReq = request.getRequest();
         checkMandatoryParamsPresent(milestoneAchievementReq, JsonKey.REQUEST, Arrays.asList(JsonKey.USER_ID, JsonKey.COURSE_ID, JsonKey.BATCH_ID));
+    }
+
+    public void validateGenerateBadge(Request request) throws BaseException {
+
+        Map<String, Object> milestoneAchievementReq = request.getRequest();
+        checkMandatoryParamsPresent(milestoneAchievementReq, JsonKey.REQUEST, Arrays.asList(JsonKey.USER_ID, JsonKey.COURSE_ID, JsonKeys.BADGE_ID));
     }
 
     private void checkMandatoryParamsPresent(

@@ -112,14 +112,18 @@ public class IssueMilestoneAchievementContentHelper {
         String batchId = (String) requestMap.get(JsonKeys.BATCH_ID);
         String milestoneId = (String) requestMap.get(JsonKeys.MILESTONE_ID);
 
+        Map<String, Object> primaryKeys = new HashMap<>();
+        primaryKeys.put(JsonKeys.USER_ID_KEY, userId);
+        primaryKeys.put(JsonKeys.COURSE_ID_KEY, courseId);
+
+        if (StringUtils.isNotBlank(batchId)) {
+            primaryKeys.put(JsonKeys.BATCH_ID_KEY, batchId);
+        }
+
         Response lpEnrolRecord = cassandraOperation.getRecordsByProperties(
                 JsonKeys.COURSE_KEY_SPACE_NAME,
                 JsonKeys.USER_ENROLMENTS_V2,
-                Map.of(
-                        JsonKeys.USER_ID_KEY, userId,
-                        JsonKeys.COURSE_ID_KEY, courseId,
-                        JsonKeys.BATCH_ID_KEY, batchId
-                ),
+                primaryKeys,
                 null
         );
 
@@ -140,24 +144,25 @@ public class IssueMilestoneAchievementContentHelper {
         if (!active) {
             return enrolledUserMap;
         }
-
-
-        Map<String, Object> primaryKey = new HashMap<>();
-        primaryKey.put(JsonKeys.USER_ID_KEY, userId);
-        primaryKey.put(JsonKeys.COURSE_ID_KEY, courseId);
-        primaryKey.put(JsonKeys.BATCH_ID_KEY, batchId);
-        primaryKey.put(JsonKeys.CONTEXT_ID_KEY, milestoneId);
-
-        Response milestoneRow = cassandraOperation.getRecordsByProperties(
-                JsonKeys.COURSE_KEY_SPACE_NAME,
-                JsonKeys.USER_MILESTONE_ACHIEVEMENTS_TABLE,
-                primaryKey
-        );
-
+        Boolean isBadge = (Boolean) requestMap.getOrDefault("isBadge", false);
         boolean isMilestoneAchievementIssued = false;
+        Response milestoneRow = null;
         String oldId = "";
         Date issuedOn = null;
+        if (!isBadge) {
+            Map<String, Object> primaryKey = new HashMap<>();
+            primaryKey.put(JsonKeys.USER_ID_KEY, userId);
+            primaryKey.put(JsonKeys.COURSE_ID_KEY, courseId);
+            primaryKey.put(JsonKeys.BATCH_ID_KEY, batchId);
+            primaryKey.put(JsonKeys.CONTEXT_ID_KEY, milestoneId);
 
+            milestoneRow = cassandraOperation.getRecordsByProperties(
+                    JsonKeys.COURSE_KEY_SPACE_NAME,
+                    JsonKeys.USER_MILESTONE_ACHIEVEMENTS_TABLE,
+                    primaryKey
+            );
+
+        }
         if (milestoneRow != null) {
             List<Map<String, Object>> mapList =
                     (List<Map<String, Object>>) milestoneRow.get(JsonKeys.RESPONSE);
@@ -362,14 +367,39 @@ public class IssueMilestoneAchievementContentHelper {
         recipientName = recipientName.trim();
 
         Map<String, Object> courseInfo = getCourseInfo((String) requestMap.get(JsonKeys.COURSE_ID));
-        String incomingMilestoneId = (String) requestMap.get(JsonKeys.MILESTONE_ID);
-        List<Map<String, Object>> milestones =
-                (List<Map<String, Object>>) courseInfo.getOrDefault("milestones_v1", Collections.emptyList());
-        Map<String, Object> milestone = milestones.stream()
-                .filter(m -> incomingMilestoneId.equalsIgnoreCase((String) m.get("id")))
-                .findFirst()
-                .orElse(null);
-        String courseName = (String) milestone.getOrDefault("name", "");
+        Boolean isBadge = (Boolean) requestMap.getOrDefault("isBadge", false);
+        String badgeName = "";
+        String courseName = "";
+        String badgeImage = "";
+        if (isBadge) {
+                String badgeId = (String) requestMap.get("badgeId");
+                List<Map<String, Object>> badgeDetailsV1 =
+                        (List<Map<String, Object>>) courseInfo.getOrDefault("badgeDetails_v1", Collections.emptyList());
+
+                if (CollectionUtils.isNotEmpty(badgeDetailsV1)) {
+                    Map<String, Object> badgeDetails = badgeDetailsV1.stream()
+                            .filter(m -> badgeId.equalsIgnoreCase((String) m.get("badgeId")))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (badgeDetails != null) {
+                        badgeName = (String) badgeDetails.getOrDefault("badgeTitle", "");
+                        badgeImage = transformBadgeTemplateUrl(
+                                (String) badgeDetails.getOrDefault("badgeTemplate", "")
+                        );
+                    }
+                }
+                courseName = (String) courseInfo.getOrDefault("courseName", "");
+        } else {
+            String incomingMilestoneId = (String) requestMap.get(JsonKeys.MILESTONE_ID);
+            List<Map<String, Object>> milestones =
+                    (List<Map<String, Object>>) courseInfo.getOrDefault("milestones_v1", Collections.emptyList());
+            Map<String, Object> milestone = milestones.stream()
+                    .filter(m -> incomingMilestoneId.equalsIgnoreCase((String) m.get("id")))
+                    .findFirst()
+                    .orElse(null);
+             courseName = (String) milestone.getOrDefault("name", "");
+        }
 
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -402,6 +432,8 @@ public class IssueMilestoneAchievementContentHelper {
         eData.put("primaryCategory", courseInfo.getOrDefault("primaryCategory", ""));
         eData.put("parentCollections", parentCollections);
         eData.put("coursePosterImage", courseInfo.getOrDefault("coursePosterImage", ""));
+        eData.put("badgeName", badgeName);
+        eData.put("badgeImage", badgeImage);
         return eData;
     }
 
@@ -421,7 +453,7 @@ public class IssueMilestoneAchievementContentHelper {
 
         String courseMetadataString = contentCache.get(courseId, null, 0);
         if (StringUtils.isBlank(courseMetadataString)) {
-            String url = PropertiesCache.getInstance().getProperty("content_basePath") + PropertiesCache.getInstance().getProperty("content_read_api") + "/" + courseId + "?fields=name,parentCollections,primaryCategory,posterImage,organisation,milestones_v1,preliminaryAssessment,batches,language";
+            String url = PropertiesCache.getInstance().getProperty("content_basePath") + PropertiesCache.getInstance().getProperty("content_read_api") + "/" + courseId + "?fields=name,parentCollections,primaryCategory,posterImage,organisation,milestones_v1,preliminaryAssessment,batches,language,badgeDetails_v1";
 
             Map<String, Object> responseObject = getAPICall(url);
             Map<String, Object> resultObject = (Map<String, Object>) responseObject.get(JsonKeys.RESULT);
@@ -449,6 +481,7 @@ public class IssueMilestoneAchievementContentHelper {
                         (List<Map<String, Object>>) response.getOrDefault("batches", Collections.emptyList());
                 courseInfoMap.put("batches", batches);
                 courseInfoMap.put("language", language);
+                courseInfoMap.put("badgeDetails_v1", response.getOrDefault("badgeDetailsv1", new ArrayList<>()));
                 return courseInfoMap;
             } else {
                 return new HashMap<>();
@@ -477,6 +510,7 @@ public class IssueMilestoneAchievementContentHelper {
                     (List<Map<String, Object>>) courseMetadata.getOrDefault("batches", Collections.emptyList());
             courseInfoMap.put("batches", batches);
             courseInfoMap.put("language", language);
+            courseInfoMap.put("badgeDetails_v1", courseMetadata.getOrDefault("badgeDetails_v1", new ArrayList<>()));
             return courseInfoMap;
         }
     }
@@ -664,6 +698,18 @@ public class IssueMilestoneAchievementContentHelper {
                 primaryKey,
                 null
         );
+    }
+
+    private String transformBadgeTemplateUrl(String originalUrl) {
+        if (StringUtils.isBlank(originalUrl)) {
+            return originalUrl;
+        }
+
+        String baseDomain = propertiesCache.getProperty("cert_domain_url");
+        String path = originalUrl
+                .replace("https://storage.googleapis.com/igot/content", "/content-store/content");
+
+        return baseDomain + path;
     }
 }
 
