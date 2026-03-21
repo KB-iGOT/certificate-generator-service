@@ -62,7 +62,7 @@ public class MilestoneAchievementsGenerationController extends BaseController {
                     Map<String, Object> context = new HashMap<>();
                     context.put(JsonKey.VERSION, JsonKey.VERSION_1);
                     req.setContext(context);
-                    new MilestoneAchievementValidator().validateGenerateMilestoneAchievementRequest(req);
+                    new MilestoneAchievementValidator().validateGenerateBadge(req);
                     return null;
                 },
                 "GENERATE_BADGE");
