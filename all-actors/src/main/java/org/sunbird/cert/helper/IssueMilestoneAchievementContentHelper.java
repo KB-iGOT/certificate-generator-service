@@ -112,14 +112,18 @@ public class IssueMilestoneAchievementContentHelper {
         String batchId = (String) requestMap.get(JsonKeys.BATCH_ID);
         String milestoneId = (String) requestMap.get(JsonKeys.MILESTONE_ID);
 
+        Map<String, Object> primaryKeys = new HashMap<>();
+        primaryKeys.put(JsonKeys.USER_ID_KEY, userId);
+        primaryKeys.put(JsonKeys.COURSE_ID_KEY, courseId);
+
+        if (StringUtils.isNotBlank(batchId)) {
+            primaryKeys.put(JsonKeys.BATCH_ID_KEY, batchId);
+        }
+
         Response lpEnrolRecord = cassandraOperation.getRecordsByProperties(
                 JsonKeys.COURSE_KEY_SPACE_NAME,
                 JsonKeys.USER_ENROLMENTS_V2,
-                Map.of(
-                        JsonKeys.USER_ID_KEY, userId,
-                        JsonKeys.COURSE_ID_KEY, courseId,
-                        JsonKeys.BATCH_ID_KEY, batchId
-                ),
+                primaryKeys,
                 null
         );
 
