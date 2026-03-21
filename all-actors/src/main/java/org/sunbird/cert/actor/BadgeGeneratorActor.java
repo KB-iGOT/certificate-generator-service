@@ -75,12 +75,11 @@ public class BadgeGeneratorActor extends BaseActor {
 
         String userId = get(req, JsonKeys.USER_ID);
         String courseId = get(req, JsonKeys.COURSE_ID);
-        String batchId = get(req, JsonKeys.BATCH_ID);
         String badgeId = get(req, JsonKeys.BADGE_ID);
 
-        validate(userId, courseId, batchId, badgeId);
+        validate(userId, courseId, badgeId);
 
-        if (!isEligible(userId, courseId, batchId, badgeId)) {
+        if (!isEligible(userId, courseId, badgeId)) {
             throw new BaseException(JsonKeys.NOT_ELIGIBLE, JsonKeys.USER_NOT_ELIGIBLE, 400);
         }
 
@@ -133,8 +132,8 @@ public class BadgeGeneratorActor extends BaseActor {
         request.getRequest().put(JsonKey.BADGE, badge);
     }
 
-    private boolean isEligible(String userId, String courseId, String batchId, String badgeId) throws BaseException {
-        Response userEnrolmentRecord = enrolmentHelper.getUserEnrollmentRecord(courseId, batchId, userId);
+    private boolean isEligible(String userId, String courseId, String badgeId) throws BaseException {
+        Response userEnrolmentRecord = enrolmentHelper.getUserEnrollmentRecord(courseId, null, userId);
         if (userEnrolmentRecord != null) {
             List<Map<String, Object>> mapList = (List<Map<String, Object>>) userEnrolmentRecord.get(JsonKeys.RESPONSE);
             if (CollectionUtils.isNotEmpty(mapList)) {

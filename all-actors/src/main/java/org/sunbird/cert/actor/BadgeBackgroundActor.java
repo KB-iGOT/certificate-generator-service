@@ -48,7 +48,6 @@ public class BadgeBackgroundActor extends BaseActor {
 
             Map<String, Object> related = new HashMap<>();
             related.put(JsonKeys.COURSE_ID, req.get(JsonKeys.COURSE_ID));
-            related.put(JsonKeys.BATCH_ID, req.get(JsonKeys.BATCH_ID));
             related.put(JsonKeys.FIELD_BADGE_ID, req.get(JsonKeys.FIELD_BADGE_ID));
 
             badgeData.put(JsonKeys.RELATED, objectMapper.writeValueAsString(related));

@@ -3,7 +3,7 @@ package org.sunbird.cert.helper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.sunbird.BaseException;
 import org.sunbird.JsonKeys;
 import org.sunbird.cassandra.CassandraOperation;
@@ -35,7 +35,9 @@ public class UserEnrolmentHelper {
         Map<String, Object> primaryKey = new HashMap<>();
         primaryKey.put(JsonKeys.USER_ID, userId);
         primaryKey.put(JsonKeys.COURSE_ID, courseId);
-        primaryKey.put(JsonKeys.BATCH_ID, batchId);
+        if (StringUtils.isNotEmpty(batchId)) {
+            primaryKey.put(JsonKeys.BATCH_ID, batchId);
+        }
         return cassandraOperation.getRecordsByProperties(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.USER_ENROLMENTS_V2, primaryKey);
     }
 
