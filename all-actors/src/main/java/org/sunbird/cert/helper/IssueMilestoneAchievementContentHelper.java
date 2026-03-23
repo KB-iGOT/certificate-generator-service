@@ -384,9 +384,7 @@ public class IssueMilestoneAchievementContentHelper {
 
                     if (badgeDetails != null) {
                         badgeName = (String) badgeDetails.getOrDefault("badgeTitle", "");
-                        badgeImage = transformBadgeTemplateUrl(
-                                (String) badgeDetails.getOrDefault("badgeTemplate", "")
-                        );
+                        badgeImage = (String) badgeDetails.getOrDefault("badgeTemplate", "");
                     }
                 }
                 courseName = (String) courseInfo.getOrDefault("courseName", "");
@@ -698,18 +696,6 @@ public class IssueMilestoneAchievementContentHelper {
                 primaryKey,
                 null
         );
-    }
-
-    private String transformBadgeTemplateUrl(String originalUrl) {
-        if (StringUtils.isBlank(originalUrl)) {
-            return originalUrl;
-        }
-
-        String baseDomain = propertiesCache.getProperty("cert_domain_url");
-        String path = originalUrl
-                .replace("https://storage.googleapis.com/igot/content", "/content-store/content");
-
-        return baseDomain + path;
     }
 }
 
