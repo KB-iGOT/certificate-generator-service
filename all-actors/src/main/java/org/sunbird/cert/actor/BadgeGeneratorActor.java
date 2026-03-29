@@ -139,7 +139,7 @@ public class BadgeGeneratorActor extends BaseActor {
 
         if (isExternal) {
             userEnrolmentRecord =
-                    enrolmentHelper.getUserExternalEnrollmentRecord(courseId, userId);
+                    enrolmentHelper.getUserEnrollmentRecordForExternalContent(courseId, userId);
         } else {
             userEnrolmentRecord =
                     enrolmentHelper.getUserEnrollmentRecord(courseId, null, userId);

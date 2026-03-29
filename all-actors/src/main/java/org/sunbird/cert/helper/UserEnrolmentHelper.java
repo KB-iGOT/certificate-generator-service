@@ -225,11 +225,4 @@ public class UserEnrolmentHelper {
         return cassandraOperation.getRecordsByProperties(JsonKeys.SUNBIRD, JsonKeys.TABLE_SYSTEM_SETTINGS, primaryKey);
     }
 
-    public Response getUserExternalEnrollmentRecord(String courseId, String userId) throws BaseException {
-        Map<String, Object> primaryKey = new HashMap<>();
-        primaryKey.put(JsonKeys.USER_ID_KEY, userId);
-        primaryKey.put(JsonKeys.COURSE_ID_KEY, courseId);
-        return cassandraOperation.getRecordsByProperties(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.TABLE_USER_EXTERNAL_ENROLMENTS, primaryKey);
-    }
-
 }
