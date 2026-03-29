@@ -238,7 +238,7 @@ public class IssueCertificateExternalTrainingHelper {
         String courseMetadataString = contentCache.get(courseId, null, 0);
         if (StringUtils.isBlank(courseMetadataString)) {
             String url = PropertiesCache.getInstance().getProperty("content_basePath") + PropertiesCache.getInstance().getProperty("content_read_api") + "/" + courseId
-                    + "?fields=name,parentCollections,primaryCategory,posterImage,organisation,sourceName,category";
+                    + "?fields=name,parentCollections,primaryCategory,posterImage,organisation,sourceName,category,badgeDetails_v1";
 
             Map<String, Object> responseObject = getAPICall(url);
             Map<String, Object> resultObject = (Map<String,Object>)responseObject.get(JsonKeys.RESULT);
@@ -258,6 +258,7 @@ public class IssueCertificateExternalTrainingHelper {
                 courseInfoMap.put("coursePosterImage", posterImage);
                 courseInfoMap.put("providerName", sourceName);
                 courseInfoMap.put("category", category);
+                courseInfoMap.put("badgeDetails_v1", response.getOrDefault("badgeDetails_v1", new ArrayList<>()));
                 return courseInfoMap;
             } else {
                 logger.error("Not able to find the content info for :" + courseId);
@@ -280,6 +281,7 @@ public class IssueCertificateExternalTrainingHelper {
             courseInfoMap.put("coursePosterImage", posterImage);
             courseInfoMap.put("providerName", sourceName);
             courseInfoMap.put("category", category);
+            courseInfoMap.put("badgeDetails_v1", courseMetadata.getOrDefault("badgeDetails_v1", new ArrayList<>()));
 
             return courseInfoMap;
         }

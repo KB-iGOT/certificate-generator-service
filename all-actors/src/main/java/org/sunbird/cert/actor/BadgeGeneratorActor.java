@@ -11,10 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.sunbird.*;
-import org.sunbird.cert.helper.CertRegistryHelper;
-import org.sunbird.cert.helper.IssueCertificateContentHelper;
-import org.sunbird.cert.helper.IssueMilestoneAchievementContentHelper;
-import org.sunbird.cert.helper.UserEnrolmentHelper;
+import org.sunbird.cert.helper.*;
 import org.sunbird.cloud.storage.BaseStorageService;
 import org.sunbird.cloud.storage.factory.StorageConfig;
 import org.sunbird.cloud.storage.factory.StorageServiceFactory;
@@ -53,7 +50,7 @@ public class BadgeGeneratorActor extends BaseActor {
     private BaseStorageService storageService = null;
     private static final IssueCertificateContentHelper issueCertificateContentHelper = IssueCertificateContentHelper.getInstance();
     private static final IssueMilestoneAchievementContentHelper issueMilestoneAchievementContentHelper = IssueMilestoneAchievementContentHelper.getInstance();
-
+    private static final IssueCertificateExternalTrainingHelper issueCertificateExternalTrainingHelper = IssueCertificateExternalTrainingHelper.getInstance();
     @Inject
     @Named("badge_background_actor")
     private ActorRef badgeBackgroundActorRef;
@@ -76,6 +73,8 @@ public class BadgeGeneratorActor extends BaseActor {
         String userId = get(req, JsonKeys.USER_ID);
         String courseId = get(req, JsonKeys.COURSE_ID);
         String badgeId = get(req, JsonKeys.BADGE_ID);
+        boolean isExternal = courseId != null && courseId.startsWith("ext_");
+        request.getRequest().put("isExternal", isExternal);
 
         validate(userId, courseId, badgeId);
 
@@ -83,8 +82,16 @@ public class BadgeGeneratorActor extends BaseActor {
             throw new BaseException(JsonKeys.NOT_ELIGIBLE, JsonKeys.USER_NOT_ELIGIBLE, 400);
         }
 
-        Map<String, Object> contentInfo =
-                issueCertificateContentHelper.getCourseInfo(courseId);
+        Map<String, Object> contentInfo;
+
+        boolean isExternalCourse =
+                (boolean) request.getRequest().getOrDefault("isExternal", false);
+
+        if (isExternalCourse) {
+            contentInfo = issueCertificateExternalTrainingHelper.getCourseInfo(courseId);
+        } else {
+            contentInfo = issueCertificateContentHelper.getCourseInfo(courseId);
+        }
 
         Map<String, Object> badgeData =
                 getBadgeFromContent(contentInfo, badgeId);
