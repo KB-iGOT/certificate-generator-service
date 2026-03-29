@@ -133,16 +133,39 @@ public class BadgeGeneratorActor extends BaseActor {
     }
 
     private boolean isEligible(String userId, String courseId, String badgeId) throws BaseException {
-        Response userEnrolmentRecord = enrolmentHelper.getUserEnrollmentRecord(courseId, null, userId);
+
+        Response userEnrolmentRecord;
+        boolean isExternal = courseId != null && courseId.startsWith("ext_");
+
+        if (isExternal) {
+            userEnrolmentRecord =
+                    enrolmentHelper.getUserExternalEnrollmentRecord(courseId, userId);
+        } else {
+            userEnrolmentRecord =
+                    enrolmentHelper.getUserEnrollmentRecord(courseId, null, userId);
+        }
+
         if (userEnrolmentRecord != null) {
-            List<Map<String, Object>> mapList = (List<Map<String, Object>>) userEnrolmentRecord.get(JsonKeys.RESPONSE);
+
+            List<Map<String, Object>> mapList =
+                    (List<Map<String, Object>>) userEnrolmentRecord.get(JsonKeys.RESPONSE);
+
             if (CollectionUtils.isNotEmpty(mapList)) {
+
                 Map<String, Object> map = mapList.get(0);
-                boolean active = (boolean) map.getOrDefault(JsonKeys.ACTIVE, false);
-                if (!active) {
-                    return false;
+
+                if (!isExternal) {
+                    boolean active = (boolean) map.getOrDefault(JsonKeys.ACTIVE, false);
+                    if (!active) {
+                        return false;
+                    }
                 }
-                List<Map<String, String>> issuedBadges = (List<Map<String, String>>) map.getOrDefault(JsonKeys.ISSUED_BADGES, new ArrayList<>());
+
+                List<Map<String, String>> issuedBadges =
+                        (List<Map<String, String>>) map.getOrDefault(
+                                JsonKeys.ISSUED_BADGES,
+                                new ArrayList<>());
+
                 return !issuedBadges.isEmpty() && issuedBadges.stream().anyMatch(badge -> badgeId.equalsIgnoreCase(badge.getOrDefault(JsonKeys.FIELD_BADGE_ID, "")));
             }
         }
