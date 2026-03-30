@@ -31,7 +31,7 @@ public class IssueMilestoneAchievementContentHelper {
     private static final RedisCacheUtil contentCache = new RedisCacheUtil();
     private static ObjectMapper mapper = new ObjectMapper();
     private static PropertiesCache propertiesCache = PropertiesCache.getInstance();
-    private static final IssueCertificateExternalTrainingHelper issueCertificateExternalTrainingHelper = IssueCertificateExternalTrainingHelper.getInstance();
+    private static final IssueCertificateExternalContentHelper issueCertificateExternalContentHelper = IssueCertificateExternalContentHelper.getInstance();
 
     static {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -366,10 +366,10 @@ public class IssueMilestoneAchievementContentHelper {
 
         String recipientName = StringUtils.isNotBlank(lastName) ? firstName + " " + lastName : firstName;
         recipientName = recipientName.trim();
-        Boolean isExternal = (Boolean) requestMap.getOrDefault("isExternal", false);
+        Boolean isExternal = (Boolean) requestMap.getOrDefault(JsonKeys.IS_EXTERNAL, false);
         Map<String, Object> courseInfo;
         if (isExternal) {
-            courseInfo = issueCertificateExternalTrainingHelper.getCourseInfo((String) requestMap.get(JsonKeys.COURSE_ID));
+            courseInfo = issueCertificateExternalContentHelper.getExternalCourseInfo((String) requestMap.get(JsonKeys.COURSE_ID));
         } else {
             courseInfo = getCourseInfo((String) requestMap.get(JsonKeys.COURSE_ID));
         }

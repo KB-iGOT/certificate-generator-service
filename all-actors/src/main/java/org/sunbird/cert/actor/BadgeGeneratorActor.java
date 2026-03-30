@@ -50,7 +50,7 @@ public class BadgeGeneratorActor extends BaseActor {
     private BaseStorageService storageService = null;
     private static final IssueCertificateContentHelper issueCertificateContentHelper = IssueCertificateContentHelper.getInstance();
     private static final IssueMilestoneAchievementContentHelper issueMilestoneAchievementContentHelper = IssueMilestoneAchievementContentHelper.getInstance();
-    private static final IssueCertificateExternalTrainingHelper issueCertificateExternalTrainingHelper = IssueCertificateExternalTrainingHelper.getInstance();
+    private static final IssueCertificateExternalContentHelper issueCertificateExternalContentHelper = IssueCertificateExternalContentHelper.getInstance();
     @Inject
     @Named("badge_background_actor")
     private ActorRef badgeBackgroundActorRef;
@@ -85,10 +85,10 @@ public class BadgeGeneratorActor extends BaseActor {
         Map<String, Object> contentInfo;
 
         boolean isExternalCourse =
-                (boolean) request.getRequest().getOrDefault("isExternal", false);
+                (boolean) request.getRequest().getOrDefault(JsonKeys.IS_EXTERNAL, false);
 
         if (isExternalCourse) {
-            contentInfo = issueCertificateExternalTrainingHelper.getCourseInfo(courseId);
+            contentInfo = issueCertificateExternalContentHelper.getExternalCourseInfo(courseId);
         } else {
             contentInfo = issueCertificateContentHelper.getCourseInfo(courseId);
         }

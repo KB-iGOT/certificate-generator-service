@@ -173,5 +173,5 @@ public class JsonKeys {
     public static final String INVALID_OPERATION = "INVALID_OPERATION";
     public static final String UNSUPPORTED_OPERATION  = "Unsupported operation";
     public static final String BADGE_ISSUED = "badge-issued";
-
+    public static final String IS_EXTERNAL = "isExternal";
 }
