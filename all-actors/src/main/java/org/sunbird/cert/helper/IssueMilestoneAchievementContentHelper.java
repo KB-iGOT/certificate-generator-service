@@ -31,6 +31,7 @@ public class IssueMilestoneAchievementContentHelper {
     private static final RedisCacheUtil contentCache = new RedisCacheUtil();
     private static ObjectMapper mapper = new ObjectMapper();
     private static PropertiesCache propertiesCache = PropertiesCache.getInstance();
+    private static final IssueCertificateExternalContentHelper issueCertificateExternalContentHelper = IssueCertificateExternalContentHelper.getInstance();
 
     static {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -365,8 +366,13 @@ public class IssueMilestoneAchievementContentHelper {
 
         String recipientName = StringUtils.isNotBlank(lastName) ? firstName + " " + lastName : firstName;
         recipientName = recipientName.trim();
-
-        Map<String, Object> courseInfo = getCourseInfo((String) requestMap.get(JsonKeys.COURSE_ID));
+        Boolean isExternal = (Boolean) requestMap.getOrDefault(JsonKeys.IS_EXTERNAL, false);
+        Map<String, Object> courseInfo;
+        if (isExternal) {
+            courseInfo = issueCertificateExternalContentHelper.getExternalCourseInfo((String) requestMap.get(JsonKeys.COURSE_ID));
+        } else {
+            courseInfo = getCourseInfo((String) requestMap.get(JsonKeys.COURSE_ID));
+        }
         Boolean isBadge = (Boolean) requestMap.getOrDefault("isBadge", false);
         String badgeName = "";
         String courseName = "";
@@ -479,7 +485,7 @@ public class IssueMilestoneAchievementContentHelper {
                         (List<Map<String, Object>>) response.getOrDefault("batches", Collections.emptyList());
                 courseInfoMap.put("batches", batches);
                 courseInfoMap.put("language", language);
-                courseInfoMap.put("badgeDetails_v1", response.getOrDefault("badgeDetailsv1", new ArrayList<>()));
+                courseInfoMap.put("badgeDetails_v1", response.getOrDefault("badgeDetails_v1", new ArrayList<>()));
                 return courseInfoMap;
             } else {
                 return new HashMap<>();

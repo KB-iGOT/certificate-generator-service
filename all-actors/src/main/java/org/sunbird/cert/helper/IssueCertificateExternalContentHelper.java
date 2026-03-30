@@ -202,6 +202,7 @@ public class IssueCertificateExternalContentHelper {
                 courseInfoMap.put("coursePosterImage", posterImage);
                 courseInfoMap.put("providerName", contentPartnerName);
                 courseInfoMap.put("contentPartnerId", contentPartnerId);
+                courseInfoMap.put("badgeDetails_v1", resultObject.getOrDefault("badgeDetails_v1", new ArrayList<>()));
 
                 return courseInfoMap;
             } else {
@@ -226,7 +227,7 @@ public class IssueCertificateExternalContentHelper {
             courseInfoMap.put("coursePosterImage", posterImage);
             courseInfoMap.put("providerName", contentPartnerName);
             courseInfoMap.put("contentPartnerId", contentPartnerId);
-
+            courseInfoMap.put("badgeDetails_v1", courseMetadata.getOrDefault("badgeDetails_v1", new ArrayList<>()));
             return courseInfoMap;
         }
     }
