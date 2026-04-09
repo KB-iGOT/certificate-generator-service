@@ -41,7 +41,11 @@ public abstract class BaseActor extends UntypedAbstractActor {
                 onReceive(request);
                 logger.info("method ended : operation {}", operation);
             } catch (Exception e) {
-                logger.error("Exception : operation {} : message : {} {}", operation, e.getMessage(), e);
+                String userId = (String) request.getRequest().get(JsonKey.USER_ID);
+                String courseId = (String) request.getRequest().get(JsonKey.COURSE_ID);
+                String certificateId = (String) request.getRequest().get(JsonKey.UUID);
+                logger.error("Exception : operation {} : userId {} : courseId {} : certificateId {} : message : {}",
+                        operation, userId, courseId, certificateId, e.getMessage(), e);
                 onReceiveException(operation, e);
             } finally {
                 logger.clearMDC();

@@ -244,8 +244,10 @@ public class CertificateGeneratorActor extends BaseActor {
                 throw new BaseException(IResponseMessage.INTERNAL_ERROR, "Issue while fetching the content", ResponseCode.SERVER_ERROR.getCode());
             }
 
+        } catch (BaseException ex) {
+            throw ex;
         } catch (Exception ex) {
-            logger.error("generateCertificateV2:Exception Occurred while generating certificate. : {}", ex.getStackTrace());
+            logger.error("generateCertificateV2:Exception Occurred while generating certificate. : {}", ex.getMessage(), ex);
             throw new BaseException(IResponseMessage.INTERNAL_ERROR, ex.getMessage(), ResponseCode.SERVER_ERROR.getCode());
         }
         logger.info("onReceive method call End");
@@ -371,8 +373,10 @@ public class CertificateGeneratorActor extends BaseActor {
                     }
                 }
             }
+        } catch (BaseException ex) {
+            throw ex;
         } catch (Exception ex) {
-            logger.error("generateCertificateV2:Exception Occurred while generating certificate. : {}", ex.getStackTrace());
+            logger.error("generateCertificateV2:Exception Occurred while generating certificate. : {}", ex.getMessage(), ex);
             throw new BaseException(IResponseMessage.INTERNAL_ERROR, ex.getMessage(), ResponseCode.SERVER_ERROR.getCode());
         }
         return null;
@@ -625,8 +629,10 @@ public class CertificateGeneratorActor extends BaseActor {
             }
 
 
+        } catch (BaseException ex) {
+            throw ex;
         } catch (Exception ex) {
-            logger.error("generateCertificateV2 Legacy App:Exception Occurred while generating certificate. : {}", ex.getStackTrace());
+            logger.error("generateCertificateV2 Legacy App:Exception Occurred while generating certificate. : {}", ex.getMessage(), ex);
             throw new BaseException(IResponseMessage.INTERNAL_ERROR, ex.getMessage(), ResponseCode.SERVER_ERROR.getCode());
         }
         logger.info("onReceive method call End");
@@ -637,8 +643,10 @@ public class CertificateGeneratorActor extends BaseActor {
             logger.info("generateCertificateByAdmin request received== {}", request.getRequest());
             request.getRequest().put(JsonKeys.IS_ADMIN, true);
             generateCertificate(request);
+        } catch (BaseException ex) {
+            throw ex;
         } catch (Exception ex) {
-            logger.error("generateCertificateByAdmin:Exception Occurred while generating certificate. : {}", ex.getStackTrace());
+            logger.error("generateCertificateByAdmin:Exception Occurred while generating certificate. : {}", ex.getMessage(), ex);
             throw new BaseException(IResponseMessage.INTERNAL_ERROR, ex.getMessage(), ResponseCode.SERVER_ERROR.getCode());
         }
         logger.info("onReceive method call End");
