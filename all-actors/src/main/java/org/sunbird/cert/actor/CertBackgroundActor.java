@@ -91,6 +91,11 @@ public class CertBackgroundActor extends BaseActor {
 
                 } else {
                     certificateMap.put(JsonKeys.LAST_ISSUED_ON, formatter.format(new Date()));
+                    Object eventIssueName = request.getRequest().get(JsonKeys.EVENT_ISSUE_NAME);
+                    if (eventIssueName instanceof String && StringUtils.isNotBlank((String) eventIssueName)) {
+                        logger.info("The Special Event Certificate is present and value is::: " + eventIssueName);
+                        certificateMap.put(JsonKeys.EVENT_ISSUE_NAME, request.getRequest().get(JsonKeys.EVENT_ISSUE_NAME));
+                    }
                 }
 
                 certificateMap.put(JsonKeys.TOKEN, accessCode);
