@@ -140,6 +140,10 @@ public class CertificateGeneratorActor extends BaseActor {
             String batchId = (String) request.getRequest().get(JsonKeys.BATCH_ID);
             String userId = (String) request.getRequest().get(JsonKeys.USER_ID);
             Boolean isAdmin = (Boolean) request.getRequest().get(JsonKeys.IS_ADMIN);
+            String eventIssueTypeFromRequest = (String) request.getRequest().get(JsonKeys.EVENT_ISSUE_NAME);
+            if (StringUtils.isNotBlank(eventIssueTypeFromRequest) && !isAdmin) {
+                request.getRequest().remove(JsonKeys.EVENT_ISSUE_NAME);
+            }
             if (isAdmin == null) {
                 List<String> userToken = scala.collection.JavaConverters.seqAsJavaList(
                         (scala.collection.Seq<String>) request.getHeaders().get(JsonKeys.X_AUTHENTICATED_USER_TOKEN)
@@ -350,9 +354,12 @@ public class CertificateGeneratorActor extends BaseActor {
                             request.getRequest().put(JsonKeys.IS_EVENT, isEvent);
                             request.getRequest().put(JsonKeys.CATEGORY, eventCategory);
                             request.getRequest().put(JsonKeys.COMPLETED_ON, userCompletedOn);
-                        
+                            String eventIssueTypeFromRequest = (String) request.getRequest().get(JsonKeys.EVENT_ISSUE_NAME);
                             if (StringUtils.isNotBlank(specialEventCertificateName)) {
                                 request.getRequest().put(JsonKeys.EVENT_ISSUE_NAME, specialEventCertificateName);
+                            }
+                            if (StringUtils.isNotBlank(eventIssueTypeFromRequest)) {
+                                request.getRequest().put(JsonKeys.EVENT_ISSUE_NAME, eventIssueTypeFromRequest);
                             }
                             request.getRequest().put(JsonKeys.USER_CERTICATE_LIST, issuedCertificateList);
                             request.getRequest().putAll(req.getRequest());
@@ -642,6 +649,10 @@ public class CertificateGeneratorActor extends BaseActor {
         try {
             logger.info("generateCertificateByAdmin request received== {}", request.getRequest());
             request.getRequest().put(JsonKeys.IS_ADMIN, true);
+            String eventIssueName = (String) request.getRequest().get(JsonKeys.EVENT_ISSUE_NAME);
+            if (StringUtils.isNotBlank(eventIssueName)) {
+                request.getRequest().put(JsonKeys.EVENT_ISSUE_NAME, eventIssueName);
+            }
             generateCertificate(request);
         } catch (BaseException ex) {
             throw ex;
