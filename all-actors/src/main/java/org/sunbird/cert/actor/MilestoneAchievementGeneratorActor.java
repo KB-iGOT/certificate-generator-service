@@ -60,7 +60,8 @@ import static org.sunbird.cert.helper.IssueCertificateExternalContentHelper.getA
 public class MilestoneAchievementGeneratorActor extends BaseActor {
     private static CertsConstant certVar = new CertsConstant();
     private static ObjectMapper mapper = new ObjectMapper();
-    private BaseStorageService storageService = null;
+    private static volatile BaseStorageService storageService = null;
+    private static final Object storageServiceLock = new Object();
     String directory = "conf/";
     private static final IssueMilestoneAchievementContentHelper issueMilestoneAchievementContentHelper = IssueMilestoneAchievementContentHelper.getInstance();
     private static final CertRegistryHelper certRegistryHelper = CertRegistryHelper.getInstance();
@@ -108,26 +109,28 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
     }
 
 
-    private BaseStorageService getStorageService() {
+    private static BaseStorageService getStorageService() {
         if(storageService == null) {
-            StorageConfig storageConfig = null;
-            java.lang.String cloudStorageType = "gcloud";
-            if (cloudStorageType.equalsIgnoreCase(certVar.getAzureStorage())) {
-                storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getAzureStorageKey(), certVar.getAzureStorageSecret(), Option.apply(null), Option.empty());
-            } else if (cloudStorageType.equalsIgnoreCase(certVar.getAwsStorage())) {
-                storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getAwsStorageKey(), certVar.getAwsStorageSecret(), Option.apply(null), Option.empty());
-            } else if (cloudStorageType.equalsIgnoreCase(certVar.getCephs3Storage())) {
-                storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getCephs3StorageKey(), certVar.getCephs3StorageSecret(), Option.apply(certVar.getCephs3StorageEndPoint()), Option.empty());
-            } else if (cloudStorageType.equalsIgnoreCase(certVar.getGCPStorage())) {
-                storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getGCPStorageKey(), certVar.getGCPStorageSecret(), Option.apply(certVar.getGCPStorageEndPoint()), Option.empty());
-            } else
-                try {
-                    throw new BaseException(IResponseMessage.INTERNAL_ERROR, "Error while initialising cloud storage", ResponseCode.SERVER_ERROR.getCode());
-                } catch (BaseException e) {
-                    logger.error("Error while initialising cloud storage. : {}", e.getMessage());
+            synchronized (storageServiceLock) {
+                if (storageService == null) {
+                    StorageConfig storageConfig = null;
+                    java.lang.String cloudStorageType = "gcloud";
+                    if (cloudStorageType.equalsIgnoreCase(certVar.getAzureStorage())) {
+                        storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getAzureStorageKey(), certVar.getAzureStorageSecret(), Option.apply(null), Option.empty());
+                    } else if (cloudStorageType.equalsIgnoreCase(certVar.getAwsStorage())) {
+                        storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getAwsStorageKey(), certVar.getAwsStorageSecret(), Option.apply(null), Option.empty());
+                    } else if (cloudStorageType.equalsIgnoreCase(certVar.getCephs3Storage())) {
+                        storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getCephs3StorageKey(), certVar.getCephs3StorageSecret(), Option.apply(certVar.getCephs3StorageEndPoint()), Option.empty());
+                    } else if (cloudStorageType.equalsIgnoreCase(certVar.getGCPStorage())) {
+                        storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getGCPStorageKey(), certVar.getGCPStorageSecret(), Option.apply(certVar.getGCPStorageEndPoint()), Option.empty());
+                    } else {
+                        log.error("Error while initialising cloud storage. Unsupported storage type: {}", cloudStorageType);
+                    }
+                    if (storageConfig != null) {
+                        storageService = StorageServiceFactory.getStorageService(storageConfig);
+                    }
                 }
-            //logger.info("MilestoneAchievementGeneratorActor:getStorageService:storage object formed: {}", storageConfig.toString());
-            storageService = StorageServiceFactory.getStorageService(storageConfig);
+            }
         }
         return storageService;
     }
@@ -232,6 +235,7 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
                             }
                         }
                         String encodedQrCode = encodeQrCodeBytes((byte[]) qrMap.get(JsonKey.QR_CODE_FILE));
+                        qrMap.put(JsonKey.QR_CODE_FILE, null); // Release raw QR bytes after encoding
                         String specialEventMilestoneAchievementName = null;
                         if (CollectionUtils.isNotEmpty(issuedMilestoneAchievementList)) {
                             specialEventMilestoneAchievementName = issuedMilestoneAchievementList.stream()
@@ -260,6 +264,7 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
 
                         SvgGenerator svgGenerator = new SvgGenerator((String) ((Map) request.get(JsonKeys.MILESTONE_ACHIEVEMENT)).get(JsonKey.SVG_TEMPLATE), directory);
                         encodedSvg = svgGenerator.generate(certificateExtension, encodedQrCode, getStorageService());
+                        encodedQrCode = null; // Release encoded QR string after use
                         if (MapUtils.isEmpty(v2MilestoneAchievementRegistryMap)) {
                             certificateExtension.setPrintUri(encodedSvg);
                             Request req = new Request();
