@@ -47,7 +47,8 @@ public class BadgeGeneratorActor extends BaseActor {
     private final CertRegistryHelper certRegistryHelper = CertRegistryHelper.getInstance();
     private final UserEnrolmentHelper enrolmentHelper = UserEnrolmentHelper.getInstance();
     private final PropertiesCache propertiesCache = PropertiesCache.getInstance();
-    private BaseStorageService storageService = null;
+    private static volatile BaseStorageService storageService = null;
+    private static final Object storageServiceLock = new Object();
     private static final IssueCertificateContentHelper issueCertificateContentHelper = IssueCertificateContentHelper.getInstance();
     private static final IssueMilestoneAchievementContentHelper issueMilestoneAchievementContentHelper = IssueMilestoneAchievementContentHelper.getInstance();
     private static final IssueCertificateExternalContentHelper issueCertificateExternalContentHelper = IssueCertificateExternalContentHelper.getInstance();
@@ -319,27 +320,29 @@ public class BadgeGeneratorActor extends BaseActor {
         return null;
     }
 
-    private BaseStorageService getStorageService() {
+    private static BaseStorageService getStorageService() {
         if(storageService == null) {
-            StorageConfig storageConfig = null;
-            String cloudStorageType = "gcloud";
-            CertsConstant certVar = new CertsConstant();
-            if (cloudStorageType.equalsIgnoreCase(certVar.getAzureStorage())) {
-                storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getAzureStorageKey(), certVar.getAzureStorageSecret(), Option.apply(null), Option.empty());
-            } else if (cloudStorageType.equalsIgnoreCase(certVar.getAwsStorage())) {
-                storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getAwsStorageKey(), certVar.getAwsStorageSecret(), Option.apply(null), Option.empty());
-            } else if (cloudStorageType.equalsIgnoreCase(certVar.getCephs3Storage())) {
-                storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getCephs3StorageKey(), certVar.getCephs3StorageSecret(), Option.apply(certVar.getCephs3StorageEndPoint()), Option.empty());
-            } else if (cloudStorageType.equalsIgnoreCase(certVar.getGCPStorage())) {
-                storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getGCPStorageKey(), certVar.getGCPStorageSecret(), Option.apply(certVar.getGCPStorageEndPoint()), Option.empty());
-            } else
-                try {
-                    throw new BaseException(IResponseMessage.INTERNAL_ERROR, "Error while initialising cloud storage", ResponseCode.SERVER_ERROR.getCode());
-                } catch (BaseException e) {
-                    logger.error("Error while initialising cloud storage. : {}", e.getMessage());
+            synchronized (storageServiceLock) {
+                if (storageService == null) {
+                    StorageConfig storageConfig = null;
+                    CertsConstant certVar = new CertsConstant();
+                    String cloudStorageType = "gcloud";
+                    if (cloudStorageType.equalsIgnoreCase(certVar.getAzureStorage())) {
+                        storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getAzureStorageKey(), certVar.getAzureStorageSecret(), Option.apply(null), Option.empty());
+                    } else if (cloudStorageType.equalsIgnoreCase(certVar.getAwsStorage())) {
+                        storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getAwsStorageKey(), certVar.getAwsStorageSecret(), Option.apply(null), Option.empty());
+                    } else if (cloudStorageType.equalsIgnoreCase(certVar.getCephs3Storage())) {
+                        storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getCephs3StorageKey(), certVar.getCephs3StorageSecret(), Option.apply(certVar.getCephs3StorageEndPoint()), Option.empty());
+                    } else if (cloudStorageType.equalsIgnoreCase(certVar.getGCPStorage())) {
+                        storageConfig = new StorageConfig(certVar.getCloudStorageType(), certVar.getGCPStorageKey(), certVar.getGCPStorageSecret(), Option.apply(certVar.getGCPStorageEndPoint()), Option.empty());
+                    } else {
+                        LOGGER.error("Error while initialising cloud storage. Unsupported storage type: {}", cloudStorageType);
+                    }
+                    if (storageConfig != null) {
+                        storageService = StorageServiceFactory.getStorageService(storageConfig);
+                    }
                 }
-            logger.info("MilestoneAchievementGeneratorActor:getStorageService:storage object formed: {}", storageConfig.toString());
-            storageService = StorageServiceFactory.getStorageService(storageConfig);
+            }
         }
         return storageService;
     }

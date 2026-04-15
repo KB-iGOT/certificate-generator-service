@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import scala.Some;
 
 import java.io.*;
+import java.util.LinkedHashMap;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -29,8 +30,14 @@ public class SvgGenerator {
     private String svgTemplate;
     private String directory;
     private static Map<String, String> encoderMap = new HashMap<>();
-    private static Map<String, String> cachedSvgTemplates = new HashMap<>();
-
+    private static final int MAX_CACHED_TEMPLATES = 500;
+    private static Map<String, String> cachedSvgTemplates = new LinkedHashMap<String, String>(MAX_CACHED_TEMPLATES,
+            0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
+            return size() > MAX_CACHED_TEMPLATES;
+        }
+    };
 
     static {
         encoderMap.put("<", "%3C");
@@ -45,11 +52,13 @@ public class SvgGenerator {
         this.directory = directory;
     }
 
-    public String generate(CertificateExtension certificateExtension, String encodedQrCode, BaseStorageService storageService) throws IOException {
+    public String generate(CertificateExtension certificateExtension, String encodedQrCode,
+            BaseStorageService storageService) throws IOException {
         String svgFileName = getSvgFileName();
         String svgContent = "";
-        if(StringUtils.isNotBlank(certificateExtension.getBadgeImage()) && certificateExtension.getBadgeImage().startsWith("http")){
-            String base64= convertImageUrlToBase64(certificateExtension.getBadgeImage());
+        if (StringUtils.isNotBlank(certificateExtension.getBadgeImage())
+                && certificateExtension.getBadgeImage().startsWith("http")) {
+            String base64 = convertImageUrlToBase64(certificateExtension.getBadgeImage());
             certificateExtension.setBadgeImage(base64);
         }
         File file = new File(directory + svgFileName);
@@ -59,19 +68,20 @@ public class SvgGenerator {
         }
         if (!cachedSvgTemplates.containsKey(this.svgTemplate)) {
             logger.info("svg data is not cached , read svf file");
-            //svgContent = readSvgContent(file.getAbsolutePath());
+            // svgContent = readSvgContent(file.getAbsolutePath());
             String encodedSvg = "data:image/svg+xml," + encodeData(svgContent);
             encodedSvg = encodedSvg.replaceAll("\n", "").replaceAll("\t", "").replaceAll("'(?=[a-zA-Z-]+=)", "' ");
             cachedSvgTemplates.put(this.svgTemplate, encodedSvg);
         }
         logger.info("svg template is cached {}", cachedSvgTemplates.containsKey(this.svgTemplate));
-        String svgData = replaceTemplateVars(cachedSvgTemplates.get(this.svgTemplate), certificateExtension, encodedQrCode);
+        String svgData = replaceTemplateVars(cachedSvgTemplates.get(this.svgTemplate), certificateExtension,
+                encodedQrCode);
         logger.info("svg template string creation completed {}", StringUtils.isNotBlank(svgData));
         return svgData;
     }
 
-
-    private String replaceTemplateVars(String svgContent, CertificateExtension certificateExtension, String encodeQrCode) {
+    private String replaceTemplateVars(String svgContent, CertificateExtension certificateExtension,
+            String encodeQrCode) {
         HTMLVarResolver htmlVarResolver = new HTMLVarResolver(certificateExtension);
         Map<String, String> certData = htmlVarResolver.getCertMetaData();
         certData.put("qrCodeImage", "data:image/png;base64," + encodeQrCode);
@@ -163,16 +173,14 @@ public class SvgGenerator {
 
     private String convertImageUrlToBase64(String imageUrl) throws IOException {
         URL url = new URL(imageUrl);
-        InputStream in = url.openStream();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-        byte[] buffer = new byte[1024];
-        int n;
-        while ((n = in.read(buffer)) != -1) {
-            out.write(buffer, 0, n);
+        try (InputStream in = url.openStream();
+                ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[4096];
+            int n;
+            while ((n = in.read(buffer)) != -1) {
+                out.write(buffer, 0, n);
+            }
+            return Base64.getEncoder().encodeToString(out.toByteArray());
         }
-
-        byte[] imageBytes = out.toByteArray();
-        return Base64.getEncoder().encodeToString(imageBytes);
     }
 }

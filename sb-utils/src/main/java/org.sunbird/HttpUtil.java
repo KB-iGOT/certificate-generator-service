@@ -21,6 +21,23 @@ import java.util.Map;
 public class HttpUtil {
 
   public static Logger logger = LoggerFactory.getLogger(HttpUtil.class);
+
+  static {
+    // Configure Unirest connection pool to prevent connection leaks
+    Unirest.setTimeouts(10000, 60000); // connection timeout 10s, socket timeout 60s
+    Unirest.setConcurrency(200, 20);   // max 200 total connections, 20 per route
+
+    // Register shutdown hook to release Unirest connections on JVM shutdown
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      try {
+        Unirest.shutdown();
+        logger.info("Unirest HTTP client shut down successfully.");
+      } catch (Exception e) {
+        logger.error("Error shutting down Unirest HTTP client: " + e.getMessage(), e);
+      }
+    }));
+  }
+
   private HttpUtil() {}
 
   /**

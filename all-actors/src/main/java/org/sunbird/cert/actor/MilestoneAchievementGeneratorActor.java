@@ -126,7 +126,7 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
                 } catch (BaseException e) {
                     logger.error("Error while initialising cloud storage. : {}", e.getMessage());
                 }
-            logger.info("MilestoneAchievementGeneratorActor:getStorageService:storage object formed: {}", storageConfig.toString());
+            //logger.info("MilestoneAchievementGeneratorActor:getStorageService:storage object formed: {}", storageConfig.toString());
             storageService = StorageServiceFactory.getStorageService(storageConfig);
         }
         return storageService;
