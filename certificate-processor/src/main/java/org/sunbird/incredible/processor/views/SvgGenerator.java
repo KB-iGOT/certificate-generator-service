@@ -58,7 +58,7 @@ public class SvgGenerator {
         String svgContent = "";
         if (StringUtils.isNotBlank(certificateExtension.getBadgeImage())
                 && certificateExtension.getBadgeImage().startsWith("http")) {
-            String base64 = convertImageUrlToBase64(certificateExtension.getBadgeImage());
+            String base64 = convertImageUrlToBase64V2(certificateExtension.getBadgeImage());
             certificateExtension.setBadgeImage(base64);
         }
         File file = new File(directory + svgFileName);
@@ -181,6 +181,25 @@ public class SvgGenerator {
                 out.write(buffer, 0, n);
             }
             return Base64.getEncoder().encodeToString(out.toByteArray());
+        }
+    }
+
+    public String convertImageUrlToBase64V2(String imageUrl) throws IOException {
+        URL url = new URL(imageUrl);
+
+        try (InputStream in = url.openStream();
+             ByteArrayOutputStream out = new ByteArrayOutputStream();
+             OutputStream base64Out = Base64.getEncoder().wrap(out)) {
+
+            byte[] buffer = new byte[4096];
+            int n;
+
+            while ((n = in.read(buffer)) != -1) {
+                base64Out.write(buffer, 0, n);
+            }
+
+            base64Out.flush();
+            return out.toString(StandardCharsets.UTF_8);
         }
     }
 }

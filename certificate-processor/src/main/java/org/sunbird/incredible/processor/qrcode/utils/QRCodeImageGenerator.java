@@ -74,6 +74,9 @@ public class QRCodeImageGenerator {
     public byte[] createQRImagesV2(QRCodeGenerationModel qrGenRequest)
             throws WriterException, IOException, NotFoundException, FontFormatException {
 
+        // Disable ImageIO caching (VERY IMPORTANT - do once ideally at startup)
+        ImageIO.setUseCache(false);
+
         String data = qrGenRequest.getData();
         String text = qrGenRequest.getText();
         String errorCorrectionLevel = qrGenRequest.getErrorCorrectionLevel();
@@ -88,28 +91,43 @@ public class QRCodeImageGenerator {
         int qrMarginBottom = qrGenRequest.getQrCodeMarginBottom();
         int imageMargin = qrGenRequest.getImageMargin();
 
-        // Generate the base QR image
-        BufferedImage qrImage = generateBaseImage(data, errorCorrectionLevel, pixelsPerBlock, qrMargin, colorModel);
+        BufferedImage qrImage = null;
+        BufferedImage textImage = null;
 
-        // Overlay text if present
-        if (StringUtils.isNotBlank(text)) {
-            BufferedImage textImage = getTextImage(text, fontName, fontSize, tracking, colorModel);
-            qrImage = addTextToBaseImage(qrImage, textImage, colorModel, qrMargin, pixelsPerBlock, qrMarginBottom, imageMargin);
-        }
+        try {
+            // Generate base QR
+            qrImage = generateBaseImage(data, errorCorrectionLevel, pixelsPerBlock, qrMargin, colorModel);
 
-        // Draw border if specified
-        if (borderSize > 0) {
-            drawBorder(qrImage, borderSize, imageMargin);
-        }
+            // Add text if present
+            if (StringUtils.isNotBlank(text)) {
+                textImage = getTextImage(text, fontName, fontSize, tracking, colorModel);
+                qrImage = addTextToBaseImage(qrImage, textImage, colorModel,
+                        qrMargin, pixelsPerBlock, qrMarginBottom, imageMargin);
+            }
 
-        // Write to ByteArrayOutputStream instead of disk
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            // Border
+            if (borderSize > 0) {
+                drawBorder(qrImage, borderSize, imageMargin);
+            }
+
+            // 🔥 Pre-size buffer (reduce resize + fragmentation)
+            int estimatedSize = qrImage.getWidth() * qrImage.getHeight(); // rough estimate
+            ByteArrayOutputStream baos = new ByteArrayOutputStream(Math.max(1024, estimatedSize / 4));
+
             ImageIO.write(qrImage, imageFormat, baos);
-            baos.flush();
-            return baos.toByteArray(); // return raw bytes
+
+            return baos.toByteArray(); // unavoidable copy if API must return byte[]
+
+        } finally {
+            // 🔥 Help GC by breaking references
+            if (textImage != null) {
+                textImage.flush();
+            }
+            if (qrImage != null) {
+                qrImage.flush();
+            }
         }
     }
-
     private static BufferedImage addTextToBaseImage(BufferedImage qrImage, BufferedImage textImage, String colorModel, int qrMargin, int pixelsPerBlock, int qrMarginBottom, int imageMargin) throws NotFoundException {
         BufferedImageLuminanceSource qrSource = new BufferedImageLuminanceSource(qrImage);
         HybridBinarizer qrBinarizer = new HybridBinarizer(qrSource);

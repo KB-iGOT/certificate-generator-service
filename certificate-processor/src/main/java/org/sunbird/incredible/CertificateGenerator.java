@@ -35,7 +35,10 @@ public class CertificateGenerator {
 
     private Map<String, String> properties;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    static {
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    }
 
     private CertificateFactory certificateFactory = new CertificateFactory();
 
@@ -73,7 +76,6 @@ public class CertificateGenerator {
     public String generateCertificateJson(CertificateExtension certificateExtension) throws IOException {
         checkDirectoryExists();
         File file = new File(directory + getUUID(certificateExtension) + ".json");
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         objectMapper.writeValue(file, certificateExtension);
         String jsonData = objectMapper.writeValueAsString(certificateExtension);
         logger.info("Json file has been generated for the certificate");

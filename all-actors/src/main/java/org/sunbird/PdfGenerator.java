@@ -111,14 +111,12 @@ public class PdfGenerator {
         httpPost.setHeader("Accept", "application/json");
         httpPost.setHeader("Content-type", "application/json");
 
-        CloseableHttpResponse response = client.execute(httpPost);
-        String pdfUrl = generateResponse(response);
-        try {
-          response.close();
+        try (CloseableHttpResponse response = client.execute(httpPost)) {
+            return generateResponse(response);
         } catch (Exception ex) {
-          logger.error("Exception occurred while closing http response.");
+            logger.error("Exception occurred while calling print service.", ex);
+            throw ex;
         }
-        return pdfUrl;
     }
 
     private static String generateResponse(CloseableHttpResponse httpResponse) throws IOException {

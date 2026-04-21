@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CertMapper {
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private Map<String, String> properties;
 
@@ -84,7 +85,7 @@ public class CertMapper {
     }
 
     private Criteria getCriteria(Map<String, Object> criteriaData) {
-        return new ObjectMapper().convertValue(criteriaData, Criteria.class);
+        return mapper.convertValue(criteriaData, Criteria.class);
     }
 
     private CertModel getCertModel(Map<String, Object> data) {
