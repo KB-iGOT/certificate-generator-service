@@ -68,7 +68,12 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
     private static final UserEnrolmentHelper userEnrolmentHelper = UserEnrolmentHelper.getInstance();
     private static final PropertiesCache propertiesCache = PropertiesCache.getInstance();
     private static final int eventCacheTTL = Platform.getInteger("special.event.milestone.achievement.cache.ttl", 24);
-    private static Map<String, String> specialEventMilestoneAchievementTemplateMap;
+    // FIXED: Changed from unbounded Map to bounded Caffeine cache with max 500 entries
+    private static final Cache<String, String> specialEventMilestoneAchievementTemplateMap = 
+        Caffeine.newBuilder()
+            .maximumSize(500)
+            .expireAfterWrite(Duration.ofHours(eventCacheTTL))
+            .build();
     private static final Cache<LocalDate, Map<String, String>> todayMilestoneAchievementCache = Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(eventCacheTTL)).build();
     private static final Logger log = LoggerFactory.getLogger(CertificateGenerator.class);
 
@@ -81,18 +86,19 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
         log.info("MilestoneAchievementGeneratorActor initialized.");
         try {
             String json = Platform.getString(JsonKeys.SPECIAL_MILESTONE_ACHIEVEMENT_TEMPLATE_MAP, "");
-            if (StringUtils.isBlank(json)) {
-                specialEventMilestoneAchievementTemplateMap = Collections.emptyMap();
-            } else {
-                specialEventMilestoneAchievementTemplateMap = mapper.readValue(
+            if (StringUtils.isNotBlank(json)) {
+                Map<String, String> templateMap = mapper.readValue(
                         json,
                         new TypeReference<Map<String, String>>() {}
                 );
+                // Load into bounded cache with max 500 entries
+                for (Map.Entry<String, String> entry : templateMap.entrySet()) {
+                    specialEventMilestoneAchievementTemplateMap.put(entry.getKey(), entry.getValue());
+                }
             }
             getMilestoneAchievementForToday();
         } catch (Exception e) {
             log.error("exception while getting the specialEventMilestoneAchievementTemplateMap" , e.getMessage());
-            specialEventMilestoneAchievementTemplateMap = Collections.emptyMap();
         }
     }
 
@@ -254,11 +260,13 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
                         }
 
                         if (StringUtils.isNotBlank(specialEventMilestoneAchievementName)) {
-                            if (MapUtils.isNotEmpty(specialEventMilestoneAchievementTemplateMap)) {
-                                logger.info("The size for specialEvent MilestoneAchievement is: " + specialEventMilestoneAchievementTemplateMap.size());
-                                String svgTemplate = specialEventMilestoneAchievementTemplateMap.get(specialEventMilestoneAchievementName);
+                            if (specialEventMilestoneAchievementTemplateMap.estimatedSize() > 0) {
+                                logger.info("The size for specialEvent MilestoneAchievement is: " + specialEventMilestoneAchievementTemplateMap.estimatedSize());
+                                String svgTemplate = specialEventMilestoneAchievementTemplateMap.getIfPresent(specialEventMilestoneAchievementName);
                                 logger.info("The svg template is: " + svgTemplate);
-                                ((Map) request.get(JsonKey.CERTIFICATE)).put(JsonKey.SVG_TEMPLATE, svgTemplate);
+                                if (svgTemplate != null) {
+                                    ((Map) request.get(JsonKey.CERTIFICATE)).put(JsonKey.SVG_TEMPLATE, svgTemplate);
+                                }
                             }
                         }
 
@@ -418,11 +426,17 @@ public class MilestoneAchievementGeneratorActor extends BaseActor {
                 logger.info("The event is for the L0OrgId: " + milestoneAchievementForToday.get(JsonKeys.L0_ORG_ID));
                 if (isUserValidForMdoSpecialEvent(userId, milestoneAchievementForToday.get(JsonKeys.L0_ORG_ID))) {
                     milestoneAchievementTemplateMap.put(JsonKeys.SPECIAL_EVENT_NAME, milestoneAchievementForToday.get(JsonKeys.SPECIAL_EVENT_NAME));
-                    milestoneAchievementTemplateMap.put(JsonKeys.MILESTONE_ACHIEVEMENT_TEMPLATE, specialEventMilestoneAchievementTemplateMap.get(milestoneAchievementForToday.get(JsonKeys.SPECIAL_EVENT_NAME)));
+                    String template = specialEventMilestoneAchievementTemplateMap.getIfPresent(milestoneAchievementForToday.get(JsonKeys.SPECIAL_EVENT_NAME));
+                    if (template != null) {
+                        milestoneAchievementTemplateMap.put(JsonKeys.MILESTONE_ACHIEVEMENT_TEMPLATE, template);
+                    }
                 }
             } else if (StringUtils.isNotBlank(milestoneAchievementForToday.get(JsonKeys.SPECIAL_EVENT_NAME))) {
                 milestoneAchievementTemplateMap.put(JsonKeys.SPECIAL_EVENT_NAME, milestoneAchievementForToday.get(JsonKeys.SPECIAL_EVENT_NAME));
-                milestoneAchievementTemplateMap.put(JsonKeys.MILESTONE_ACHIEVEMENT_TEMPLATE, specialEventMilestoneAchievementTemplateMap.get(milestoneAchievementForToday.get(JsonKeys.SPECIAL_EVENT_NAME)));
+                String template = specialEventMilestoneAchievementTemplateMap.getIfPresent(milestoneAchievementForToday.get(JsonKeys.SPECIAL_EVENT_NAME));
+                if (template != null) {
+                    milestoneAchievementTemplateMap.put(JsonKeys.MILESTONE_ACHIEVEMENT_TEMPLATE, template);
+                }
             }
         }
         return milestoneAchievementTemplateMap;

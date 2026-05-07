@@ -85,8 +85,7 @@ public class IssueCertificateContentHelper {
 
     // Placeholder methods for dependent logic
     private static Map<String, Object> validateTemplate(Map<String, Object> template, String batchId) throws Exception {
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, Object> criteria = objectMapper.readValue((String) template.getOrDefault(JsonKeys.CRITERIA, "{}"), Map.class);
+        Map<String, Object> criteria = mapper.readValue((String) template.getOrDefault(JsonKeys.CRITERIA, "{}"), Map.class);
 
         if (StringUtils.isNotBlank((String) template.getOrDefault(JsonKeys.URL, "")) && !criteria.isEmpty() && !Collections.disjoint(criteria.keySet(), Arrays.asList(JsonKeys.ENROLLMENT, JsonKeys.ASSESSMENT, JsonKeys.USERS))) {
             return criteria;

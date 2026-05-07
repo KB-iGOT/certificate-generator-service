@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class StoreConfig {
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private String type;
 

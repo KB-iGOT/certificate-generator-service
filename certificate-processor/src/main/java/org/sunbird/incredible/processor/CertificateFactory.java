@@ -35,7 +35,7 @@ public class CertificateFactory {
     private static Logger logger = LoggerFactory.getLogger(CertificateFactory.class);
 
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     public CertificateExtension createCertificate(CertModel certModel, Map<String, String> properties, String certificateUUID)
             throws InvalidDateFormatException, SignatureException.UnreachableException, IOException, SignatureException.CreationException {

@@ -21,8 +21,10 @@ public class PropertiesCache {
     "externalresource.properties",
   };
   private final Properties configProp = new Properties();
-  public final Map<String, Float> attributePercentageMap = new ConcurrentHashMap<>();
+  // FIXED: Changed to bounded map with max 1000 entries to prevent unbounded growth
+  public final Map<String, Float> attributePercentageMap = new ConcurrentHashMap<>(1000);
   private static PropertiesCache propertiesCache = null;
+  private static final int MAX_ATTRIBUTE_PERCENTAGE_MAP_SIZE = 1000;
   public static Logger logger = LoggerFactory.getLogger(HttpUtil.class);
 
   /** private default constructor */
@@ -70,16 +72,24 @@ public class PropertiesCache {
     } else {
       String keys[] = key.split(",");
       String values[] = value.split(",");
+      
+      // FIXED: Add size limit check to prevent unbounded growth
+      if (keys.length > MAX_ATTRIBUTE_PERCENTAGE_MAP_SIZE) {
+        logger.warn("Number of attributes ({}) exceeds maximum allowed ({}). Truncating to fit.", 
+          keys.length, MAX_ATTRIBUTE_PERCENTAGE_MAP_SIZE);
+      }
+      
       if (keys.length == value.length()) {
         // then take the value from user
         logger.info("weighted value is provided by user.");
-        for (int i = 0; i < keys.length; i++)
+        for (int i = 0; i < keys.length && i < MAX_ATTRIBUTE_PERCENTAGE_MAP_SIZE; i++)
           attributePercentageMap.put(keys[i], new Float(values[i]));
       } else {
         // equally divide all the provided field.
         logger.debug("weighted value is not provided  by user.");
         float perc = (float) 100.0 / keys.length;
-        for (int i = 0; i < keys.length; i++) attributePercentageMap.put(keys[i], perc);
+        for (int i = 0; i < keys.length && i < MAX_ATTRIBUTE_PERCENTAGE_MAP_SIZE; i++) 
+          attributePercentageMap.put(keys[i], perc);
       }
     }
   }

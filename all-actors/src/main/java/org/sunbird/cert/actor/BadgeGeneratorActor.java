@@ -44,6 +44,7 @@ public class BadgeGeneratorActor extends BaseActor {
     private static final String directory = "conf/";
 
     private static CertsConstant certVar = new CertsConstant();
+    private static final ObjectMapper mapper = new ObjectMapper();
     private final CertRegistryHelper certRegistryHelper = CertRegistryHelper.getInstance();
     private final UserEnrolmentHelper enrolmentHelper = UserEnrolmentHelper.getInstance();
     private final PropertiesCache propertiesCache = PropertiesCache.getInstance();
@@ -214,8 +215,7 @@ public class BadgeGeneratorActor extends BaseActor {
             if (CollectionUtils.isNotEmpty(mapList)) {
                 java.util.Map<String, Object> map = mapList.get(0);
                 String value = (String) map.get(JsonKeys.VALUE);
-                ObjectMapper objectMapper = new ObjectMapper();
-                 valueMap = objectMapper.readValue(value, new TypeReference<Map<String, Object>>() {});
+                 valueMap = mapper.readValue(value, new TypeReference<Map<String, Object>>() {});
                 svgTemplate = (String) valueMap.get(JsonKeys.PREVIEW_URL);
             }
 

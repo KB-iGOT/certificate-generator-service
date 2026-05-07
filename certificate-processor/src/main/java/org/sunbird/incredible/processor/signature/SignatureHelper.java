@@ -28,7 +28,7 @@ public class SignatureHelper {
 
     private final String VERIFY_API_ENDPOINT;
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     public SignatureHelper(String encServiceUrl) {
         SIGN_API_ENDPOINT = encServiceUrl.concat("/" + JsonKey.SIGN + "/");
@@ -50,20 +50,20 @@ public class SignatureHelper {
             throws SignatureException.UnreachableException, SignatureException.CreationException {
         Map signReq = new HashMap<String, Object>();
         signReq.put(JsonKey.ENTITY, rootNode);
-        CloseableHttpClient client = HttpClients.createDefault();
         logger.info("generateSignature:keyID:".concat(keyId));
         String encServiceUrl = SIGN_API_ENDPOINT.concat(keyId);
         logger.info("generateSignature:enc service url formed:".concat(encServiceUrl));
         HttpPost httpPost = new HttpPost(encServiceUrl);
-        try {
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
             StringEntity entity = new StringEntity(mapper.writeValueAsString(signReq));
             logger.info("generateSignature:SignRequest for enc-service call:".concat(mapper.writeValueAsString(signReq)));
             httpPost.setEntity(entity);
             httpPost.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
-            CloseableHttpResponse response = client.execute(httpPost);
-            return mapper.readValue(response.getEntity().getContent(),
-                    new TypeReference<Map<String, Object>>() {
-                    });
+            try (CloseableHttpResponse response = client.execute(httpPost)) {
+                return mapper.readValue(response.getEntity().getContent(),
+                        new TypeReference<Map<String, Object>>() {
+                        });
+            }
         } catch (ClientProtocolException e) {
             logger.error("ClientProtocolException when signing: {}", e.getMessage());
             throw new SignatureException().new UnreachableException(e.getMessage());
@@ -82,17 +82,16 @@ public class SignatureHelper {
         Map signReq = new HashMap<String, Object>();
         signReq.put(JsonKey.ENTITY, rootNode);
         boolean result = false;
-        CloseableHttpClient client = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(VERIFY_API_ENDPOINT);
         httpPost.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
-        try {
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
             StringEntity entity = new StringEntity(mapper.writeValueAsString(signReq));
             httpPost.setEntity(entity);
-            CloseableHttpResponse response = client.execute(httpPost);
-            result = mapper.readValue(response.getEntity().getContent(),
-                    new TypeReference<Boolean>() {
-                    });
-
+            try (CloseableHttpResponse response = client.execute(httpPost)) {
+                result = mapper.readValue(response.getEntity().getContent(),
+                        new TypeReference<Boolean>() {
+                        });
+            }
         } catch (ClientProtocolException ex) {
             logger.error("ClientProtocolException when verifying: {}", ex.getMessage());
             throw new SignatureException().new UnreachableException(ex.getMessage());

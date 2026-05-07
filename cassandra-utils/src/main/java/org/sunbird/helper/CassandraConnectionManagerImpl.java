@@ -255,6 +255,57 @@ public class CassandraConnectionManagerImpl implements CassandraConnectionManage
   }
 
   /**
+   * Gracefully close a specific keyspace connection and cluster.
+   * Use this during application graceful shutdown or when reconnecting.
+   * 
+   * @param keyspace The keyspace to close
+   */
+  public static void closeConnection(String keyspace) {
+    try {
+      if (cassandraSessionMap.containsKey(keyspace)) {
+        Session session = cassandraSessionMap.get(keyspace);
+        if (session != null && !session.isClosed()) {
+          session.close();
+          logger.info("Cassandra session closed for keyspace: {}", keyspace);
+        }
+        cassandraSessionMap.remove(keyspace);
+      }
+      
+      if (cassandraclusterMap.containsKey(keyspace)) {
+        Cluster cluster = cassandraclusterMap.get(keyspace);
+        if (cluster != null) {
+          cluster.close();
+          logger.info("Cassandra cluster closed for keyspace: {}", keyspace);
+        }
+        cassandraclusterMap.remove(keyspace);
+      }
+    } catch (Exception e) {
+      logger.error("Error closing Cassandra connection for keyspace: {}", keyspace, e);
+    }
+  }
+
+  /**
+   * Close all Cassandra connections and clusters.
+   * Use this during graceful application shutdown.
+   */
+  public static void closeAllConnections() {
+    logger.info("Closing all Cassandra connections...");
+    List<String> keyspacesToClose = new ArrayList<>(cassandraSessionMap.keySet());
+    for (String keyspace : keyspacesToClose) {
+      closeConnection(keyspace);
+    }
+    logger.info("All Cassandra connections closed");
+  }
+
+  /**
+   * Get current connection count for monitoring
+   * @return Number of active Cassandra sessions
+   */
+  public static int getActiveConnectionCount() {
+    return cassandraSessionMap.size();
+  }
+
+  /**
    * This class will be called by registerShutDownHook to register the call inside jvm , when jvm
    * terminate it will call the run method to clean up the resource.
    */
@@ -262,10 +313,7 @@ public class CassandraConnectionManagerImpl implements CassandraConnectionManage
     @Override
     public void run() {
       logger.info("started resource cleanup Cassandra.");
-      for (Map.Entry<String, Session> entry : cassandraSessionMap.entrySet()) {
-        cassandraSessionMap.get(entry.getKey()).close();
-        cassandraclusterMap.get(entry.getKey()).close();
-      }
+      closeAllConnections();
       logger.info("completed resource cleanup Cassandra.");
     }
   }

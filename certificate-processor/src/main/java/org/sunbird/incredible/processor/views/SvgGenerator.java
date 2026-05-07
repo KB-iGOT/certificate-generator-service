@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import scala.Some;
 
 import java.io.*;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -31,13 +32,15 @@ public class SvgGenerator {
     private String directory;
     private static Map<String, String> encoderMap = new HashMap<>();
     private static final int MAX_CACHED_TEMPLATES = 500;
-    private static Map<String, String> cachedSvgTemplates = new LinkedHashMap<String, String>(MAX_CACHED_TEMPLATES,
-            0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
-            return size() > MAX_CACHED_TEMPLATES;
-        }
-    };
+    // FIXED: Wrapped with Collections.synchronizedMap to prevent concurrent modification
+    // from multiple Akka actor threads (LinkedHashMap is NOT thread-safe)
+    private static Map<String, String> cachedSvgTemplates = Collections.synchronizedMap(
+            new LinkedHashMap<String, String>(MAX_CACHED_TEMPLATES, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
+                    return size() > MAX_CACHED_TEMPLATES;
+                }
+            });
 
     static {
         encoderMap.put("<", "%3C");

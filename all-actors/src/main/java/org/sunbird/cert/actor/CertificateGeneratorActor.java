@@ -67,7 +67,12 @@ public class CertificateGeneratorActor extends BaseActor {
     private static final UserEnrolmentHelper userEnrolmentHelper = UserEnrolmentHelper.getInstance();
     private static final PropertiesCache propertiesCache = PropertiesCache.getInstance();
     private static final int eventCacheTTL = Platform.getInteger("special.event.cache.ttl", 24);
-    private static Map<String, String> specialEventCertificateTemplateMap;
+    // FIXED: Changed from unbounded Map to bounded Caffeine cache with max 500 entries
+    private static final Cache<String, String> specialEventCertificateTemplateMap = 
+        Caffeine.newBuilder()
+            .maximumSize(500)
+            .expireAfterWrite(Duration.ofHours(eventCacheTTL))
+            .build();
     private static final Cache<LocalDate, Map<String, String>> todayCertificateCache = Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(eventCacheTTL)).build();
     private static final Logger log = LoggerFactory.getLogger(CertificateGenerator.class);
     private static final IssueCertificateExternalContentHelper issueCertificateExternalContentHelper = IssueCertificateExternalContentHelper.getInstance();
@@ -82,18 +87,19 @@ public class CertificateGeneratorActor extends BaseActor {
         log.info("CertificateGeneratorActor initialized.");
         try {
             String json = Platform.getString(JsonKeys.SPECIAL_CERTIFICATE_TEMPLATE_MAP, "");
-            if (StringUtils.isBlank(json)) {
-                specialEventCertificateTemplateMap = Collections.emptyMap();
-            } else {
-                specialEventCertificateTemplateMap = mapper.readValue(
+            if (!StringUtils.isBlank(json)) {
+                Map<String, String> templateMap = mapper.readValue(
                         json,
                         new TypeReference<Map<String, String>>() {}
                 );
+                // Load into bounded cache with max 500 entries
+                for (Map.Entry<String, String> entry : templateMap.entrySet()) {
+                    specialEventCertificateTemplateMap.put(entry.getKey(), entry.getValue());
+                }
             }
             getCertificateForToday();
         } catch (Exception e) {
             log.error("exception while getting the specialEventCertificateTemplateMap" , e.getMessage());
-            specialEventCertificateTemplateMap = Collections.emptyMap();
         }
     }
 
@@ -315,6 +321,7 @@ public class CertificateGeneratorActor extends BaseActor {
                             }
                         }
                         String encodedQrCode = encodeQrCodeBytes((byte[]) qrMap.get(JsonKey.QR_CODE_FILE));
+                        qrMap.put(JsonKey.QR_CODE_FILE, null); // Release raw QR bytes after encoding
                         String specialEventCertificateName = null;
                         if (CollectionUtils.isNotEmpty(issuedCertificateList)) {
                             specialEventCertificateName = issuedCertificateList.stream()
@@ -333,16 +340,20 @@ public class CertificateGeneratorActor extends BaseActor {
                         }
 
                         if (StringUtils.isNotBlank(specialEventCertificateName) && !isExternalCourse) {
-                            if (MapUtils.isNotEmpty(specialEventCertificateTemplateMap)) {
-                                logger.info("The size for specialEvent Certificate is: " + specialEventCertificateTemplateMap.size());
-                                String svgTemplate = specialEventCertificateTemplateMap.get(specialEventCertificateName);
+                            // FIXED: Updated to work with Caffeine cache
+                            if (specialEventCertificateTemplateMap.estimatedSize() > 0) {
+                                logger.info("The size for specialEvent Certificate is: " + specialEventCertificateTemplateMap.estimatedSize());
+                                String svgTemplate = specialEventCertificateTemplateMap.getIfPresent(specialEventCertificateName);
                                 logger.info("The svg template is: " + svgTemplate);
-                                ((Map) request.get(JsonKey.CERTIFICATE)).put(JsonKey.SVG_TEMPLATE, svgTemplate);
+                                if (svgTemplate != null) {
+                                    ((Map) request.get(JsonKey.CERTIFICATE)).put(JsonKey.SVG_TEMPLATE, svgTemplate);
+                                }
                             }
                         }
 
                         SvgGenerator svgGenerator = new SvgGenerator((String) ((Map) request.get(JsonKey.CERTIFICATE)).get(JsonKey.SVG_TEMPLATE), directory);
                         encodedSvg = svgGenerator.generate(certificateExtension, encodedQrCode, getStorageService());
+                        encodedQrCode = null; // Release encoded QR string after use
                         if (MapUtils.isEmpty(v2CertificateRegistryMap)) {
                             certificateExtension.setPrintUri(encodedSvg);
                             Request req = new Request();
@@ -530,11 +541,19 @@ public class CertificateGeneratorActor extends BaseActor {
                 logger.info("The event is for the L0OrgId: " + certificateForToday.get(JsonKeys.L0_ORG_ID));
                 if (isUserValidForMdoSpecialEvent(userId, certificateForToday.get(JsonKeys.L0_ORG_ID))) {
                     certifiateTemplateMap.put(JsonKeys.SPECIAL_EVENT_NAME, certificateForToday.get(JsonKeys.SPECIAL_EVENT_NAME));
-                    certifiateTemplateMap.put(JsonKeys.CERTIFICATE_TEMPLATE, specialEventCertificateTemplateMap.get(certificateForToday.get(JsonKeys.SPECIAL_EVENT_NAME)));
+                    // FIXED: Updated to work with Caffeine cache using getIfPresent()
+                    String template = specialEventCertificateTemplateMap.getIfPresent(certificateForToday.get(JsonKeys.SPECIAL_EVENT_NAME));
+                    if (template != null) {
+                        certifiateTemplateMap.put(JsonKeys.CERTIFICATE_TEMPLATE, template);
+                    }
                 }
             } else if (StringUtils.isNotBlank(certificateForToday.get(JsonKeys.SPECIAL_EVENT_NAME))) {
                 certifiateTemplateMap.put(JsonKeys.SPECIAL_EVENT_NAME, certificateForToday.get(JsonKeys.SPECIAL_EVENT_NAME));
-                certifiateTemplateMap.put(JsonKeys.CERTIFICATE_TEMPLATE, specialEventCertificateTemplateMap.get(certificateForToday.get(JsonKeys.SPECIAL_EVENT_NAME)));
+                // FIXED: Updated to work with Caffeine cache using getIfPresent()
+                String template = specialEventCertificateTemplateMap.getIfPresent(certificateForToday.get(JsonKeys.SPECIAL_EVENT_NAME));
+                if (template != null) {
+                    certifiateTemplateMap.put(JsonKeys.CERTIFICATE_TEMPLATE, template);
+                }
             }
         }
         return certifiateTemplateMap;

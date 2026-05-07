@@ -16,4 +16,15 @@ RUN chown -R sunbird:sunbird /home/sunbird
 USER sunbird
 EXPOSE 9000
 WORKDIR /home/sunbird/
-CMD java -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+PrintFlagsFinal $JAVA_OPTIONS -cp '/home/sunbird/certificate-service-1.2.0/lib/*' play.core.server.ProdServerStart  /home/sunbird/certificate-service-1.2.0
+CMD java \
+  -XX:+UseG1GC \
+  -XX:MaxGCPauseMillis=200 \
+  -XX:InitiatingHeapOccupancyPercent=25 \
+  -XX:G1NewCollectionHeuristicWeight=35 \
+  -XX:+ParallelRefProcEnabled \
+  -XX:+UseContainerSupport \
+  -XX:MaxRAMPercentage=75.0 \
+  -XX:+PrintFlagsFinal \
+  $JAVA_OPTIONS \
+  -cp '/home/sunbird/certificate-service-1.2.0/lib/*' \
+  play.core.server.ProdServerStart /home/sunbird/certificate-service-1.2.0

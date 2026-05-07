@@ -33,12 +33,21 @@ import static org.apache.commons.lang.StringUtils.capitalize;
 
 public class PdfGenerator {
   private static PoolingHttpClientConnectionManager connectionManager =null;
+  private static CloseableHttpClient client = null;
+  private static volatile boolean isShutdown = false;
+  
   static {
     connectionManager = new PoolingHttpClientConnectionManager();
     connectionManager.setMaxTotal(200);
     connectionManager.setDefaultMaxPerRoute(150);
     connectionManager.closeIdleConnections(180, TimeUnit.SECONDS);
+    
+    // Register shutdown hook for graceful cleanup
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      shutdown();
+    }));
   }
+  
   private static Logger logger = LoggerFactory.getLogger(PdfGenerator.class);
   private static ObjectMapper mapper = new ObjectMapper();
   private static ConnectionKeepAliveStrategy keepAliveStrategy =
@@ -56,13 +65,58 @@ public class PdfGenerator {
       return 180 * 1000;
     };
 
-    private static CloseableHttpClient client = HttpClients.custom()
-      .setConnectionManager(connectionManager)
-      .useSystemProperties()
-      .setKeepAliveStrategy(keepAliveStrategy)
-      .build();
+    static {
+      client = HttpClients.custom()
+        .setConnectionManager(connectionManager)
+        .useSystemProperties()
+        .setKeepAliveStrategy(keepAliveStrategy)
+        .build();
+    }
 
     private static final String PRINT_SERVICE_URL = "http://print-service:5000/v1/print/pdf";
+    
+    /**
+     * Graceful shutdown of HTTP client and connection manager
+     * Call this during application shutdown to prevent connection leaks
+     */
+    public static void shutdown() {
+      if (isShutdown) {
+        return;
+      }
+      
+      synchronized (PdfGenerator.class) {
+        if (isShutdown) {
+          return;
+        }
+        
+        try {
+          logger.info("Shutting down PdfGenerator HTTP client...");
+          if (client != null) {
+            client.close();
+            logger.info("PdfGenerator HTTP client closed");
+          }
+          if (connectionManager != null) {
+            connectionManager.shutdown();
+            logger.info("PdfGenerator connection manager shut down");
+          }
+          isShutdown = true;
+        } catch (IOException e) {
+          logger.error("Error shutting down PdfGenerator resources", e);
+        }
+      }
+    }
+    
+    /**
+     * Get HTTP client pool statistics for monitoring
+     */
+    public static String getPoolStats() {
+      if (connectionManager != null) {
+        return String.format("Total: %d, PerRoute: %s", 
+          connectionManager.getTotalStats().getMax(),
+          connectionManager.getDefaultMaxPerRoute());
+      }
+      return "Connection manager not initialized";
+    }
 
     public static String generate(String htmlTemplateUrl, CertificateExtension certificateExtension , String qrImageUrl,
                                   String container, String path) throws IOException {

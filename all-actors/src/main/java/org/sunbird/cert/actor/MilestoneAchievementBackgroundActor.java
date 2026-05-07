@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class MilestoneAchievementBackgroundActor extends BaseActor {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final UserEnrolmentHelper userEnrolmentHelper = UserEnrolmentHelper.getInstance();
     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
@@ -120,7 +121,6 @@ public class MilestoneAchievementBackgroundActor extends BaseActor {
             String accessCode) {
 
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Object> certificateData =
                     objectMapper.convertValue(certificateExtension, Map.class);
 
@@ -146,7 +146,6 @@ public class MilestoneAchievementBackgroundActor extends BaseActor {
 
     public Response createMilestoneAchievement(CertificateV2 certificate) throws BaseException {
 
-        ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> certMap =
                 objectMapper.convertValue(certificate, Map.class);
 

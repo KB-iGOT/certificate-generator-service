@@ -17,6 +17,7 @@ import java.util.UUID;
 public class BadgeBackgroundActor extends BaseActor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BadgeBackgroundActor.class);
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private final UserEnrolmentHelper userEnrolmentHelper = UserEnrolmentHelper.getInstance();
 
     @Override
@@ -30,7 +31,6 @@ public class BadgeBackgroundActor extends BaseActor {
     }
 
     private void save(Request request) {
-        ObjectMapper objectMapper = new ObjectMapper();
         try {
             Map<String, Object> req = request.getRequest();
 

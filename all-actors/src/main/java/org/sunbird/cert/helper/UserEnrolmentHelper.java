@@ -17,6 +17,7 @@ import static org.sunbird.HttpUtil.logger;
 
 public class UserEnrolmentHelper {
 
+    private static final ObjectMapper mapper = new ObjectMapper();
     private static final CassandraOperation cassandraOperation = ServiceFactory.getInstance();
 
     private static UserEnrolmentHelper instance = null;
@@ -169,8 +170,6 @@ public class UserEnrolmentHelper {
             if (CollectionUtils.isEmpty(records)) {
                 return null;
             }
-
-            ObjectMapper mapper = new ObjectMapper();
 
             for (Map<String, Object> record : records) {
 
