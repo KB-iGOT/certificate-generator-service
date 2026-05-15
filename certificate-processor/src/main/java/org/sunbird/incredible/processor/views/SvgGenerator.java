@@ -20,6 +20,9 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import java.time.Duration;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,7 +32,10 @@ public class SvgGenerator {
     private String svgTemplate;
     private String directory;
     private static Map<String, String> encoderMap = new HashMap<>();
-    private static Map<String, String> cachedSvgTemplates = new HashMap<>();
+        private static final Cache<String, String> cachedSvgTemplates = Caffeine.newBuilder()
+                .maximumSize(200)
+                .expireAfterWrite(Duration.ofHours(6))
+                .build();
 
 
     static {
@@ -57,15 +63,15 @@ public class SvgGenerator {
             logger.info("{} file does not exits , downloading", svgFileName);
             svgContent = download(svgTemplate, storageService);
         }
-        if (!cachedSvgTemplates.containsKey(this.svgTemplate)) {
-            logger.info("svg data is not cached , read svf file");
-            //svgContent = readSvgContent(file.getAbsolutePath());
-            String encodedSvg = "data:image/svg+xml," + encodeData(svgContent);
+        String encodedSvg = cachedSvgTemplates.getIfPresent(this.svgTemplate);
+        if (encodedSvg == null) {
+            logger.info("svg data is not cached , read svg file");
+            encodedSvg = "data:image/svg+xml," + encodeData(svgContent);
             encodedSvg = encodedSvg.replaceAll("\n", "").replaceAll("\t", "").replaceAll("'(?=[a-zA-Z-]+=)", "' ");
             cachedSvgTemplates.put(this.svgTemplate, encodedSvg);
         }
-        logger.info("svg template is cached {}", cachedSvgTemplates.containsKey(this.svgTemplate));
-        String svgData = replaceTemplateVars(cachedSvgTemplates.get(this.svgTemplate), certificateExtension, encodedQrCode);
+        logger.info("svg template is cached {}", cachedSvgTemplates.getIfPresent(this.svgTemplate) != null);
+        String svgData = replaceTemplateVars(encodedSvg, certificateExtension, encodedQrCode);
         logger.info("svg template string creation completed {}", StringUtils.isNotBlank(svgData));
         return svgData;
     }
