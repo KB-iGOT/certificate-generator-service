@@ -158,11 +158,12 @@ public class BadgeGeneratorActor extends BaseActor {
                     (List<Map<String, Object>>) userEnrolmentRecord.get(JsonKeys.RESPONSE);
 
             if (CollectionUtils.isNotEmpty(mapList)) {
-
-                Map<String, Object> map = mapList.get(0);
-
+                Map<String, Object> map = enrolmentHelper.getActiveEnrollment(mapList);
+                if (MapUtils.isEmpty(map)) {
+                    return false;
+                }
                 if (!isExternal) {
-                    boolean active = (boolean) map.getOrDefault(JsonKeys.ACTIVE, false);
+                    boolean active = Boolean.TRUE.equals(map.get(JsonKeys.ACTIVE));
                     if (!active) {
                         return false;
                     }

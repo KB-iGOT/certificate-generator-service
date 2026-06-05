@@ -17,7 +17,7 @@ import static org.sunbird.HttpUtil.logger;
 
 public class UserEnrolmentHelper {
 
-    private static final CassandraOperation cassandraOperation = ServiceFactory.getInstance();
+    private static CassandraOperation cassandraOperation = ServiceFactory.getInstance();
 
     private static UserEnrolmentHelper instance = null;
 
@@ -26,6 +26,10 @@ public class UserEnrolmentHelper {
             instance = new UserEnrolmentHelper();
         }
         return instance;
+    }
+
+    static void setCassandraOperationForTest(CassandraOperation operation) {
+        cassandraOperation = operation;
     }
 
     private UserEnrolmentHelper() {
@@ -223,6 +227,21 @@ public class UserEnrolmentHelper {
         Map<String, Object> primaryKey = new HashMap<>();
         primaryKey.put(JsonKeys.ID, id);
         return cassandraOperation.getRecordsByProperties(JsonKeys.SUNBIRD, JsonKeys.TABLE_SYSTEM_SETTINGS, primaryKey);
+    }
+
+    public Response getUserExternalEnrollmentRecord(String courseId, String userId) throws BaseException {
+        Map<String, Object> primaryKey = new HashMap<>();
+        primaryKey.put(JsonKeys.USER_ID_KEY, userId);
+        primaryKey.put(JsonKeys.COURSE_ID_KEY, courseId);
+        return cassandraOperation.getRecordsByProperties(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.TABLE_USER_EXTERNAL_ENROLMENTS, primaryKey);
+    }
+
+    public Map<String, Object> getActiveEnrollment(List<Map<String, Object>> enrollments) {
+        return enrollments.stream()
+                .filter(Objects::nonNull)
+                .filter(m -> Boolean.TRUE.equals(m.get(JsonKeys.ACTIVE)))
+                .findFirst()
+                .orElse(null);
     }
 
 }
