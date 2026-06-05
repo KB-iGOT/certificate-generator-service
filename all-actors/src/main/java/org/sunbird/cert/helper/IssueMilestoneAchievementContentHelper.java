@@ -141,6 +141,9 @@ public class IssueMilestoneAchievementContentHelper {
         }
 
         Map<String, Object> lpMap = userEnrolmentHelper.getActiveEnrollment(lpMapList);
+        if (MapUtils.isEmpty(lpMap)) {
+            return enrolledUserMap;
+        }
         boolean active = Boolean.TRUE.equals(lpMap.get(JsonKeys.ACTIVE));
 
         if (!active) {
