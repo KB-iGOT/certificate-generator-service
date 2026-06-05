@@ -17,7 +17,7 @@ import static org.sunbird.HttpUtil.logger;
 
 public class UserEnrolmentHelper {
 
-    private static final CassandraOperation cassandraOperation = ServiceFactory.getInstance();
+    private static CassandraOperation cassandraOperation = ServiceFactory.getInstance();
 
     private static UserEnrolmentHelper instance = null;
 
@@ -26,6 +26,10 @@ public class UserEnrolmentHelper {
             instance = new UserEnrolmentHelper();
         }
         return instance;
+    }
+
+    static void setCassandraOperationForTest(CassandraOperation operation) {
+        cassandraOperation = operation;
     }
 
     private UserEnrolmentHelper() {
