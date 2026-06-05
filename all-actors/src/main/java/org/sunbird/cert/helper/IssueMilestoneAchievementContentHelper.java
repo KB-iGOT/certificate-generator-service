@@ -32,6 +32,7 @@ public class IssueMilestoneAchievementContentHelper {
     private static ObjectMapper mapper = new ObjectMapper();
     private static PropertiesCache propertiesCache = PropertiesCache.getInstance();
     private static final IssueCertificateExternalContentHelper issueCertificateExternalContentHelper = IssueCertificateExternalContentHelper.getInstance();
+    private static final UserEnrolmentHelper userEnrolmentHelper = UserEnrolmentHelper.getInstance();
 
     static {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -139,7 +140,7 @@ public class IssueMilestoneAchievementContentHelper {
             return enrolledUserMap;
         }
 
-        Map<String, Object> lpMap = lpMapList.get(0);
+        Map<String, Object> lpMap = userEnrolmentHelper.getActiveEnrollment(lpMapList);
         boolean active = Boolean.TRUE.equals(lpMap.get(JsonKeys.ACTIVE));
 
         if (!active) {

@@ -232,4 +232,12 @@ public class UserEnrolmentHelper {
         return cassandraOperation.getRecordsByProperties(JsonKeys.COURSE_KEY_SPACE_NAME, JsonKeys.TABLE_USER_EXTERNAL_ENROLMENTS, primaryKey);
     }
 
+    public Map<String, Object> getActiveEnrollment(List<Map<String, Object>> enrollments) {
+        return enrollments.stream()
+                .filter(Objects::nonNull)
+                .filter(m -> Boolean.TRUE.equals(m.get(JsonKeys.ACTIVE)))
+                .findFirst()
+                .orElse(null);
+    }
+
 }
