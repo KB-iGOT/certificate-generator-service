@@ -147,7 +147,7 @@ public class HTMLVarResolver {
             metaData.put(JsonKey.EXPIRY_DATE, urlEncode(getExpiryDate()));
             metaData.put(JsonKey.PROVIDER_NAME, urlEncode(getProviderName()));
             metaData.put(JsonKey.badgeImage, getBadgeImage());
-            metaData.put(JsonKey.badgeName, getBadgeName());
+            metaData.put(JsonKey.badgeName, urlEncode(getBadgeName()));
             String courseName = getCourseName();
             if (org.apache.commons.lang3.StringUtils.isNotBlank(courseName) && courseName.length() > externalCourseNameMaximumLength) {
                 String wrappedCourseName = WordUtils.wrap(courseName, externalCourseNameMaximumLength, "\n", false);
