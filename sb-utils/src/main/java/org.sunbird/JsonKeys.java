@@ -174,4 +174,5 @@ public class JsonKeys {
     public static final String UNSUPPORTED_OPERATION  = "Unsupported operation";
     public static final String BADGE_ISSUED = "badge-issued";
     public static final String IS_EXTERNAL = "isExternal";
+    public static final String CERT_ISSUED_DATE_TIMEZONE = "cert_issued_date_timezone";
 }

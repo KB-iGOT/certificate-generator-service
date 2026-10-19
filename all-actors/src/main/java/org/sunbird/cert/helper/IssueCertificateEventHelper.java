@@ -187,6 +187,7 @@ public class IssueCertificateEventHelper {
         String courseName = (String) courseInfo.getOrDefault("courseName", "");
 
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormatter.setTimeZone(TimeZone.getTimeZone(PropertiesCache.getInstance().getProperty(JsonKeys.CERT_ISSUED_DATE_TIMEZONE)));
 
         List<String> parentCollections = Optional.ofNullable((List<String>) courseInfo.get("parentCollections"))
                 .orElse(Collections.emptyList());
