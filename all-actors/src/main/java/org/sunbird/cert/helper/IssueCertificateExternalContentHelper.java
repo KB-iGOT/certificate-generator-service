@@ -134,6 +134,7 @@ public class IssueCertificateExternalContentHelper {
             String courseName = (String) courseInfo.getOrDefault("courseName", "");
 
             SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+            dateFormatter.setTimeZone(TimeZone.getTimeZone(PropertiesCache.getInstance().getProperty(JsonKeys.CERT_ISSUED_DATE_TIMEZONE)));
 
             Map<String, Object> eData = new HashMap<>();
             eData.put("issuedDate", dateFormatter.format(enrolledUser.get(JsonKeys.ISSUED_ON)));
