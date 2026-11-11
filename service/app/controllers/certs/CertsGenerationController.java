@@ -3,6 +3,8 @@ package controllers.certs;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CompletionException;
+import java.util.function.Function;
 
 import akka.actor.ActorRef;
 import org.sunbird.JsonKeys;
@@ -10,9 +12,12 @@ import org.sunbird.incredible.processor.JsonKey;
 import org.sunbird.cert.actor.operation.CertActorOperation;
 
 import controllers.BaseController;
+import controllers.RequestHandler;
 import org.sunbird.request.Request;
+import org.sunbird.response.Response;
 import play.mvc.Http;
 import play.mvc.Result;
+import utils.SvgDataUriDecoder;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -56,7 +61,29 @@ public class CertsGenerationController extends BaseController {
      * @return a CompletableFuture of success response
      */
     public CompletionStage<Result> generateCertificatesLegacyApp(String uid, Http.Request httpRequest) {
-        CompletionStage<Result> response = handleRequest(certGenerateActorRef, httpRequest,
+        return generateLegacyCertificate(uid, httpRequest, null);
+    }
+
+    /** Returns the existing generated certificate as directly renderable SVG. */
+    public CompletionStage<Result> renderCertificatesLegacyApp(String uid, Http.Request httpRequest) {
+        return generateLegacyCertificate(uid, httpRequest, response -> {
+            Object printUri = response.getResult().get(JsonKeys.PRINT_URI);
+            if (!(printUri instanceof String)) {
+                throw new IllegalArgumentException("Generated certificate printUri must be a string");
+            }
+            return ok(SvgDataUriDecoder.decode((String) printUri)).as("image/svg+xml");
+        }).exceptionally(ex -> {
+            Throwable cause = ex;
+            while (cause instanceof CompletionException && cause.getCause() != null) {
+                cause = cause.getCause();
+            }
+            return RequestHandler.handleFailureResponse(cause, httpRequest);
+        });
+    }
+
+    private CompletionStage<Result> generateLegacyCertificate(String uid, Http.Request httpRequest,
+            Function<Response, Result> successMapper) {
+        return handleRequest(certGenerateActorRef, httpRequest,
                 request -> {
                     Request req = (Request) request;
                     Map<String, Object> context = new HashMap<>();
@@ -65,8 +92,7 @@ public class CertsGenerationController extends BaseController {
                     req.setContext(context);
                     return null;
                 },
-                CertActorOperation.GENERATE_CERTIFICATES_LEGACY_APP.getOperation());
-        return response;
+                CertActorOperation.GENERATE_CERTIFICATES_LEGACY_APP.getOperation(), successMapper);
     }
 
     /**

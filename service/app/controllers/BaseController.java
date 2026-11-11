@@ -2,6 +2,7 @@ package controllers;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
 import javax.inject.Inject;
 
 import akka.actor.ActorRef;
@@ -97,6 +98,12 @@ public class BaseController extends Controller {
 	 */
 	public CompletionStage<Result> handleRequest(ActorRef actorRef, play.mvc.Http.Request req, RequestValidatorFunction validatorFunction,
 			String operation) {
+		return handleRequest(actorRef, req, validatorFunction, operation, null);
+	}
+
+	/** Allows an endpoint to format successful actor replies without changing error handling. */
+	public CompletionStage<Result> handleRequest(ActorRef actorRef, play.mvc.Http.Request req,
+			RequestValidatorFunction validatorFunction, String operation, Function<Response, Result> successMapper) {
 		try {
 			Request request = new Request();
 			if (req.body() != null && req.body().asJson() != null) {
@@ -105,7 +112,7 @@ public class BaseController extends Controller {
 			if (validatorFunction != null) {
 				validatorFunction.apply(request);
 			}
-			return new RequestHandler().handleRequest(request,actorRef,operation,req);
+			return new RequestHandler().handleRequest(request, actorRef, operation, req, successMapper);
 		} catch (BaseException ex) {
 			return CompletableFuture.completedFuture(RequestHandler.handleFailureResponse(ex, req));
 		} catch (Exception ex) {
