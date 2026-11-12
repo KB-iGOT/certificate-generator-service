@@ -42,9 +42,14 @@ public class RequestHandler extends BaseController {
      */
     public CompletionStage<Result> handleRequest(Request request,Object actorRef, String operation, play.mvc.Http.Request req) throws Exception {
         Object obj;
+        return handleRequest(request, actorRef, operation, req, null);
+    }
+
+    /** A non-null mapper changes only successful reply formatting for the opting-in endpoint. */
+    public CompletionStage<Result> handleRequest(Request request, Object actorRef, String operation,
+            play.mvc.Http.Request req, Function<Response, Result> successMapper) throws Exception {
         request.setOperation(operation);
-        Function<Object, Result> fn =
-        object -> handleResponse(object, req);
+        Function<Object, Result> fn = object -> handleResponse(object, req, successMapper);
         Future<Object> future;
         Timeout t = new Timeout(Long.valueOf(request.getTimeout()), TimeUnit.SECONDS);
         if (actorRef instanceof ActorRef) {
@@ -124,6 +129,20 @@ public class RequestHandler extends BaseController {
       } else {
         return handleFailureResponse(object, req);
       }
+    }
+
+    /** Keeps the default JSON response path intact unless a success mapper is supplied. */
+    public static Result handleResponse(Object object, play.mvc.Http.Request req,
+            Function<Response, Result> successMapper) {
+        if (successMapper == null || !(object instanceof Response)
+                || ((Response) object).getResponseCode() != ResponseCode.OK) {
+            return handleResponse(object, req);
+        }
+        try {
+            return successMapper.apply((Response) object);
+        } catch (Exception ex) {
+            return handleFailureResponse(ex, req);
+        }
     }
 
     /**
