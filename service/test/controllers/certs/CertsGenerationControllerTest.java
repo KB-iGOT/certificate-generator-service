@@ -26,7 +26,15 @@ import utils.module.ACTOR_NAMES;
 import utils.module.ActorStartModule;
 import utils.module.StartModule;
 
+import javax.imageio.ImageIO;
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -37,11 +45,9 @@ import static play.inject.Bindings.bind;
 
 public class CertsGenerationControllerTest {
     private static final String CERTIFICATE_ID = "certificate-123";
-    private static final String SVG = "<svg xmlns='http://www.w3.org/2000/svg'><text>A+B C#25% %20 é</text>"
-            + "<image href='data:image/png;base64,ab+c/def=='/></svg>";
+    private static final String SVG = certificateSvg();
     private static final String PRINT_URI = "data:image/svg+xml,"
-            + "%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Ctext%3EA+B%20C%2325%25%20%2520%20%C3%A9%3C/text%3E"
-            + "%3Cimage href='data:image/png;base64,ab+c/def=='/%3E%3C/svg%3E";
+            + SVG.replace("%", "%25").replace("<", "%3C").replace(">", "%3E");
 
     private ActorSystem actorSystem;
     private Application application;
@@ -77,11 +83,18 @@ public class CertsGenerationControllerTest {
     }
 
     @Test
-    public void renderRouteReturnsExactUtf8SvgAndDispatchesLegacyOperationOnce() throws Exception {
+    public void renderRouteReturnsRealPngAndDispatchesLegacyOperationOnce() throws Exception {
         Result result = get("render");
         assertEquals(200, result.status());
-        assertEquals("image/svg+xml", result.body().contentType().get());
-        assertArrayEquals(SVG.getBytes(StandardCharsets.UTF_8), Helpers.contentAsBytes(result).toArray());
+        assertEquals("image/png", result.body().contentType().get());
+        byte[] body = Helpers.contentAsBytes(result).toArray();
+        assertArrayEquals(new byte[] {(byte) 137, 80, 78, 71, 13, 10, 26, 10}, Arrays.copyOf(body, 8));
+        assertFalse(new String(body, StandardCharsets.UTF_8).startsWith("<svg"));
+        BufferedImage image = ImageIO.read(new ByteArrayInputStream(body));
+        assertNotNull("The response must be a decodable PNG", image);
+        assertEquals(320, image.getWidth());
+        assertEquals(180, image.getHeight());
+        assertEquals(Color.RED.getRGB(), image.getRGB(25, 25));
         assertSingleLegacyDispatch();
     }
 
@@ -96,6 +109,17 @@ public class CertsGenerationControllerTest {
         assertEquals("v1", json.get("ver").asText());
         assertEquals("v1.certs.legacy.generate." + CERTIFICATE_ID, json.get("id").asText());
         assertNotNull(json.get("ts"));
+        assertSingleLegacyDispatch();
+    }
+
+    @Test
+    public void legacyGenerateDoesNotDecodeOrConvertItsPrintUri() throws Exception {
+        String printUri = "data:image/svg+xml,%3Csvg";
+        reply.set(certificateResponse(printUri));
+        Result result = get("generate");
+        assertEquals(200, result.status());
+        assertEquals("application/json", result.contentType().get());
+        assertEquals(printUri, Json.parse(Helpers.contentAsString(result)).get("result").get("printUri").asText());
         assertSingleLegacyDispatch();
     }
 
@@ -128,15 +152,52 @@ public class CertsGenerationControllerTest {
     }
 
     @Test
+    public void excessiveCertificateDimensionsReturnClearJson500() throws Exception {
+        reply.set(certificateResponse("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'"
+                + " width='3000' height='3000'/%3E"));
+        Result result = get("render");
+        assertEquals(500, result.status());
+        assertEquals("application/json", result.contentType().get());
+        JsonNode json = Json.parse(Helpers.contentAsString(result));
+        assertEquals("SERVER_ERROR", json.get("responseCode").asText());
+        assertTrue(json.get("result").get("message").asText().contains("8000000 pixels"));
+        assertSingleLegacyDispatch();
+    }
+
+    @Test
     public void missingOrMalformedPrintUriReturnsJson500() throws Exception {
         for (Object printUri : new Object[] {null, 123, "", "data:image/svg+xml,", "data:image/png,abc",
-                "data:image/svg+xml;base64,PHN2Zy8+", "data:image/svg+xml,%GG", "data:image/svg+xml,%FF"}) {
+                "data:image/svg+xml;base64,PHN2Zy8+", "data:image/svg+xml,%GG", "data:image/svg+xml,%FF",
+                "data:image/svg+xml,%3Csvg", "data:image/svg+xml,%3Chtml/%3E",
+                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='0' height='0'/%3E",
+                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E"
+                        + "%3Cimage href='data:image/png;base64,invalid' width='10' height='10'/%3E%3C/svg%3E"}) {
             reply.set(certificateResponse(printUri));
             Result result = get("render");
             assertEquals(500, result.status());
             assertEquals("application/json", result.contentType().get());
             assertEquals("SERVER_ERROR", Json.parse(Helpers.contentAsString(result)).get("responseCode").asText());
             assertSingleLegacyDispatch();
+        }
+    }
+
+    private static String certificateSvg() {
+        try {
+            BufferedImage logo = new BufferedImage(4, 4, BufferedImage.TYPE_INT_RGB);
+            for (int y = 0; y < 4; y++) {
+                for (int x = 0; x < 4; x++) {
+                    logo.setRGB(x, y, Color.RED.getRGB());
+                }
+            }
+            ByteArrayOutputStream png = new ByteArrayOutputStream();
+            ImageIO.write(logo, "png", png);
+            return "<svg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'>"
+                    + "<rect width='320' height='180' fill='white'/>"
+                    + "<text x='20' y='150' font-size='18'>A+B C#25% %20 é</text>"
+                    + "<image x='20' y='20' width='16' height='16' href='data:image/png;base64,"
+                    + Base64.getEncoder().encodeToString(png.toByteArray()) + "'/></svg>";
+        } catch (IOException ex) {
+            throw new AssertionError("Unable to create certificate fixture", ex);
         }
     }
 
