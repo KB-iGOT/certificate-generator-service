@@ -23,6 +23,17 @@
         </pluginRepository>
     </pluginRepositories>
     <dependencies>
+        <!-- SVG rasterization is used only by the KAR-1353 render wrapper. -->
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-transcoder</artifactId>
+            <version>1.20</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-codec</artifactId>
+            <version>1.20</version>
+        </dependency>
       <dependency>
         <groupId>com.typesafe.play</groupId>
         <artifactId>play-netty-server_${scala.major.version}</artifactId>

@@ -8,6 +8,7 @@ import java.util.function.Function;
 
 import akka.actor.ActorRef;
 import org.sunbird.JsonKeys;
+import org.sunbird.BaseException;
 import org.sunbird.incredible.processor.JsonKey;
 import org.sunbird.cert.actor.operation.CertActorOperation;
 
@@ -17,7 +18,7 @@ import org.sunbird.request.Request;
 import org.sunbird.response.Response;
 import play.mvc.Http;
 import play.mvc.Result;
-import utils.SvgDataUriDecoder;
+import utils.SvgToPngConverter;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -64,14 +65,19 @@ public class CertsGenerationController extends BaseController {
         return generateLegacyCertificate(uid, httpRequest, null);
     }
 
-    /** Returns the existing generated certificate as directly renderable SVG. */
+    /** Returns the existing generated certificate as a PNG image. */
     public CompletionStage<Result> renderCertificatesLegacyApp(String uid, Http.Request httpRequest) {
         return generateLegacyCertificate(uid, httpRequest, response -> {
             Object printUri = response.getResult().get(JsonKeys.PRINT_URI);
             if (!(printUri instanceof String)) {
                 throw new IllegalArgumentException("Generated certificate printUri must be a string");
             }
-            return ok(SvgDataUriDecoder.decode((String) printUri)).as("image/svg+xml");
+            try {
+                return ok(SvgToPngConverter.convertDataUri((String) printUri)).as("image/png");
+            } catch (SvgToPngConverter.RenderLimitException ex) {
+                return RequestHandler.handleFailureResponse(
+                        new BaseException("CERTIFICATE_RENDER_LIMIT", ex.getMessage(), ex.getStatus()), httpRequest);
+            }
         }).exceptionally(ex -> {
             Throwable cause = ex;
             while (cause instanceof CompletionException && cause.getCause() != null) {
